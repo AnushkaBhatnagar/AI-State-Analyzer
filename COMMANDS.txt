@@ -1,0 +1,292 @@
+================================================================================
+AI STATE ANALYZER - COMPLETE COMMAND REFERENCE
+================================================================================
+
+This file contains ALL commands needed to run every part of this application.
+
+================================================================================
+SETUP & INSTALLATION
+================================================================================
+
+1. Install Python Dependencies
+   -------------------------------
+   pip install playwright flask
+
+2. Install Playwright Browsers
+   -------------------------------
+   python -m playwright install chromium
+
+
+================================================================================
+SERVER COMMANDS
+================================================================================
+
+1. Start Web Server (for serving HTML files)
+   -------------------------------
+   python server.py
+   
+   → Server starts at http://localhost:8000
+   → Access your app at http://localhost:8000/index.html
+
+
+================================================================================
+PLAYWRIGHT RECORDER COMMANDS
+================================================================================
+
+Location: playwright_recorder/ directory
+
+1. Manual Recording (User Interaction)
+   -------------------------------
+   cd playwright_recorder
+   python record_session.py --html ../index.html
+   
+   → Browser opens
+   → You interact manually
+   → Press Ctrl+S or close browser to save
+   → Saves to recordings/session_001.json (auto-numbered)
+
+2. Manual Recording (Custom Output Name)
+   -------------------------------
+   python record_session.py --html ../index.html --output my_test.json
+   
+   → Saves to recordings/my_test.json
+
+3. List All Recordings
+   -------------------------------
+   python record_session.py --list
+   
+   → Shows all recordings with details
+
+4. Convert Recording to Action Script
+   -------------------------------
+   python convert_to_script.py --recording recordings/session_001.json --output actions.json
+   
+   → Creates reusable action script
+
+5. Automated Recording (Using Script)
+   -------------------------------
+   python record_session.py --html ../index.html --script actions.json
+   
+   → Playwright performs actions automatically
+   → Saves new recording with same actions
+
+6. Replay Recording
+   -------------------------------
+   python replay_session.py --recording recordings/session_001.json
+   
+   → Replays your recorded interactions
+   → App pauses when replay completes
+
+7. Replay on Different HTML
+   -------------------------------
+   python replay_session.py --recording recordings/session_001.json --html ../index_v2.html
+   
+   → Test same interactions on modified code
+
+8. Replay at Different Speed
+   -------------------------------
+   python replay_session.py --recording recordings/session_001.json --speed 2.0
+   
+   → 2x faster playback (0.5 for half speed)
+
+
+================================================================================
+STATE ANALYZER COMMANDS
+================================================================================
+
+1. Analyze State Machine
+   -------------------------------
+   python state_analyzer.py index.html
+   
+   → Analyzes HTML for state machine patterns
+   → Outputs states_schema.json
+
+2. Generate State Panel HTML
+   -------------------------------
+   python generate_state_panel.py index.html
+   
+   → Generates index_with_panel.html
+   → Includes visual state debugging panel
+
+3. Panel Generator (Alternative)
+   -------------------------------
+   python panel_generator.py
+   
+   → Interactive panel generation
+
+
+================================================================================
+COMPLETE WORKFLOW EXAMPLES
+================================================================================
+
+Example 1: Record & Replay on Same HTML
+----------------------------------------
+cd playwright_recorder
+python record_session.py --html ../index.html
+# [Interact with app, press Ctrl+S]
+python replay_session.py --recording recordings/session_001.json
+
+
+Example 2: Record Once, Test on Modified Code
+----------------------------------------------
+# 1. Record on original
+cd playwright_recorder
+python record_session.py --html ../index.html
+
+# 2. Modify your HTML code (fix bugs, add features, etc.)
+
+# 3. Test with same interactions
+python replay_session.py --recording recordings/session_001.json --html ../index.html
+
+
+Example 3: Create Reusable Test Script
+---------------------------------------
+# 1. Record manually
+cd playwright_recorder
+python record_session.py --html ../index.html
+
+# 2. Convert to script
+python convert_to_script.py --recording recordings/session_001.json --output test_script.json
+
+# 3. Use script for automated testing
+python record_session.py --html ../index.html --script test_script.json
+python record_session.py --html ../index_v2.html --script test_script.json
+
+
+Example 4: Full Development Cycle
+----------------------------------
+# 1. Start server
+python server.py
+
+# 2. In another terminal, record session
+cd playwright_recorder
+python record_session.py --html http://localhost:8000/index.html
+
+# 3. Make code changes
+
+# 4. Test changes
+python replay_session.py --recording recordings/session_001.json --html http://localhost:8000/index.html
+
+
+Example 5: Batch Testing Multiple Versions
+-------------------------------------------
+# Record once
+cd playwright_recorder
+python record_session.py --html ../index.html
+
+# Convert to script
+python convert_to_script.py --recording recordings/session_001.json --output test.json
+
+# Test multiple versions automatically
+python record_session.py --html ../version1.html --script test.json
+python record_session.py --html ../version2.html --script test.json
+python record_session.py --html ../version3.html --script test.json
+
+
+================================================================================
+FILE LOCATIONS
+================================================================================
+
+Recordings:
+   playwright_recorder/recordings/session_001.json
+   playwright_recorder/recordings/session_002.json
+   ...
+
+Action Scripts:
+   playwright_recorder/actions.json
+   playwright_recorder/test_script.json
+   ...
+
+HTML Files:
+   index.html                  - Your main app
+   index_with_panel.html       - Version with debug panel
+   art-index.html              - Art version
+   
+State Files:
+   states_schema.json          - Generated state machine schema
+
+
+================================================================================
+KEYBOARD SHORTCUTS
+================================================================================
+
+During Manual Recording:
+   Ctrl+S          - Save and stop recording
+   Close Browser   - Auto-save recording
+
+During Replay:
+   (After pause)   - Browser stays open for inspection
+   Close Browser   - End replay
+
+
+================================================================================
+TIPS & TRICKS
+================================================================================
+
+1. Auto-Numbered Sessions
+   - Recordings automatically number: session_001, session_002, etc.
+   - No need to specify output names
+
+2. Path Handling
+   - Use relative paths: ../index.html
+   - Or absolute paths: C:\path\to\index.html
+   - Or URLs: http://localhost:8000/index.html
+
+3. Recording Best Practices
+   - Keep recordings short and focused
+   - Convert important recordings to scripts for reuse
+   - Use descriptive names for custom outputs
+
+4. Testing Modified Code
+   - Record once on original
+   - Replay on modified versions
+   - No need to re-record manually
+
+5. Debugging
+   - Check browser console for recording messages
+   - "🔴 Recorded click: .button" confirms recording works
+   - "⏸️ Replay paused" confirms app froze correctly
+
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Issue: "Playwright not installed"
+   Fix: pip install playwright
+        python -m playwright install chromium
+
+Issue: "HTML file not found"
+   Fix: Use correct relative path (e.g., ../index.html from playwright_recorder/)
+
+Issue: "Recording shows 0 events"
+   Fix: Check browser console for recording script errors
+        Ensure recording script loaded properly
+
+Issue: "Spacebar doesn't work in replay"
+   Fix: This was removed - app just pauses now (by design)
+
+Issue: "Can't find recordings/"
+   Fix: Directory auto-creates on first recording
+
+
+================================================================================
+QUICK REFERENCE
+================================================================================
+
+Most Common Commands:
+   python server.py
+   cd playwright_recorder
+   python record_session.py --html ../index.html
+   python replay_session.py --recording recordings/session_001.json
+   python convert_to_script.py --recording recordings/session_001.json
+   python record_session.py --html ../index.html --script actions.json
+
+List & Help:
+   python record_session.py --list
+   python record_session.py --help
+   python replay_session.py --help
+   python convert_to_script.py --help
+
+
+================================================================================

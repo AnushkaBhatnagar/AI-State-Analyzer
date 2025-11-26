@@ -1,0 +1,45 @@
+# Generated Files
+index_with_panel.html
+states_schema.json
+
+# Session Recordings and Test Data
+playwright_recorder/recordings/*.json
+playwright_recorder/my_session.json
+playwright_recorder/test.json
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Playwright
+playwright/.env
+.playwright/
+
+# Distribution / Packaging
+dist/
+build/
+*.egg-info/
