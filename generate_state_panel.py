@@ -12,8 +12,12 @@ Or with custom API key:
 import argparse
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
 from state_analyzer import StateDetectionAnalyzer
 from panel_generator import StatePanelGenerator
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 def main():

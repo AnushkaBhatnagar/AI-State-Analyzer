@@ -3,6 +3,10 @@ import anthropic
 import json
 import re
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 class StateDetectionAnalyzer:
     def __init__(self, api_key=None):

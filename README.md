@@ -4,18 +4,18 @@ A comprehensive toolkit for analyzing, recording, and debugging state machines i
 
 ## Features
 
-### 🎯 State Machine Analysis
+### State Machine Analysis
 - Automatically analyze HTML/JavaScript for state machine patterns
 - Generate state schemas and visualizations
 - Create debug panels for real-time state inspection
 
-### 🎬 Playwright Session Recorder
+### Playwright Session Recorder
 - Record user interactions automatically
 - Replay sessions with precise timing
 - Convert recordings to reusable test scripts
 - Test code changes with recorded interactions
 
-### 🔍 Debug Tools
+### Debug Tools
 - Visual state panel overlay
 - Live event tracking
 - Session management and analysis
@@ -26,11 +26,27 @@ A comprehensive toolkit for analyzing, recording, and debugging state machines i
 
 ```bash
 # Install Python dependencies
-pip install playwright flask
+pip install playwright flask python-dotenv
 
 # Install Playwright browsers (one-time setup)
 python -m playwright install chromium
 ```
+
+### Environment Setup
+
+Create a `.env` file in the project root to store your Anthropic API key:
+
+```bash
+# Copy the example file
+cp .env.example .env
+
+# Edit .env and add your API key
+# ANTHROPIC_API_KEY=your-api-key-here
+```
+
+Get your API key from: https://console.anthropic.com/settings/keys
+
+The `.env` file is automatically ignored by git and will not be committed to the repository.
 
 ### Running the Application
 
@@ -118,10 +134,7 @@ python convert_to_script.py --recording recordings/session_001.json --output act
 - Python 3.7+
 - Playwright
 - Flask (optional, for advanced features)
-
-## License
-
-MIT License - Free for research and commercial use
+- python-dotenv (for environment variable management)
 
 ## Research Applications
 

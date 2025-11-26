@@ -1,3 +1,6 @@
+# Environment Variables
+.env
+
 # Generated Files
 index_with_panel.html
 states_schema.json
