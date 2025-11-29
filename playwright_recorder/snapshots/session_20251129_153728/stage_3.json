@@ -1,0 +1,25 @@
+{
+  "stage": 4,
+  "notificationCount": 100,
+  "tapCount": 15,
+  "notificationSpeed": 300,
+  "escapeAttempts": 3,
+  "rewardStreak": 0,
+  "totalRewards": 0,
+  "isHellMode": false,
+  "urgentTimers": [
+    542,
+    648,
+    744,
+    882,
+    1022,
+    1093,
+    1175,
+    1198,
+    1301,
+    1310,
+    1470
+  ],
+  "dom": "<div class=\"notification dark pulsing-glow\"><div class=\"notification-icon\">\ud83d\udcf1</div><div class=\"notification-text\">Mike is wondering why you're not responding<div class=\"notification-time\">URGENT</div></div></div><div class=\"notification urgent\"><div class=\"notification-icon\">\ud83d\udca5</div><div class=\"notification-text\">Quick! Your streak will break!<div class=\"notification-time\">SAVE IT</div></div><div class=\"countdown-timer\">18</div></div><div class=\"notification dark\"><div class=\"notification-icon\">\u2753</div><div class=\"notification-text\">Where are you? You haven't posted in 5 minutes...<div class=\"notification-time\">now</div></div></div><div class=\"notification dark\"><div class=\"notification-icon\">\ud83d\udd0d</div><div class=\"notification-text\">Are you still real?<div class=\"notification-time\">3m ago</div></div></div><div class=\"notification dark\"><div class=\"notification-icon\">\ud83d\udc8e</div><div class=\"notification-text\">Premium features unlocked for YOU only<div class=\"notification-time\">SPECIAL OFFER</div></div></div><div class=\"notification dark\"><div class=\"notification-icon\">\ud83d\udc7b</div><div class=\"notification-text\">You're missing out! 12 new conversations<div class=\"notification-time\">JOIN NOW</div></div></div><div class=\"notification dark\"><div class=\"notification-icon\">\u2753</div><div class=\"notification-text\">Where are you? You haven't posted in 5 minutes...<div class=\"notification-time\">now</div></div></div><div class=\"notification dark\"><div class=\"notification-icon\">\ud83d\udcf1</div><div class=\"notification-text\">Check your phone. Now.<div class=\"notification-time\">4m ago</div></div></div><div class=\"notification dark\"><div class=\"notification-icon\">\ud83d\udc94</div><div class=\"notification-text\">Your absence is hurting your relationships<div class=\"notification-time\">WARNING</div></div></div><div class=\"notification dark\"><div class=\"notification-icon\">\u2753</div><div class=\"notification-text\">Where are you? You haven't posted in 5 minutes...<div class=\"notification-time\">now</div></div></div><div class=\"notification mystery pulsing-glow\"><div class=\"notification-icon\">\ud83c\udfb2</div><div class=\"notification-text\">Fortune or failure? Click to discover<div class=\"notification-time\">GAMBLE</div></div></div><div class=\"notification dark pulsing-glow\"><div class=\"notification-icon\">\u23f0</div><div class=\"notification-text\">Limited time: Double likes for next 5 minutes!<div class=\"notification-time\">EXPIRES SOON</div></div></div>",
+  "timestamp": 70.30546402931213
+}

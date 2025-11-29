@@ -1,0 +1,363 @@
+{
+  "description": "Converted from recordings/session_001.json",
+  "source_recording": "recordings/session_001.json",
+  "total_actions": 51,
+  "actions": [
+    {
+      "type": "click",
+      "selector": ".start-button",
+      "x": 626,
+      "y": 286
+    },
+    {
+      "type": "click",
+      "selector": ".notification",
+      "x": 650,
+      "y": 354,
+      "wait": 3.8
+    },
+    {
+      "type": "click",
+      "selector": ".notification-time",
+      "x": 683,
+      "y": 433,
+      "wait": 1.8
+    },
+    {
+      "type": "click",
+      "selector": ".notification-text",
+      "x": 675,
+      "y": 495,
+      "wait": 1.9
+    },
+    {
+      "type": "click",
+      "selector": ".notification-text",
+      "x": 676,
+      "y": 566,
+      "wait": 1.3
+    },
+    {
+      "type": "click",
+      "selector": ".notification-text",
+      "x": 676,
+      "y": 566,
+      "wait": 0.6
+    },
+    {
+      "type": "click",
+      "selector": ".notification-time",
+      "x": 603,
+      "y": 176,
+      "wait": 2.0
+    },
+    {
+      "type": "click",
+      "selector": ".notification-time",
+      "x": 603,
+      "y": 176,
+      "wait": 0.6
+    },
+    {
+      "type": "click",
+      "selector": ".notification-time",
+      "x": 608,
+      "y": 258,
+      "wait": 0.9
+    },
+    {
+      "type": "click",
+      "selector": ".notification-text",
+      "x": 630,
+      "y": 318,
+      "wait": 1.1
+    },
+    {
+      "type": "click",
+      "selector": ".notification-text",
+      "x": 607,
+      "y": 312,
+      "wait": 2.6
+    },
+    {
+      "type": "click",
+      "selector": ".notification-time",
+      "x": 619,
+      "y": 277,
+      "wait": 1.4
+    },
+    {
+      "type": "click",
+      "selector": "#contentArea",
+      "x": 627,
+      "y": 363,
+      "wait": 1.3
+    },
+    {
+      "type": "click",
+      "selector": ".notification-text",
+      "x": 628,
+      "y": 362,
+      "wait": 0.5
+    },
+    {
+      "type": "click",
+      "selector": ".notification-time",
+      "x": 591,
+      "y": 299,
+      "wait": 1.2
+    },
+    {
+      "type": "click",
+      "selector": "#counter",
+      "x": 759,
+      "y": 76,
+      "wait": 2.5
+    },
+    {
+      "type": "click",
+      "selector": "#escapeButton",
+      "x": 714,
+      "y": 62,
+      "wait": 0.5
+    },
+    {
+      "type": "click",
+      "selector": "#escapeButton",
+      "x": 714,
+      "y": 62,
+      "wait": 4.9
+    },
+    {
+      "type": "click",
+      "selector": ".notification.mystery",
+      "x": 683,
+      "y": 403,
+      "wait": 1.9
+    },
+    {
+      "type": "click",
+      "selector": "#contentArea",
+      "x": 694,
+      "y": 382,
+      "wait": 0.6
+    },
+    {
+      "type": "click",
+      "selector": ".notification.urgent.pulsing-glow",
+      "x": 696,
+      "y": 333,
+      "wait": 0.5
+    },
+    {
+      "type": "click",
+      "selector": ".notification-text",
+      "x": 696,
+      "y": 372,
+      "wait": 0.4
+    },
+    {
+      "type": "click",
+      "selector": "#contentArea",
+      "x": 696,
+      "y": 372,
+      "wait": 0.6
+    },
+    {
+      "type": "click",
+      "selector": ".notification-text",
+      "x": 696,
+      "y": 372,
+      "wait": 0.6
+    },
+    {
+      "type": "click",
+      "selector": ".notification-text",
+      "x": 696,
+      "y": 372,
+      "wait": 0.4
+    },
+    {
+      "type": "click",
+      "selector": "#contentArea",
+      "x": 614,
+      "y": 505,
+      "wait": 1.0
+    },
+    {
+      "type": "click",
+      "selector": "#contentArea",
+      "x": 631,
+      "y": 489,
+      "wait": 1.0
+    },
+    {
+      "type": "click",
+      "selector": "#contentArea",
+      "x": 631,
+      "y": 487,
+      "wait": 0.2
+    },
+    {
+      "type": "click",
+      "selector": ".notification-time",
+      "x": 631,
+      "y": 487,
+      "wait": 0.2
+    },
+    {
+      "type": "click",
+      "selector": "#escapeButton",
+      "x": 721,
+      "y": 55,
+      "wait": 2.0
+    },
+    {
+      "type": "click",
+      "selector": "#escapeButton",
+      "x": 697,
+      "y": 62,
+      "wait": 1.4
+    },
+    {
+      "type": "click",
+      "selector": ".notification.dark.pulsing-glow",
+      "x": 637,
+      "y": 296,
+      "wait": 1.2
+    },
+    {
+      "type": "click",
+      "selector": "#contentArea",
+      "x": 636,
+      "y": 410,
+      "wait": 0.6
+    },
+    {
+      "type": "click",
+      "selector": ".notification.mystery.pulsing-glow",
+      "x": 645,
+      "y": 382,
+      "wait": 0.6
+    },
+    {
+      "type": "click",
+      "selector": ".notification.dark",
+      "x": 645,
+      "y": 382,
+      "wait": 0.2
+    },
+    {
+      "type": "click",
+      "selector": "#contentArea",
+      "x": 648,
+      "y": 423,
+      "wait": 1.1
+    },
+    {
+      "type": "click",
+      "selector": ".notification.dark",
+      "x": 648,
+      "y": 423,
+      "wait": 0.3
+    },
+    {
+      "type": "click",
+      "selector": ".notification.dark",
+      "x": 648,
+      "y": 423,
+      "wait": 0.2
+    },
+    {
+      "type": "click",
+      "selector": "#contentArea",
+      "x": 652,
+      "y": 394,
+      "wait": 0.7
+    },
+    {
+      "type": "click",
+      "selector": ".notification.mystery",
+      "x": 652,
+      "y": 394,
+      "wait": 0.4
+    },
+    {
+      "type": "click",
+      "selector": ".notification.jackpot",
+      "x": 652,
+      "y": 394,
+      "wait": 0.2
+    },
+    {
+      "type": "click",
+      "selector": ".notification.dark.pulsing-glow",
+      "x": 675,
+      "y": 345,
+      "wait": 1.0
+    },
+    {
+      "type": "click",
+      "selector": "#contentArea",
+      "x": 664,
+      "y": 545,
+      "wait": 0.8
+    },
+    {
+      "type": "click",
+      "selector": "#contentArea",
+      "x": 606,
+      "y": 264,
+      "wait": 2.4
+    },
+    {
+      "type": "click",
+      "selector": "#contentArea",
+      "x": 606,
+      "y": 264,
+      "wait": 0.2
+    },
+    {
+      "type": "click",
+      "selector": "#contentArea",
+      "x": 606,
+      "y": 264,
+      "wait": 0.6
+    },
+    {
+      "type": "click",
+      "selector": "#contentArea",
+      "x": 606,
+      "y": 264,
+      "wait": 0.2
+    },
+    {
+      "type": "click",
+      "selector": "#contentArea",
+      "x": 606,
+      "y": 264,
+      "wait": 0.2
+    },
+    {
+      "type": "click",
+      "selector": "#contentArea",
+      "x": 606,
+      "y": 264,
+      "wait": 0.2
+    },
+    {
+      "type": "click",
+      "selector": "#contentArea",
+      "x": 660,
+      "y": 262,
+      "wait": 0.8
+    },
+    {
+      "type": "click",
+      "selector": "#contentArea",
+      "x": 672,
+      "y": 323,
+      "wait": 4.5
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "stage": 3,
+  "notificationCount": 50,
+  "tapCount": 11,
+  "notificationSpeed": 350,
+  "escapeAttempts": 3,
+  "rewardStreak": 0,
+  "totalRewards": 0,
+  "isHellMode": false,
+  "urgentTimers": [
+    542,
+    648,
+    744,
+    882,
+    1022
+  ],
+  "dom": "<div class=\"notification urgent pulsing-glow\"><div class=\"notification-icon\">\ud83d\udd25</div><div class=\"notification-text\">Limited time offer ending NOW!<div class=\"notification-time\">LAST CHANCE</div></div><div class=\"countdown-timer\">9</div></div><div class=\"notification mystery pulsing-glow\"><div class=\"notification-icon\">\ud83c\udfb2</div><div class=\"notification-text\">Fortune or failure? Click to discover<div class=\"notification-time\">GAMBLE</div></div></div><div class=\"notification dark\"><div class=\"notification-icon\">\u23f0</div><div class=\"notification-text\">Limited time: Double likes for next 5 minutes!<div class=\"notification-time\">EXPIRES SOON</div></div></div><div class=\"notification hell\"><div class=\"notification-icon\">\ud83d\udd12</div><div class=\"notification-text\">You tried to escape 3 times<div class=\"notification-time\">PATHETIC</div></div></div><div class=\"notification hell\"><div class=\"notification-icon\">\ud83d\udc7b</div><div class=\"notification-text\">WE'RE BACK!<div class=\"notification-time\">FOREVER</div></div></div><div class=\"notification dark\"><div class=\"notification-icon\">\ud83d\ude15</div><div class=\"notification-text\">Mom: 'You never respond anymore...'<div class=\"notification-time\">FAMILY</div></div></div><div class=\"notification hell\"><div class=\"notification-icon\">\ud83d\udc7b</div><div class=\"notification-text\">WE'RE BACK!<div class=\"notification-time\">FOREVER</div></div></div><div class=\"notification hell\"><div class=\"notification-icon\">\ud83d\udc7b</div><div class=\"notification-text\">WE'RE BACK!<div class=\"notification-time\">FOREVER</div></div></div><div class=\"notification hell pulsing-glow\"><div class=\"notification-icon\">\ud83d\udc7b</div><div class=\"notification-text\">WE'RE BACK!<div class=\"notification-time\">FOREVER</div></div></div><div class=\"notification hell\"><div class=\"notification-icon\">\ud83d\udca5</div><div class=\"notification-text\">DELETING MAKES IT WORSE<div class=\"notification-time\">SURPRISE</div></div></div><div class=\"notification mystery pulsing-glow\"><div class=\"notification-icon\">\u2753</div><div class=\"notification-text\">Mystery box - tap to reveal your fate<div class=\"notification-time\">???</div></div></div>",
+  "timestamp": 54.00986313819885
+}

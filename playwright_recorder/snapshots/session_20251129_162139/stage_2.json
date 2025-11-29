@@ -1,0 +1,25 @@
+{
+  "stage": 3,
+  "notificationCount": 50,
+  "tapCount": 22,
+  "notificationSpeed": 600,
+  "escapeAttempts": 0,
+  "rewardStreak": 0,
+  "totalRewards": 0,
+  "isHellMode": false,
+  "urgentTimers": [
+    403,
+    439,
+    518,
+    519,
+    550,
+    556,
+    631,
+    659,
+    668,
+    679,
+    684
+  ],
+  "dom": "<div class=\"notification dark pulsing-glow state-highlight\"><div class=\"notification-icon\">\ud83d\ude22</div><div class=\"notification-text\">Emma: 'Are you ignoring me?'<div class=\"notification-time\">3m ago</div></div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\ud83d\udc41\ufe0f</div><div class=\"notification-text\">We miss you. Come back.<div class=\"notification-time\">1m ago</div></div></div><div class=\"notification mystery\"><div class=\"notification-icon\">\ud83d\udd2e</div><div class=\"notification-text\">Something special awaits... or does it?<div class=\"notification-time\">MYSTERY</div></div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\u2753</div><div class=\"notification-text\">Where are you? You haven't posted in 5 minutes...<div class=\"notification-time\">now</div></div></div><div class=\"notification urgent\"><div class=\"notification-icon\">\u23f0</div><div class=\"notification-text\">15 seconds left to claim your reward!<div class=\"notification-time\">HURRY</div></div><div class=\"countdown-timer\">5</div></div><div class=\"notification reward\"><div class=\"notification-icon\">\u26a1</div><div class=\"notification-text\">Perfect timing! Bonus achieved!<div class=\"notification-time\">SUCCESS</div></div></div><div class=\"notification urgent\"><div class=\"notification-icon\">\u23f0</div><div class=\"notification-text\">15 seconds left to claim your reward!<div class=\"notification-time\">HURRY</div></div><div class=\"countdown-timer\">3</div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\u26a0\ufe0f</div><div class=\"notification-text\">Opportunity expired. Better luck next time.<div class=\"notification-time\">FAILED</div></div></div><div class=\"notification urgent\"><div class=\"notification-icon\">\ud83d\udca5</div><div class=\"notification-text\">Quick! Your streak will break!<div class=\"notification-time\">SAVE IT</div></div><div class=\"countdown-timer\">12</div></div><div class=\"notification reward\"><div class=\"notification-icon\">\u26a1</div><div class=\"notification-text\">Perfect timing! Bonus achieved!<div class=\"notification-time\">SUCCESS</div></div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\u23f0</div><div class=\"notification-text\">Limited time: Double likes for next 5 minutes!<div class=\"notification-time\">EXPIRES SOON</div></div></div><div class=\"notification urgent\"><div class=\"notification-icon\">\ud83d\udca5</div><div class=\"notification-text\">Quick! Your streak will break!<div class=\"notification-time\">SAVE IT</div></div><div class=\"countdown-timer\">1</div></div>",
+  "timestamp": 40.2494740486145
+}
