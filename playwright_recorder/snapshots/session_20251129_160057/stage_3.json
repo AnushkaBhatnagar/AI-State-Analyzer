@@ -1,0 +1,24 @@
+{
+  "stage": 4,
+  "notificationCount": 100,
+  "tapCount": 15,
+  "notificationSpeed": 275,
+  "escapeAttempts": 8,
+  "rewardStreak": 0,
+  "totalRewards": 0,
+  "isHellMode": false,
+  "urgentTimers": [
+    408,
+    931,
+    1130,
+    1165,
+    1188,
+    1219,
+    1221,
+    1237,
+    1319,
+    1322
+  ],
+  "dom": "<div class=\"notification mystery pulsing-glow\"><div class=\"notification-icon\">\ud83d\udd2e</div><div class=\"notification-text\">Something special awaits... or does it?<div class=\"notification-time\">MYSTERY</div></div></div><div class=\"notification dark\"><div class=\"notification-icon\">\ud83d\udc41\ufe0f</div><div class=\"notification-text\">We miss you. Come back.<div class=\"notification-time\">1m ago</div></div></div><div class=\"notification dark pulsing-glow\"><div class=\"notification-icon\">\ud83d\ude22</div><div class=\"notification-text\">Emma: 'Are you ignoring me?'<div class=\"notification-time\">3m ago</div></div></div><div class=\"notification urgent pulsing-glow\"><div class=\"notification-icon\">\u23f0</div><div class=\"notification-text\">15 seconds left to claim your reward!<div class=\"notification-time\">HURRY</div></div><div class=\"countdown-timer\">7</div></div><div class=\"notification urgent pulsing-glow\"><div class=\"notification-icon\">\ud83d\udea8</div><div class=\"notification-text\">URGENT: Tap before timer runs out!<div class=\"notification-time\">EXPIRING</div></div><div class=\"countdown-timer\">15</div></div><div class=\"notification mystery\"><div class=\"notification-icon\">\ud83c\udfaa</div><div class=\"notification-text\">Surprise inside! Could be anything...<div class=\"notification-time\">UNKNOWN</div></div></div><div class=\"notification dark\"><div class=\"notification-icon\">\ud83d\udc65</div><div class=\"notification-text\">Sarah just got 50 likes while you were idle<div class=\"notification-time\">2s ago</div></div></div><div class=\"notification dark pulsing-glow\"><div class=\"notification-icon\">\ud83d\udc65</div><div class=\"notification-text\">5 friends feel neglected by your silence<div class=\"notification-time\">GUILT TRIP</div></div></div><div class=\"notification dark\"><div class=\"notification-icon\">\ud83d\udd25</div><div class=\"notification-text\">Your friends are all online now - 23 active<div class=\"notification-time\">now</div></div></div><div class=\"notification dark\"><div class=\"notification-icon\">\ud83d\ude22</div><div class=\"notification-text\">Emma: 'Are you ignoring me?'<div class=\"notification-time\">3m ago</div></div></div><div class=\"notification dark pulsing-glow\"><div class=\"notification-icon\">\ud83d\udd0d</div><div class=\"notification-text\">Are you still real?<div class=\"notification-time\">3m ago</div></div></div><div class=\"notification mystery\"><div class=\"notification-icon\">\ud83d\udd2e</div><div class=\"notification-text\">Something special awaits... or does it?<div class=\"notification-time\">MYSTERY</div></div></div>",
+  "timestamp": 53.569822788238525
+}

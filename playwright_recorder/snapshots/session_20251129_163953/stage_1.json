@@ -1,0 +1,13 @@
+{
+  "stage": 2,
+  "notificationCount": 5,
+  "tapCount": 0,
+  "notificationSpeed": 800,
+  "escapeAttempts": 0,
+  "rewardStreak": 0,
+  "totalRewards": 0,
+  "isHellMode": false,
+  "urgentTimers": [],
+  "dom": "<div class=\"notification state-highlight\"><div class=\"notification-icon\">\ud83d\udc65</div><div class=\"notification-text\">3 new followers!<div class=\"notification-time\">3m ago</div></div></div><div class=\"notification pulsing-glow state-highlight\"><div class=\"notification-icon\">\u2b50</div><div class=\"notification-text\">Your post got featured!<div class=\"notification-time\">5m ago</div></div></div><div class=\"notification pulsing-glow state-highlight\"><div class=\"notification-icon\">\ud83d\udd25</div><div class=\"notification-text\">You're trending! 47 new likes<div class=\"notification-time\">2m ago</div></div></div><div class=\"notification pulsing-glow state-highlight\"><div class=\"notification-icon\">\ud83d\udcac</div><div class=\"notification-text\">New comment: 'Looking great!'<div class=\"notification-time\">1m ago</div></div></div><div class=\"notification state-highlight\"><div class=\"notification-icon\">\u2764\ufe0f</div><div class=\"notification-text\">Sarah liked your photo!<div class=\"notification-time\">now</div></div></div>",
+  "timestamp": 7.686058044433594
+}

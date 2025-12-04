@@ -24,18 +24,36 @@ except ImportError:
     print("Then run: python -m playwright install chromium")
     exit(1)
 
+try:
+    from instagram_config import INSTAGRAM_STATE, get_stage_info
+    SNAPSHOTS_AVAILABLE = True
+except ImportError:
+    SNAPSHOTS_AVAILABLE = False
+
+# Load states schema
+STATES_SCHEMA = None
+try:
+    schema_path = Path(__file__).parent.parent / 'states_schema.json'
+    if schema_path.exists():
+        with open(schema_path, 'r') as f:
+            STATES_SCHEMA = json.load(f)
+except:
+    pass
+
 
 class SessionRecorder:
     """Records user interactions with a web application"""
     
-    def __init__(self, html_path):
+    def __init__(self, html_path, capture_snapshots=False):
         """
         Initialize recorder
         
         Args:
             html_path: Path to HTML file or URL
+            capture_snapshots: Whether to capture stage snapshots
         """
         self.html_path = html_path
+        self.capture_snapshots = capture_snapshots
         self.recording = {
             'session_id': f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
             'timestamp': datetime.now().isoformat(),
@@ -43,6 +61,8 @@ class SessionRecorder:
             'events': []
         }
         self.start_time = None
+        self.snapshots = {}
+        self.last_stage = -1
     
     def record_with_script(self, script_path):
         """Record session by executing actions from a script"""
@@ -189,6 +209,9 @@ class SessionRecorder:
                         events = page.evaluate('window.recordedEvents || []')
                         self.recording['events'] = events
                         
+                        # Check for stage changes and capture snapshots
+                        self._check_stage_change(page)
+                        
                         # Check if user pressed Ctrl+S
                         should_stop = page.evaluate('window.shouldStopRecording || false')
                         if should_stop:
@@ -230,6 +253,142 @@ class SessionRecorder:
         self.recording['duration_seconds'] = time.time() - self.start_time if self.start_time else 0
         
         return self.recording
+    
+    def _capture_snapshot(self, page):
+        """Capture current state snapshot"""
+        if not self.capture_snapshots or not SNAPSHOTS_AVAILABLE:
+            return None
+        
+        try:
+            config = INSTAGRAM_STATE
+            snapshot = {}
+            
+            # Capture all state variables
+            for var_name in config['variables']:
+                try:
+                    value = page.evaluate(f'typeof {var_name} !== "undefined" ? {var_name} : null')
+                    if value is not None:
+                        snapshot[var_name] = value
+                except:
+                    pass
+            
+            # Capture DOM
+            try:
+                content_id = config['content_id']
+                dom = page.evaluate(f'document.getElementById("{content_id}") ? document.getElementById("{content_id}").innerHTML : ""')
+                snapshot['dom'] = dom
+            except:
+                pass
+            
+            # Add timestamp
+            snapshot['timestamp'] = time.time() - self.start_time if self.start_time else 0
+            
+            return snapshot
+        except Exception as e:
+            print(f"⚠️  Error capturing snapshot: {e}")
+            return None
+    
+    def _check_stage_change(self, page):
+        """Check if state has changed and capture snapshot if needed"""
+        if not self.capture_snapshots or not SNAPSHOTS_AVAILABLE:
+            return
+        
+        try:
+            # Use states_schema.json if available for detection
+            if STATES_SCHEMA:
+                current_state = self._detect_current_state(page)
+            else:
+                # Fallback to old method
+                current_state = page.evaluate('typeof stage !== "undefined" ? stage : -1')
+            
+            # If state changed, capture snapshot
+            if current_state != self.last_stage and current_state >= 0:
+                snapshot = self._capture_snapshot(page)
+                if snapshot:
+                    self.snapshots[current_state] = snapshot
+                    
+                    # Get state name from schema or fallback
+                    if STATES_SCHEMA:
+                        state_info = next((s for s in STATES_SCHEMA['states'] if s['id'] == current_state), None)
+                        state_name = state_info['name'] if state_info else f'State {current_state}'
+                    else:
+                        state_info = get_stage_info(current_state)
+                        state_name = state_info['name']
+                    
+                    print(f"\n📸 Captured snapshot: State {current_state} ({state_name})")
+                
+                self.last_stage = current_state
+        except Exception as e:
+            pass
+    
+    def _detect_current_state(self, page):
+        """Detect current state using states_schema.json detection conditions"""
+        if not STATES_SCHEMA:
+            return -1
+        
+        try:
+            # Check each state's detection condition
+            for state in STATES_SCHEMA['states']:
+                state_id = state['id']
+                condition = state['detection_condition']
+                
+                # Evaluate the detection condition
+                try:
+                    # For State 5 (Flood Overlay), check if overlay is visible
+                    if state_id == 5:
+                        notif_count = page.evaluate('typeof notificationCount !== "undefined" ? notificationCount : 0')
+                        overlay_visible = page.evaluate('document.getElementById("floodOverlay") && document.getElementById("floodOverlay").style.display === "flex"')
+                        if notif_count >= 150 and overlay_visible:
+                            return 5
+                    
+                    # For State 4 (Hell Mode), check stage and isHellMode
+                    elif state_id == 4:
+                        stage = page.evaluate('typeof stage !== "undefined" ? stage : -1')
+                        is_hell = page.evaluate('typeof isHellMode !== "undefined" ? isHellMode : false')
+                        if stage == 4 and is_hell:
+                            return 4
+                    
+                    # For States 0-3, check stage variable
+                    else:
+                        stage = page.evaluate('typeof stage !== "undefined" ? stage : -1')
+                        if stage == state_id:
+                            return state_id
+                
+                except:
+                    continue
+            
+            return -1
+        except:
+            return -1
+    
+    def _save_snapshots(self, session_id):
+        """Save snapshots to files"""
+        if not self.snapshots:
+            return
+        
+        # Create snapshots directory
+        snapshot_dir = Path('snapshots') / session_id
+        snapshot_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Save each snapshot
+        for stage_num, snapshot in self.snapshots.items():
+            if stage_num >= 0:  # Don't save initial state
+                stage_file = snapshot_dir / f'stage_{stage_num}.json'
+                with open(stage_file, 'w') as f:
+                    json.dump(snapshot, f, indent=2)
+        
+        # Save metadata
+        metadata = {
+            'session_id': session_id,
+            'stages_captured': len(self.snapshots),
+            'stage_numbers': sorted([s for s in self.snapshots.keys() if s >= 0])
+        }
+        metadata_file = snapshot_dir / 'metadata.json'
+        with open(metadata_file, 'w') as f:
+            json.dump(metadata, f, indent=2)
+        
+        print(f"\n📸 Snapshots saved: {snapshot_dir}")
+        print(f"   Stages captured: {len([s for s in self.snapshots.keys() if s >= 0])}")
     
     def _get_recording_script(self):
         """Get the recording JavaScript code"""
@@ -418,6 +577,11 @@ def main():
         '--script',
         help='Action script to execute automatically (instead of manual interaction)'
     )
+    parser.add_argument(
+        '--capture-snapshots',
+        action='store_true',
+        help='Capture stage snapshots for stage isolation testing (Instagram app only)'
+    )
     
     args = parser.parse_args()
     
@@ -448,6 +612,12 @@ def main():
         # Auto-numbered output
         output_path = get_auto_filename()
     
+    # Check snapshot capture availability
+    if args.capture_snapshots and not SNAPSHOTS_AVAILABLE:
+        print("⚠️  Warning: Snapshot capture requires instagram_config.py")
+        print("   Continuing without snapshot capture...")
+        args.capture_snapshots = False
+    
     # Check if script mode
     if args.script:
         # Check if script exists
@@ -456,16 +626,25 @@ def main():
             exit(1)
         
         # Record with script
-        recorder = SessionRecorder(args.html)
+        recorder = SessionRecorder(args.html, capture_snapshots=args.capture_snapshots)
         recorder.record_with_script(args.script)
         recorder.save(output_path)
+        
+        # Save snapshots if captured
+        if args.capture_snapshots:
+            recorder._save_snapshots(recorder.recording['session_id'])
         
         print(f"\n💡 To replay: python replay_session.py --recording {output_path}")
     else:
         # Manual recording
-        recorder = SessionRecorder(args.html)
+        recorder = SessionRecorder(args.html, capture_snapshots=args.capture_snapshots)
         recorder.record()
         recorder.save(output_path)
+        
+        # Save snapshots if captured
+        if args.capture_snapshots:
+            recorder._save_snapshots(recorder.recording['session_id'])
+            print(f"\n💡 To test a stage: python test_stage.py --session {recorder.recording['session_id']} --stage <N> --html {args.html}")
         
         print(f"\n💡 To replay: python replay_session.py --recording {output_path}")
         print(f"💡 To convert to script: python convert_to_script.py --recording {output_path}")

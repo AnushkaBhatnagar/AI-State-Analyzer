@@ -1,0 +1,22 @@
+{
+  "stage": 3,
+  "notificationCount": 50,
+  "tapCount": 3,
+  "notificationSpeed": 400,
+  "escapeAttempts": 1,
+  "rewardStreak": 0,
+  "totalRewards": 0,
+  "isHellMode": false,
+  "urgentTimers": [
+    294,
+    295,
+    296,
+    297,
+    326,
+    327,
+    328,
+    329
+  ],
+  "dom": "<div class=\"notification urgent pulsing-glow\"><div class=\"notification-icon\">\ud83d\udea8</div><div class=\"notification-text\">URGENT: Tap before timer runs out!<div class=\"notification-time\">EXPIRING</div></div><div class=\"countdown-timer\">19</div></div><div class=\"notification dark pulsing-glow state-highlight\"><div class=\"notification-icon\">\u23f0</div><div class=\"notification-text\">Your followers are waiting...<div class=\"notification-time\">2m ago</div></div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\u23f0</div><div class=\"notification-text\">Your followers are waiting...<div class=\"notification-time\">2m ago</div></div></div><div class=\"notification mystery\"><div class=\"notification-icon\">\ud83c\udfb2</div><div class=\"notification-text\">Fortune or failure? Click to discover<div class=\"notification-time\">GAMBLE</div></div></div><div class=\"notification mystery\"><div class=\"notification-icon\">\ud83d\udd2e</div><div class=\"notification-text\">Something special awaits... or does it?<div class=\"notification-time\">MYSTERY</div></div></div><div class=\"notification mystery pulsing-glow\"><div class=\"notification-icon\">\u2753</div><div class=\"notification-text\">Mystery box - tap to reveal your fate<div class=\"notification-time\">???</div></div></div><div class=\"notification urgent pulsing-glow\"><div class=\"notification-icon\">\ud83d\udca5</div><div class=\"notification-text\">Quick! Your streak will break!<div class=\"notification-time\">SAVE IT</div></div><div class=\"countdown-timer\">7</div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\ud83d\udcf1</div><div class=\"notification-text\">Check your phone. Now.<div class=\"notification-time\">4m ago</div></div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\u2753</div><div class=\"notification-text\">Where are you? You haven't posted in 5 minutes...<div class=\"notification-time\">now</div></div></div><div class=\"notification mystery\"><div class=\"notification-icon\">\ud83d\udd2e</div><div class=\"notification-text\">Something special awaits... or does it?<div class=\"notification-time\">MYSTERY</div></div></div><div class=\"notification dark pulsing-glow state-highlight\"><div class=\"notification-icon\">\ud83d\udd0d</div><div class=\"notification-text\">Are you still real?<div class=\"notification-time\">3m ago</div></div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\ud83d\udcf1</div><div class=\"notification-text\">Check your phone. Now.<div class=\"notification-time\">4m ago</div></div></div>",
+  "timestamp": 44.27854919433594
+}

@@ -1,0 +1,33 @@
+{
+  "stage": 4,
+  "notificationCount": 101,
+  "tapCount": 8,
+  "notificationSpeed": 350,
+  "escapeAttempts": 3,
+  "rewardStreak": 0,
+  "totalRewards": 0,
+  "isHellMode": false,
+  "urgentTimers": [
+    294,
+    295,
+    296,
+    297,
+    326,
+    327,
+    328,
+    329,
+    393,
+    400,
+    404,
+    405,
+    407,
+    430,
+    452,
+    469,
+    500,
+    555,
+    604
+  ],
+  "dom": "<div class=\"notification reward state-highlight\"><div class=\"notification-icon\">\u26a1</div><div class=\"notification-text\">Perfect timing! Bonus achieved!<div class=\"notification-time\">SUCCESS</div></div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\ud83d\udc65</div><div class=\"notification-text\">Sarah just got 50 likes while you were idle<div class=\"notification-time\">2s ago</div></div></div><div class=\"notification reward state-highlight\"><div class=\"notification-icon\">\ud83d\udea8</div><div class=\"notification-text\">URGENT: Tap before timer runs out!<div class=\"notification-time\">EXPIRING</div></div><div class=\"countdown-timer\">11</div></div><div class=\"notification mystery state-highlight\"><div class=\"notification-icon\">\ud83d\udd2e</div><div class=\"notification-text\">Something special awaits... or does it?<div class=\"notification-time\">MYSTERY</div></div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\ud83d\udc8e</div><div class=\"notification-text\">Premium features unlocked for YOU only<div class=\"notification-time\">SPECIAL OFFER</div></div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\ud83d\udca5</div><div class=\"notification-text\">That created 2 more notifications!<div class=\"notification-time\">MULTIPLIED</div></div></div><div class=\"notification dark pulsing-glow state-highlight\"><div class=\"notification-icon\">\ud83d\udc41\ufe0f</div><div class=\"notification-text\">We miss you. Come back.<div class=\"notification-time\">1m ago</div></div></div><div class=\"notification urgent state-highlight\"><div class=\"notification-icon\">\u23f0</div><div class=\"notification-text\">15 seconds left to claim your reward!<div class=\"notification-time\">HURRY</div></div><div class=\"countdown-timer\">15</div></div><div class=\"notification dark pulsing-glow state-highlight\"><div class=\"notification-icon\">\ud83d\udd25</div><div class=\"notification-text\">Your friends are all online now - 23 active<div class=\"notification-time\">now</div></div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\ud83d\udc65</div><div class=\"notification-text\">Sarah just got 50 likes while you were idle<div class=\"notification-time\">2s ago</div></div></div><div class=\"notification mystery state-highlight\"><div class=\"notification-icon\">\ud83c\udfb2</div><div class=\"notification-text\">Fortune or failure? Click to discover<div class=\"notification-time\">GAMBLE</div></div></div><div class=\"notification dark pulsing-glow state-highlight\"><div class=\"notification-icon\">\ud83d\udcf1</div><div class=\"notification-text\">Check your phone. Now.<div class=\"notification-time\">4m ago</div></div></div>",
+  "timestamp": 58.51119899749756
+}

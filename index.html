@@ -628,7 +628,7 @@
                     var notif = positiveNotifications[Math.floor(Math.random() * positiveNotifications.length)];
                     addNotification(notif);
                     
-                    if (notificationCount >= 15) {
+                    if (notificationCount >= 5) {
                         stage = 2;
                         clearInterval(interval);
                         setTimeout(startStage2, 2000);

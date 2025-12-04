@@ -1,6 +1,6 @@
-# AI State Analyzer
+# AI State Analyzer / Experience Editing
 
-A comprehensive toolkit for analyzing, recording, and debugging state machines in web applications. This project combines state machine analysis with automated interaction recording using Playwright.
+A system for analyzing, recording, and debugging state machines in web applications. This project combines state machine analysis with automated interaction recording using Playwright.
 
 ## Features
 
@@ -43,10 +43,6 @@ cp .env.example .env
 # Edit .env and add your API key
 # ANTHROPIC_API_KEY=your-api-key-here
 ```
-
-Get your API key from: https://console.anthropic.com/settings/keys
-
-The `.env` file is automatically ignored by git and will not be committed to the repository.
 
 ### Running the Application
 
@@ -135,19 +131,3 @@ python convert_to_script.py --recording recordings/session_001.json --output act
 - Playwright
 - Flask (optional, for advanced features)
 - python-dotenv (for environment variable management)
-
-## Research Applications
-
-This toolkit was built for AI code analysis research, specifically for:
-- Recording user interactions with AI-generated applications
-- Analyzing engagement metrics and user behavior
-- Testing and debugging state machines
-- Automated regression testing
-
-## Contributing
-
-Contributions welcome! This project is designed to be extensible and modular.
-
-## Support
-
-For detailed usage instructions, see [COMMANDS.txt](COMMANDS.txt) for complete examples and troubleshooting.
