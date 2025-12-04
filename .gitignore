@@ -5,6 +5,8 @@
 index_with_panel.html
 states_schema.json
 
+index_with_panel-og.html
+states_schema-og.json
 # Session Recordings and Test Data
 playwright_recorder/recordings/*.json
 playwright_recorder/my_session.json

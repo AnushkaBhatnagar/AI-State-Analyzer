@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Behind the Filter - Instagram</title>
     <style>
         * {
             margin: 0;
@@ -33,718 +34,1133 @@
         .screen {
             width: 100%;
             height: 100%;
-            background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+            background: #fff;
             border-radius: 25px;
             position: relative;
             overflow: hidden;
         }
 
-        .status-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            color: white;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .app-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px 20px;
-            border-bottom: 1px solid #333;
-        }
-
-        .app-title {
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .notification-counter {
-            background: #ff3333;
-            color: white;
-            border-radius: 15px;
-            padding: 5px 12px;
-            font-size: 14px;
-            font-weight: bold;
-            animation: pulse 1s infinite;
-        }
-
-        .content-area {
-            padding: 20px;
-            height: calc(100% - 120px);
-            overflow: hidden;
-        }
-
-        .notification {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 10px;
-            color: white;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            animation: slideIn 0.5s ease-out;
-        }
-
-        .notification:hover {
-            transform: scale(1.02);
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .notification.dark {
-            background: rgba(255, 0, 0, 0.2);
-            border-color: #ff3333;
-            box-shadow: 0 0 20px rgba(255, 51, 51, 0.3);
-        }
-
-        .notification.hell {
-            background: rgba(139, 0, 0, 0.4);
-            border-color: #8B0000;
-            box-shadow: 0 0 30px rgba(139, 0, 0, 0.6);
-            animation: shake 0.5s infinite, slideIn 0.2s ease-out;
-        }
-
-        .notification.urgent {
-            background: linear-gradient(45deg, #ff4444, #cc0000);
-            border-color: #ff0000;
-            box-shadow: 0 0 25px rgba(255, 68, 68, 0.6);
-            animation: urgentPulse 1s infinite, slideIn 0.5s ease-out;
-        }
-
-        .notification.reward {
-            background: linear-gradient(45deg, #00ff88, #00cc44);
-            border-color: #00ff00;
-            box-shadow: 0 0 25px rgba(0, 255, 136, 0.6);
-            animation: celebration 0.8s ease-out, slideIn 0.5s ease-out;
-        }
-
-        .notification.mystery {
-            background: linear-gradient(45deg, #9b59b6, #8e44ad);
-            border-color: #9b59b6;
-            box-shadow: 0 0 25px rgba(155, 89, 182, 0.6);
-            animation: mysteryPulse 1.5s infinite, slideIn 0.5s ease-out;
-        }
-
-        .notification.jackpot {
-            background: linear-gradient(45deg, #f39c12, #e67e22);
-            border-color: #f39c12;
-            box-shadow: 0 0 30px rgba(243, 156, 18, 0.8);
-            animation: jackpotCelebration 1s ease-out, slideIn 0.5s ease-out;
-        }
-
-        .notification-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            float: left;
-            margin-right: 15px;
-            font-size: 18px;
-        }
-
-        .notification-text {
-            font-size: 14px;
-            line-height: 1.4;
-        }
-
-        .notification-time {
-            font-size: 12px;
-            opacity: 0.7;
-            margin-top: 5px;
-        }
-
-        .countdown-timer {
-            position: absolute;
-            top: 5px;
-            right: 10px;
-            background: #ff0000;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 10px;
-            font-weight: bold;
-            animation: pulse 0.5s infinite;
-        }
-
-        .pulsing-glow {
-            animation: glowPulse 2s infinite;
-        }
-
-        .flood-overlay {
+        /* Choice Screen */
+        .choice-screen {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(139, 0, 0, 0.9);
-            display: none;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            flex-direction: column;
+            padding: 40px;
             z-index: 1000;
+            animation: fadeIn 0.5s ease;
         }
 
-        .flood-text {
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-            text-align: center;
-            animation: flicker 0.5s infinite;
-        }
-
-        .start-button {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: transform 0.3s ease;
-        }
-
-        .start-button:hover {
-            transform: scale(1.05);
-        }
-
-        .warning-text {
-            color: #ff6b6b;
-            font-size: 12px;
-            text-align: center;
-            margin-top: 20px;
-            opacity: 0.8;
-        }
-
-        .escape-button {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 12px;
-            cursor: not-allowed;
-            transition: all 0.3s ease;
+        .choice-screen.hidden {
             display: none;
-            opacity: 0.5;
         }
 
-        .escape-button:hover {
-            background: rgba(255, 255, 255, 0.1);
+        .choice-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
 
-        .escape-button.enabled {
+        .choice-subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+            text-align: center;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .choice-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .choice-btn {
+            padding: 20px 30px;
+            border-radius: 20px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .choice-btn.perfect {
+            background: white;
+            color: #f5576c;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .choice-btn.perfect:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .choice-btn.real {
             background: rgba(255, 255, 255, 0.2);
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            cursor: pointer;
-            opacity: 1;
+            border: 2px solid white;
         }
 
-        .escape-button.enabled:hover {
+        .choice-btn.real:hover {
             background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
         }
 
-        .tap-counter {
+        /* Instagram Header */
+        .insta-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dbdbdb;
+            background: white;
+        }
+
+        .insta-logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .truth-meter {
+            font-size: 12px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        /* Feed */
+        .feed {
+            height: calc(100% - 60px);
+            overflow-y: auto;
+            background: #fafafa;
+        }
+
+        .feed::-webkit-scrollbar {
+            width: 0;
+        }
+
+        /* Post */
+        .post {
+            background: white;
+            margin-bottom: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            gap: 10px;
+        }
+
+        .post-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+        }
+
+        .post-username {
+            font-size: 14px;
+            font-weight: 600;
+            color: #262626;
+        }
+
+        .post-image-container {
+            position: relative;
+            width: 100%;
+            height: 375px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .post-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.4s ease;
+        }
+
+        .post-layer {
             position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            text-align: center;
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            background: rgba(0, 0, 0, 0.7);
+            pointer-events: none;
+        }
+
+        /* Progress Indicator */
+        .layer-progress {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 10;
+            display: none;
+        }
+
+        .layer-progress.visible {
+            display: block;
+        }
+
+        .click-hint {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 500;
+            z-index: 10;
+            opacity: 0.7;
+        }
+
+        .post-image-container:hover .glitch-overlay {
+            opacity: 0.3;
+        }
+
+        .glitch-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 0, 0, 0.2) 50%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+            animation: glitchMove 3s infinite;
+        }
+
+        @keyframes glitchMove {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+        }
+
+        .post-caption {
+            padding: 12px 16px;
+        }
+
+        .post-caption-text {
+            font-size: 14px;
+            color: #262626;
+            line-height: 1.5;
+        }
+
+        .post-caption-username {
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .post-likes {
+            padding: 0 16px 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #262626;
+        }
+
+        /* Post Actions */
+        .post-actions {
+            display: flex;
+            gap: 15px;
+            padding: 8px 16px;
+            border-top: 1px solid #efefef;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            padding: 5px;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .action-btn.liked {
+            animation: likeAnimation 0.4s ease;
+        }
+
+        @keyframes likeAnimation {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .like-status {
+            font-size: 11px;
+            color: #8e8e8e;
+            margin-top: 3px;
+            font-style: italic;
+        }
+
+        /* Comment Section */
+        .comment-section {
+            padding: 12px 16px;
+            border-top: 1px solid #efefef;
+        }
+
+        .comment-label {
+            font-size: 12px;
+            color: #8e8e8e;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .comment-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .comment-input:focus {
+            outline: none;
+            border-color: #0095f6;
+        }
+
+        .comment-input::placeholder {
+            color: #8e8e8e;
+        }
+
+        .comment-submit {
+            margin-top: 8px;
+            padding: 8px 16px;
+            background: #0095f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .comment-submit:hover {
+            background: #0081d5;
+        }
+
+        .comment-feedback {
+            margin-top: 6px;
+            font-size: 11px;
+            color: #00c853;
+            font-style: italic;
+        }
+
+        /* Double Click Like Animation */
+        .like-burst {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            color: #ed4956;
+            pointer-events: none;
+            animation: likeBurst 0.8s ease-out forwards;
+            z-index: 25;
+        }
+
+        @keyframes likeBurst {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0);
+            }
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1.5);
+            }
+        }
+
+        /* Context Menu */
+        .context-menu {
+            position: fixed;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            padding: 8px 0;
+            min-width: 180px;
+            z-index: 1001;
+            display: none;
+        }
+
+        .context-menu.visible {
+            display: block;
+        }
+
+        .context-menu-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #262626;
+            transition: background 0.2s ease;
+        }
+
+        .context-menu-item:hover {
+            background: #f0f0f0;
+        }
+
+        .context-menu-item.danger {
+            color: #ed4956;
+        }
+
+        /* Interaction Hint */
+        .interaction-hint {
+            position: fixed;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            color: #ff6b6b;
-            font-size: 14px;
-            font-weight: bold;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 12px;
+            z-index: 100;
+        }
+
+        /* Reflection Moment */
+        .reflection-moment {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            z-index: 1000;
+            animation: fadeIn 0.5s ease;
         }
 
-        .notification.bouncing {
-            animation: bounce 0.5s ease-in-out;
+        .reflection-moment.active {
+            display: flex;
         }
 
-        @keyframes slideIn {
-            from {
-                transform: translateY(-50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+        .reflection-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            line-height: 1.6;
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+        .reflection-question {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.9);
+            text-align: center;
+            margin-bottom: 30px;
+            line-height: 1.6;
         }
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-2px); }
-            75% { transform: translateX(2px); }
+        .reflection-btn {
+            padding: 15px 30px;
+            border-radius: 25px;
+            border: 2px solid white;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        @keyframes flicker {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
+        .reflection-btn:hover {
+            background: white;
+            color: #667eea;
         }
 
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+        /* Mirror Moment */
+        .mirror-moment {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            z-index: 1000;
         }
 
-        @keyframes urgentPulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 25px rgba(255, 68, 68, 0.6); }
-            50% { transform: scale(1.02); box-shadow: 0 0 35px rgba(255, 68, 68, 0.9); }
+        .mirror-moment.active {
+            display: flex;
         }
 
-        @keyframes celebration {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+        .mirror-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
         }
 
-        @keyframes mysteryPulse {
-            0%, 100% { opacity: 0.8; }
-            50% { opacity: 1; }
+        .mirror-post {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 20px;
         }
 
-        @keyframes jackpotCelebration {
-            0% { transform: scale(1) rotate(0deg); }
-            25% { transform: scale(1.2) rotate(5deg); }
-            50% { transform: scale(1.1) rotate(-5deg); }
-            75% { transform: scale(1.15) rotate(3deg); }
-            100% { transform: scale(1) rotate(0deg); }
+        .mirror-post-text {
+            font-size: 14px;
+            color: #262626;
+            line-height: 1.6;
+            margin-bottom: 15px;
         }
 
-        @keyframes glowPulse {
-            0%, 100% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(255, 255, 255, 0.8); }
+        .mirror-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
         }
+
+        .mirror-option {
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: 2px solid white;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .mirror-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .final-message {
+            display: none;
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            line-height: 1.8;
+            padding: 20px;
+        }
+
+        .final-message.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Layer States */
+        .post.layer-1 .post-image { filter: brightness(1.2) contrast(1.1) saturate(1.3); }
+        .post.layer-2 .post-image { filter: brightness(1) contrast(1) saturate(1); }
+        .post.layer-3 .post-image { filter: brightness(0.9) contrast(0.95) saturate(0.8); }
+        .post.layer-4 .post-image { filter: brightness(0.8) contrast(0.9) saturate(0.6); }
+        .post.layer-5 .post-image { filter: grayscale(0.3) brightness(0.7); }
     </style>
 </head>
 <body>
     <div class="phone">
         <div class="screen">
-            <br><br>
-            
-            <div class="app-header">
-                <div class="app-title">Instagram</div>
-                <div class="notification-counter" id="counter">0</div>
-            </div>
-            
-            <div class="content-area" id="contentArea">
-                <div style="text-align: center; color: white; margin-top: 100px;">
-                    <button class="start-button" onclick="startHell()">Start</button>
+            <!-- Choice Screen -->
+            <div class="choice-screen" id="choiceScreen">
+                <div class="choice-title">How do you want to experience Instagram?</div>
+                <div class="choice-subtitle">
+                    Choose your path. But remember:<br>
+                    Once you see behind the filter, you can't unsee it.
                 </div>
-            </div>
-            
-            <div class="flood-overlay" id="floodOverlay">
-                <div class="flood-text">
-                    YOU DON'T EXIST<br>
-                    WHEN NOBODY'S<br>
-                    WATCHING
+                <div class="choice-buttons">
+                    <button class="choice-btn perfect" onclick="startExperience('perfect')">
+                        ✨ The Perfect Feed
+                        <div style="font-size: 12px; margin-top: 5px; opacity: 0.8;">See Instagram as it's meant to be seen</div>
+                    </button>
+                    <button class="choice-btn real" onclick="startExperience('real')">
+                        🔍 Behind the Filter
+                        <div style="font-size: 12px; margin-top: 5px;">Discover what's really happening</div>
+                    </button>
                 </div>
             </div>
 
-            <button class="escape-button" id="escapeButton" onclick="tryEscape()">Turn Off Notifications (Disabled)</button>
-            <div class="tap-counter" id="tapCounter">Taps: 0</div>
+            <!-- Instagram Interface -->
+            <div class="insta-header">
+                <div class="insta-logo">Instagram</div>
+                <div class="truth-meter" id="truthMeter">Reality: 0%</div>
+            </div>
+
+            <div class="feed" id="feed">
+                <!-- Posts will be inserted here -->
+            </div>
+
+            <!-- Interaction Hint -->
+            <div class="interaction-hint" id="interactionHint"></div>
+
+            <!-- Reflection Moment -->
+            <div class="reflection-moment" id="reflectionMoment">
+                <div class="reflection-text" id="reflectionText"></div>
+                <div class="reflection-question" id="reflectionQuestion"></div>
+                <button class="reflection-btn" onclick="continueFromReflection()">Continue</button>
+            </div>
+
+            <!-- Mirror Moment -->
+            <div class="mirror-moment" id="mirrorMoment">
+                <div class="mirror-title">Now it's YOUR turn...</div>
+                <div class="mirror-post">
+                    <div class="mirror-post-text" id="mirrorPostText"></div>
+                </div>
+                <div class="mirror-options">
+                    <div class="mirror-option" onclick="makeMirrorChoice('perfect')">Post the perfect version</div>
+                    <div class="mirror-option" onclick="makeMirrorChoice('real')">Share the real story</div>
+                    <div class="mirror-option" onclick="makeMirrorChoice('nothing')">Don't post anything</div>
+                </div>
+                <div class="final-message" id="finalMessage"></div>
+            </div>
         </div>
     </div>
 
     <script>
-        var notificationCount = 0;
-        var stage = 0;
-        var isHellMode = false;
-        var tapCount = 0;
-        var notificationSpeed = 800;
-        var escapeAttempts = 0;
-        var urgentTimers = [];
-        var rewardStreak = 0;
-        var totalRewards = 0;
-        
-        var positiveNotifications = [
-            { icon: "❤️", text: "Sarah liked your photo!", time: "now" },
-            { icon: "💬", text: "New comment: 'Looking great!'", time: "1m ago" },
-            { icon: "🔥", text: "You're trending! 47 new likes", time: "2m ago" },
-            { icon: "👥", text: "3 new followers!", time: "3m ago" },
-            { icon: "⭐", text: "Your post got featured!", time: "5m ago" }
-        ];
-        
-        var questioningNotifications = [
-            { icon: "❓", text: "Where are you? You haven't posted in 5 minutes...", time: "now" },
-            { icon: "👁️", text: "We miss you. Come back.", time: "1m ago" },
-            { icon: "⏰", text: "Your followers are waiting...", time: "2m ago" },
-            { icon: "🔍", text: "Are you still real?", time: "3m ago" },
-            { icon: "📱", text: "Check your phone. Now.", time: "4m ago" }
+        let mode = 'perfect';
+        let truthLevel = 0;
+        let postsRevealed = 0;
+        let currentHint = 0;
+
+        const hints = [
+            'Hover over posts to see imperfections...',
+            'Hold down on a post to peel back layers...',
+            'The longer you look, the more you see...',
+            'Scroll slowly to notice the cracks...'
         ];
 
-        var fomoNotifications = [
-            { icon: "👥", text: "Sarah just got 50 likes while you were idle", time: "2s ago" },
-            { icon: "🔥", text: "Your friends are all online now - 23 active", time: "now" },
-            { icon: "⏰", text: "Limited time: Double likes for next 5 minutes!", time: "EXPIRES SOON" },
-            { icon: "💎", text: "Premium features unlocked for YOU only", time: "SPECIAL OFFER" },
-            { icon: "👻", text: "You're missing out! 12 new conversations", time: "JOIN NOW" },
-            { icon: "📱", text: "Mike is wondering why you're not responding", time: "URGENT" }
+        const posts = [
+            {
+                username: 'sarah_travels',
+                avatar: 'ST',
+                image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop',
+                caption: 'Living my best life in paradise! 🌴☀️ #blessed #wanderlust',
+                likes: '1,247',
+                time: '2 hours ago',
+                layers: [
+                    '',
+                    'Photo taken after 47 attempts to get the right angle',
+                    'Actually on a budget trip, sleeping in hostels',
+                    'Posted this while feeling lonely and homesick',
+                    'Real caption: "Spent all my savings on this trip. Worth it?"'
+                ]
+            },
+            {
+                username: 'fitness_mike',
+                avatar: 'FM',
+                image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&h=400&fit=crop',
+                caption: 'Another day, another gain 💪 Hard work pays off! #fitness #motivation',
+                likes: '3,891',
+                time: '5 hours ago',
+                layers: [
+                    '',
+                    'Flexing + perfect lighting + post-workout pump',
+                    'Been going to gym for 2 weeks, used old progress photos',
+                    'Actually struggling with body image issues',
+                    'Real caption: "Why do I still feel like it\'s never enough?"'
+                ]
+            },
+            {
+                username: 'couple_goals',
+                avatar: 'CG',
+                image: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400&h=400&fit=crop',
+                caption: 'Perfect date night with my forever person ❤️✨ #couplegoals #love',
+                likes: '2,456',
+                time: '8 hours ago',
+                layers: [
+                    '',
+                    'Took 20 minutes to stage this "candid" moment',
+                    'They had a big argument right before this photo',
+                    'Posting to make ex jealous, relationship is struggling',
+                    'Real caption: "We barely talk anymore but at least we look good"'
+                ]
+            },
+            {
+                username: 'foodie_emma',
+                avatar: 'FE',
+                image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=400&fit=crop',
+                caption: 'Treating myself! Life is too short not to enjoy it 🧁💕 #foodie #selflove',
+                likes: '987',
+                time: '12 hours ago',
+                layers: [
+                    '',
+                    'Restaurant lighting + 15 filter adjustments',
+                    'Can\'t actually afford this, maxed out credit card',
+                    'Struggling with disordered eating, this is compensating',
+                    'Real caption: "I don\'t even know who I am anymore"'
+                ]
+            },
+            {
+                username: 'success_jay',
+                avatar: 'SJ',
+                image: 'https://images.unsplash.com/photo-1551135049-8a33b5883817?w=400&h=400&fit=crop',
+                caption: 'Closed another deal today! 📈💼 Dreams do come true #entrepreneur #success',
+                likes: '5,234',
+                time: '1 day ago',
+                layers: [
+                    '',
+                    'Rented office space for photos, doesn\'t actually work here',
+                    'The "deal" was a $100 freelance gig',
+                    'Drowning in debt, projecting success to cope',
+                    'Real caption: "I\'m scared I\'m failing but can\'t let anyone know"'
+                ]
+            }
         ];
 
-        var rewardNotifications = [
-            { icon: "🎉", text: "JACKPOT! You earned 100 points!", time: "WINNER" },
-            { icon: "⭐", text: "Perfect timing! +50 bonus points", time: "AMAZING" },
-            { icon: "🏆", text: "Streak bonus! You're on fire!", time: "KEEP GOING" },
-            { icon: "💫", text: "Lucky tap! Mystery reward unlocked!", time: "RARE" }
-        ];
-
-        var punishmentNotifications = [
-            { icon: "😞", text: "Your response was too slow. Friends noticed.", time: "MISSED" },
-            { icon: "📉", text: "Your social score dropped by 15 points", time: "OUCH" },
-            { icon: "💔", text: "Someone unfollowed you while you hesitated", time: "CONSEQUENCE" },
-            { icon: "⚠️", text: "Opportunity expired. Better luck next time.", time: "FAILED" }
-        ];
-
-        var mysteryNotifications = [
-            { icon: "❓", text: "Mystery box - tap to reveal your fate", time: "???" },
-            { icon: "🎲", text: "Fortune or failure? Click to discover", time: "GAMBLE" },
-            { icon: "🔮", text: "Something special awaits... or does it?", time: "MYSTERY" },
-            { icon: "🎪", text: "Surprise inside! Could be anything...", time: "UNKNOWN" }
-        ];
-
-        var urgentNotifications = [
-            { icon: "🚨", text: "URGENT: Tap before timer runs out!", time: "EXPIRING", urgent: true },
-            { icon: "⏰", text: "15 seconds left to claim your reward!", time: "HURRY", urgent: true },
-            { icon: "🔥", text: "Limited time offer ending NOW!", time: "LAST CHANCE", urgent: true },
-            { icon: "💥", text: "Quick! Your streak will break!", time: "SAVE IT", urgent: true }
-        ];
-
-        var guiltNotifications = [
-            { icon: "😢", text: "Emma: 'Are you ignoring me?'", time: "3m ago" },
-            { icon: "💔", text: "Your absence is hurting your relationships", time: "WARNING" },
-            { icon: "👥", text: "5 friends feel neglected by your silence", time: "GUILT TRIP" },
-            { icon: "😕", text: "Mom: 'You never respond anymore...'", time: "FAMILY" }
-        ];
-        
-        var hellNotifications = [
-            { icon: "🔥", text: "YOU CAN'T LEAVE", time: "ERROR" },
-            { icon: "👹", text: "WE OWN YOU NOW", time: "∞" },
-            { icon: "💀", text: "ENDLESS SCROLLING", time: "FOREVER" },
-            { icon: "⚠️", text: "NOTIFICATION OVERLOAD", time: "HELP" },
-            { icon: "🌀", text: "TRAPPED IN THE FEED", time: "NO ESCAPE" },
-            { icon: "👁️", text: "WE'RE ALWAYS WATCHING", time: "ALWAYS" },
-            { icon: "🔒", text: "YOU'RE ADDICTED", time: "ADMIT IT" }
-        ];
-
-        function createCountdownTimer(seconds) {
-            var timer = document.createElement('div');
-            timer.className = 'countdown-timer';
-            timer.textContent = seconds;
+        function startExperience(selectedMode) {
+            mode = selectedMode;
+            document.getElementById('choiceScreen').classList.add('hidden');
             
-            var countdown = setInterval(function() {
-                seconds--;
-                timer.textContent = seconds;
-                if (seconds <= 0) {
-                    clearInterval(countdown);
-                    timer.textContent = 'EXPIRED';
-                    timer.style.background = '#666';
+            if (mode === 'real') {
+                document.getElementById('interactionHint').style.display = 'block';
+                startHintRotation();
+            } else {
+                document.getElementById('interactionHint').style.display = 'none';
+                document.getElementById('truthMeter').style.display = 'none';
+            }
+            
+            loadFeed();
+        }
+
+        function startHintRotation() {
+            // Static hint - no rotation
+            document.getElementById('interactionHint').textContent = 'Click to reveal layers • Double-click to like • Right-click for menu';
+        }
+
+        function loadFeed() {
+            const feed = document.getElementById('feed');
+            feed.innerHTML = '';
+            
+            posts.forEach((post, index) => {
+                const postEl = createPost(post, index);
+                feed.appendChild(postEl);
+            });
+        }
+
+        function createPost(post, index) {
+            const postEl = document.createElement('div');
+            postEl.className = 'post';
+            postEl.dataset.index = index;
+            postEl.dataset.layer = '1';
+            
+            // Build HTML conditionally based on mode
+            let imageContainerHTML = '';
+            
+            if (mode === 'real') {
+                // Interactive mode - include all layer reveal elements
+                imageContainerHTML = `
+                    <div class="post-image-container">
+                        <img src="${post.image}" alt="Post" class="post-image">
+                        <div class="glitch-overlay"></div>
+                        <div class="layer-progress" data-progress>Layer 1/5</div>
+                        <div class="click-hint">Tap to reveal</div>
+                        <div class="post-layer" data-layer="2">${post.layers[1]}</div>
+                        <div class="post-layer" data-layer="3">${post.layers[2]}</div>
+                        <div class="post-layer" data-layer="4">${post.layers[3]}</div>
+                        <div class="post-layer" data-layer="5">${post.layers[4]}</div>
+                    </div>
+                `;
+            } else {
+                // Perfect mode - clean static image with no interactive elements
+                imageContainerHTML = `
+                    <div class="post-image-container" style="cursor: default;">
+                        <img src="${post.image}" alt="Post" class="post-image">
+                    </div>
+                `;
+            }
+            
+            postEl.innerHTML = `
+                <div class="post-header">
+                    <div class="post-avatar">${post.avatar}</div>
+                    <div class="post-username">${post.username}</div>
+                </div>
+                ${imageContainerHTML}
+                <div class="post-likes">${post.likes} likes</div>
+                <div class="post-caption">
+                    <span class="post-caption-text">
+                        <span class="post-caption-username">${post.username}</span>
+                        ${post.caption}
+                    </span>
+                </div>
+                <div class="post-actions">
+                    <button class="action-btn like-btn" data-like onclick="toggleLike(this, ${index})">🤍</button>
+                    <div class="like-status" data-like-status></div>
+                </div>
+                <div class="comment-section">
+                    <div class="comment-label">Your thoughts?</div>
+                    <textarea class="comment-input" placeholder="Share your reaction..." rows="2" data-comment></textarea>
+                    <button class="comment-submit" onclick="submitComment(this, ${index})">Post</button>
+                    <div class="comment-feedback" data-comment-feedback></div>
+                </div>
+            `;
+            
+            if (mode === 'real') {
+                setupInteractions(postEl, post, index);
+            }
+            
+            return postEl;
+        }
+
+        function setupInteractions(postEl, post, index) {
+            const container = postEl.querySelector('.post-image-container');
+            
+            // Click interaction - advance to next layer
+            container.addEventListener('click', (e) => {
+                if (mode === 'real') {
+                    let currentLayer = parseInt(postEl.dataset.layer);
+                    if (currentLayer < 5) {
+                        revealLayer(postEl, currentLayer + 1);
+                    } else {
+                        onFullReveal(index);
+                    }
                 }
-            }, 1000);
-            
-            return { timer: timer, countdown: countdown };
+            });
         }
 
-        function createNotification(notif, className) {
-            className = className || '';
-            var notification = document.createElement('div');
-            notification.className = 'notification ' + className;
+        function revealLayer(postEl, layer) {
+            postEl.dataset.layer = layer;
+            postEl.className = `post layer-${layer}`;
             
-            if (Math.random() < 0.3) {
-                notification.classList.add('pulsing-glow');
+            // Update progress indicator
+            const progressEl = postEl.querySelector('[data-progress]');
+            if (progressEl) {
+                progressEl.textContent = `Layer ${layer}/5`;
+                progressEl.classList.add('visible');
             }
             
-            notification.innerHTML = 
-                '<div class="notification-icon">' + notif.icon + '</div>' +
-                '<div class="notification-text">' +
-                    notif.text +
-                    '<div class="notification-time">' + notif.time + '</div>' +
-                '</div>';
+            // Hide all layers
+            postEl.querySelectorAll('.post-layer').forEach(l => {
+                l.style.opacity = '0';
+            });
             
-            if (notif.urgent) {
-                var timerData = createCountdownTimer(Math.floor(Math.random() * 15) + 5);
-                notification.appendChild(timerData.timer);
-                urgentTimers.push(timerData.countdown);
+            // Show current layer
+            const layerEl = postEl.querySelector(`.post-layer[data-layer="${layer}"]`);
+            if (layerEl) {
+                layerEl.style.opacity = '1';
+                setTimeout(() => {
+                    layerEl.style.opacity = '0';
+                }, 4000);
             }
             
-            notification.onclick = function() {
-                handleNotificationClick(notification, notif, className);
-            };
-            
-            return notification;
+            // Update truth meter
+            truthLevel = Math.max(truthLevel, (layer / 5) * 100);
+            document.getElementById('truthMeter').textContent = `Reality: ${Math.round(truthLevel)}%`;
         }
 
-        function handleNotificationClick(notification, notif, className) {
-            tapCount++;
-            document.getElementById('tapCounter').textContent = 'Taps: ' + tapCount;
+        function onFullReveal(postIndex) {
+            postsRevealed++;
             
-            if (tapCount % 5 === 0 && notificationSpeed > 100) {
-                notificationSpeed -= 50;
+            if (postsRevealed === 2) {
+                setTimeout(() => showReflection(1), 1000);
+            } else if (postsRevealed === 4) {
+                setTimeout(() => showReflection(2), 1000);
+            } else if (postsRevealed === posts.length) {
+                setTimeout(() => showMirror(), 1000);
+            }
+        }
+
+        function showReflection(stage) {
+            const reflectionEl = document.getElementById('reflectionMoment');
+            const textEl = document.getElementById('reflectionText');
+            const questionEl = document.getElementById('reflectionQuestion');
+            
+            if (stage === 1) {
+                textEl.textContent = 'You\'re starting to see behind the filters...';
+                questionEl.textContent = 'How does it feel knowing the truth? Does it change how you see these posts?';
+            } else {
+                textEl.textContent = 'The more you know, the harder it is to enjoy the surface...';
+                questionEl.textContent = 'Do you wish you could go back to just seeing the perfect versions?';
             }
             
-            if (!isHellMode) {
-                if (className === 'mystery') {
-                    handleMysteryClick(notification);
-                } else if (className === 'urgent') {
-                    handleUrgentClick(notification);
-                } else if (notif.text.indexOf('Mystery') !== -1 || notif.text.indexOf('Fortune') !== -1 || notif.text.indexOf('Surprise') !== -1) {
-                    handleMysteryClick(notification);
+            reflectionEl.classList.add('active');
+            document.getElementById('interactionHint').style.display = 'none';
+        }
+
+        function continueFromReflection() {
+            document.getElementById('reflectionMoment').classList.remove('active');
+            document.getElementById('interactionHint').style.display = 'block';
+        }
+
+        function showMirror() {
+            const mirrorEl = document.getElementById('mirrorMoment');
+            const postTextEl = document.getElementById('mirrorPostText');
+            
+            postTextEl.textContent = 'You just had a moment worth sharing. A photo that could get likes. But you know the full story behind it...';
+            
+            mirrorEl.classList.add('active');
+            document.getElementById('interactionHint').style.display = 'none';
+        }
+
+        function makeMirrorChoice(choice) {
+            const finalEl = document.getElementById('finalMessage');
+            const optionsEl = document.querySelector('.mirror-options');
+            const titleEl = document.querySelector('.mirror-title');
+            const postEl = document.querySelector('.mirror-post');
+            
+            optionsEl.style.display = 'none';
+            postEl.style.display = 'none';
+            titleEl.style.display = 'none';
+            
+            let message = '';
+            
+            if (choice === 'perfect') {
+                message = 'You chose to share the perfect version.<br><br>After seeing everyone else\'s truth, you still chose the filter.<br><br>We all do. Because we know what the game is.<br><br>The question is: are you okay with that?';
+            } else if (choice === 'real') {
+                message = 'You chose to share the real story.<br><br>Brave. But will anyone believe you?<br><br>In a world of filters, authenticity looks like a cry for attention.<br><br>That\'s the trap.';
+            } else {
+                message = 'You chose not to post.<br><br>Maybe that\'s the wisest choice.<br><br>If nobody sees it, did it even happen?<br><br>But then... what\'s the point?';
+            }
+            
+            finalEl.innerHTML = message + '<br><br><span style="opacity: 0.7; font-size: 14px;">Refresh to experience again</span>';
+            finalEl.classList.add('active');
+        }
+
+        // Interactive Functions
+        function toggleLike(btn, postIndex) {
+            const postEl = btn.closest('.post');
+            const layer = parseInt(postEl.dataset.layer);
+            const statusEl = postEl.querySelector('[data-like-status]');
+            
+            if (btn.textContent === '🤍') {
+                btn.textContent = '❤️';
+                btn.classList.add('liked');
+                
+                if (layer === 1) {
+                    statusEl.textContent = 'Liked at surface level';
+                } else if (layer <= 3) {
+                    statusEl.textContent = 'Liked knowing some truth';
                 } else {
-                    notification.style.opacity = '0.5';
-                    setTimeout(function() { 
-                        if (notification.parentNode) notification.remove(); 
-                    }, 300);
+                    statusEl.textContent = 'Liked knowing the full reality';
+                }
+            } else {
+                btn.textContent = '🤍';
+                btn.classList.remove('liked');
+                statusEl.textContent = '';
+            }
+        }
+
+        // Comment Submit Function
+        function submitComment(btn, postIndex) {
+            const postEl = btn.closest('.post');
+            const commentInput = postEl.querySelector('[data-comment]');
+            const feedback = postEl.querySelector('[data-comment-feedback]');
+            const layer = parseInt(postEl.dataset.layer);
+            const comment = commentInput.value.trim();
+            
+            if (comment) {
+                feedback.textContent = `✓ Commented at Layer ${layer}: "${comment.substring(0, 30)}${comment.length > 30 ? '...' : ''}"`;
+                commentInput.value = '';
+                console.log(`Post ${postIndex}: Commented "${comment}" at layer ${layer}`);
+                
+                setTimeout(() => {
+                    feedback.textContent = '';
+                }, 5000);
+            } else {
+                feedback.textContent = 'Please write something first!';
+                feedback.style.color = '#ed4956';
+                setTimeout(() => {
+                    feedback.textContent = '';
+                    feedback.style.color = '#00c853';
+                }, 2000);
+            }
+        }
+
+        // Scroll to Zoom Function
+        function setupScrollZoom(container) {
+            const image = container.querySelector('.post-image');
+            let scale = 1;
+            
+            container.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                scale = Math.min(Math.max(scale + delta, 1), 2);
+                
+                image.style.transform = `scale(${scale})`;
+                image.style.transformOrigin = 'center';
+                
+                console.log(`Zoom level: ${scale.toFixed(2)}x`);
+            }, { passive: false });
+        }
+
+        // Right-Click Context Menu
+        let contextMenu = null;
+        
+        function setupContextMenu(container, postEl, postIndex) {
+            container.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                
+                // Remove existing menu
+                if (contextMenu) {
+                    contextMenu.remove();
                 }
                 
-                if (Math.random() < 0.15 && stage >= 2) {
-                    setTimeout(function() {
-                        addNotification({ icon: "💥", text: "That created 2 more notifications!", time: "MULTIPLIED" }, 'dark');
-                        addNotification(fomoNotifications[Math.floor(Math.random() * fomoNotifications.length)], 'dark');
-                    }, 500);
-                }
-            } else {
-                notification.classList.add('bouncing');
-                setTimeout(function() { notification.classList.remove('bouncing'); }, 500);
+                // Create context menu
+                contextMenu = document.createElement('div');
+                contextMenu.className = 'context-menu visible';
+                contextMenu.style.left = `${e.clientX}px`;
+                contextMenu.style.top = `${e.clientY}px`;
                 
-                setTimeout(function() {
-                    var punishNotif = { icon: "😈", text: "Nice try! Here's another one.", time: "GOTCHA" };
-                    addNotification(punishNotif, 'hell');
-                }, 300);
-            }
-        }
-
-        function handleMysteryClick(notification) {
-            var isJackpot = Math.random() < 0.3;
-            
-            if (isJackpot) {
-                rewardStreak++;
-                totalRewards++;
-                notification.className = notification.className.replace('mystery', 'jackpot');
-                setTimeout(function() {
-                    var reward = rewardNotifications[Math.floor(Math.random() * rewardNotifications.length)];
-                    addNotification(reward, 'reward');
-                }, 200);
-            } else {
-                rewardStreak = 0;
-                notification.style.opacity = '0.3';
-                setTimeout(function() {
-                    var punishment = punishmentNotifications[Math.floor(Math.random() * punishmentNotifications.length)];
-                    addNotification(punishment, 'dark');
-                    if (notification.parentNode) notification.remove();
-                }, 300);
-            }
-        }
-
-        function handleUrgentClick(notification) {
-            var timer = notification.querySelector('.countdown-timer');
-            if (timer && timer.textContent !== 'EXPIRED') {
-                notification.className = notification.className.replace('urgent', 'reward');
-                setTimeout(function() {
-                    addNotification({ icon: "⚡", text: "Perfect timing! Bonus achieved!", time: "SUCCESS" }, 'reward');
-                }, 200);
-            } else {
-                setTimeout(function() {
-                    addNotification({ icon: "⏰", text: "Too slow! You missed the deadline.", time: "FAILED" }, 'dark');
-                }, 200);
-            }
-            setTimeout(function() { 
-                if (notification.parentNode) notification.remove(); 
-            }, 800);
-        }
-
-        function addNotification(notif, className) {
-            var contentArea = document.getElementById('contentArea');
-            var notification = createNotification(notif, className);
-            
-            contentArea.insertBefore(notification, contentArea.firstChild);
-            
-            notificationCount++;
-            document.getElementById('counter').textContent = notificationCount;
-            
-            var notifications = contentArea.querySelectorAll('.notification');
-            if (notifications.length > 12) {
-                notifications[notifications.length - 1].remove();
-            }
-        }
-
-        function addRandomAddictiveNotification() {
-            var rand = Math.random();
-            var notif, className;
-            
-            if (rand < 0.2) {
-                notif = urgentNotifications[Math.floor(Math.random() * urgentNotifications.length)];
-                className = 'urgent';
-            } else if (rand < 0.35) {
-                notif = mysteryNotifications[Math.floor(Math.random() * mysteryNotifications.length)];
-                className = 'mystery';
-            } else if (rand < 0.5) {
-                notif = fomoNotifications[Math.floor(Math.random() * fomoNotifications.length)];
-                className = 'dark';
-            } else if (rand < 0.65) {
-                notif = guiltNotifications[Math.floor(Math.random() * guiltNotifications.length)];
-                className = 'dark';
-            } else {
-                notif = questioningNotifications[Math.floor(Math.random() * questioningNotifications.length)];
-                className = 'dark';
-            }
-            
-            addNotification(notif, className);
-        }
-
-        function startHell() {
-            document.getElementById('contentArea').innerHTML = '';
-            notificationCount = 0;
-            tapCount = 0;
-            stage = 1;
-            
-            document.getElementById('escapeButton').style.display = 'block';
-            document.getElementById('tapCounter').style.display = 'block';
-            
-            var interval = setInterval(function() {
-                if (stage === 1) {
-                    var notif = positiveNotifications[Math.floor(Math.random() * positiveNotifications.length)];
-                    addNotification(notif);
-                    
-                    if (notificationCount >= 15) {
-                        stage = 2;
-                        clearInterval(interval);
-                        setTimeout(startStage2, 2000);
-                    }
-                }
-            }, notificationSpeed);
-        }
-
-        function startStage2() {
-            // Enable the escape button when red notifications start
-            var escapeButton = document.getElementById('escapeButton');
-            escapeButton.classList.add('enabled');
-            escapeButton.textContent = 'Turn Off Notifications';
-            
-            var interval = setInterval(function() {
-                if (stage === 2) {
-                    addRandomAddictiveNotification();
-                    
-                    if (notificationCount >= 50) {
-                        stage = 3;
-                        clearInterval(interval);
-                        setTimeout(startStage3, 2000);
-                    }
-                }
-            }, Math.max(notificationSpeed, 400));
-        }
-
-        function startStage3() {
-            var interval = setInterval(function() {
-                if (stage === 3) {
-                    addRandomAddictiveNotification();
-                    
-                    if (Math.random() < 0.3) {
-                        setTimeout(function() { addRandomAddictiveNotification(); }, 200);
-                    }
-                    
-                    if (notificationCount >= 100) {
-                        stage = 4;
-                        clearInterval(interval);
-                        setTimeout(startHell4, 2000);
-                    }
-                }
-            }, Math.max(notificationSpeed, 200));
-        }
-
-        function startHell4() {
-            isHellMode = true;
-            var interval = setInterval(function() {
-                var notif = hellNotifications[Math.floor(Math.random() * hellNotifications.length)];
-                addNotification(notif, 'hell');
+                contextMenu.innerHTML = `
+                    <div class="context-menu-item" data-action="full-reality">🔍 See Full Reality</div>
+                    <div class="context-menu-item" data-action="reset">↺ Reset to Perfect</div>
+                    <div class="context-menu-item" data-action="real-caption">💬 View Real Caption</div>
+                    <div class="context-menu-item danger" data-action="skip">⏭ Skip This Post</div>
+                `;
                 
-                if (notificationCount >= 150) {
-                    clearInterval(interval);
-                    setTimeout(function() {
-                        document.getElementById('floodOverlay').style.display = 'flex';
-                    }, 3000);
+                document.body.appendChild(contextMenu);
+                
+                // Handle menu clicks
+                contextMenu.querySelectorAll('.context-menu-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const action = item.dataset.action;
+                        handleContextAction(action, postEl, postIndex);
+                        contextMenu.remove();
+                        contextMenu = null;
+                    });
+                });
+                
+                // Close on outside click
+                setTimeout(() => {
+                    document.addEventListener('click', closeContextMenu);
+                }, 0);
+            });
+        }
+        
+        function closeContextMenu() {
+            if (contextMenu) {
+                contextMenu.remove();
+                contextMenu = null;
+            }
+            document.removeEventListener('click', closeContextMenu);
+        }
+        
+        function handleContextAction(action, postEl, postIndex) {
+            const currentLayer = parseInt(postEl.dataset.layer);
+            
+            switch (action) {
+                case 'full-reality':
+                    revealLayer(postEl, 5);
+                    console.log('Jumped to full reality!');
+                    break;
+                case 'reset':
+                    revealLayer(postEl, 1);
+                    console.log('Reset to perfect view');
+                    break;
+                case 'real-caption':
+                    alert(posts[postIndex].layers[4]);
+                    break;
+                case 'skip':
+                    postEl.style.display = 'none';
+                    console.log('Post skipped');
+                    break;
+            }
+        }
+
+        // Update setupInteractions to include all new features
+        function setupInteractions(postEl, post, index) {
+            const container = postEl.querySelector('.post-image-container');
+            let clickTimer = null;
+            
+            // Single click - advance layer (with delay to detect double-click)
+            container.addEventListener('click', (e) => {
+                if (clickTimer === null) {
+                    clickTimer = setTimeout(() => {
+                        if (mode === 'real') {
+                            let currentLayer = parseInt(postEl.dataset.layer);
+                            if (currentLayer < 5) {
+                                revealLayer(postEl, currentLayer + 1);
+                            } else {
+                                onFullReveal(index);
+                            }
+                        }
+                        clickTimer = null;
+                    }, 250);
                 }
-            }, Math.max(notificationSpeed, 100));
+            });
             
-            setTimeout(function() {
-                setInterval(function() {
-                    if (isHellMode) {
-                        var notif = hellNotifications[Math.floor(Math.random() * hellNotifications.length)];
-                        addNotification(notif, 'hell');
-                    }
-                }, Math.max(notificationSpeed / 2, 50));
-            }, 5000);
+            // Double-click to like
+            container.addEventListener('dblclick', (e) => {
+                if (clickTimer) {
+                    clearTimeout(clickTimer);
+                    clickTimer = null;
+                }
+                
+                // Show heart burst
+                const burst = document.createElement('div');
+                burst.className = 'like-burst';
+                burst.textContent = '❤️';
+                container.appendChild(burst);
+                
+                // Auto-like
+                const likeBtn = postEl.querySelector('[data-like]');
+                if (likeBtn.textContent === '🤍') {
+                    toggleLike(likeBtn, index);
+                }
+                
+                setTimeout(() => burst.remove(), 800);
+            });
+            
+            // Scroll to zoom
+            setupScrollZoom(container);
+            
+            // Right-click context menu
+            setupContextMenu(container, postEl, index);
         }
 
-        function tryEscape() {
-            var button = document.getElementById('escapeButton');
-            
-            // Only work if button is enabled
-            if (!button.classList.contains('enabled')) {
-                return;
-            }
-            
-            escapeAttempts++;
-            
-            if (escapeAttempts === 1) {
-                button.textContent = "Turn Off (Not Working?)";
-                setTimeout(function() {
-                    addNotification({ icon: "😏", text: "Did you really think that would work?", time: "NAIVE" }, 'hell');
-                    addNotification({ icon: "🔄", text: "Notifications are now FASTER", time: "ENJOY" }, 'hell');
-                }, 500);
-                notificationSpeed = Math.max(notificationSpeed / 2, 100);
-            } else if (escapeAttempts === 2) {
-                button.textContent = "DELETE APP";
-                setTimeout(function() {
-                    addNotification({ icon: "💥", text: "DELETING MAKES IT WORSE", time: "SURPRISE" }, 'hell');
-                    for (var i = 0; i < 5; i++) {
-                        setTimeout(function() {
-                            var notif = { icon: "👻", text: "WE'RE BACK!", time: "FOREVER" };
-                            addNotification(notif, 'hell');
-                        }, i * 200);
-                    }
-                }, 300);
-            } else {
-                button.textContent = "THERE IS NO ESCAPE";
-                button.style.background = "rgba(139, 0, 0, 0.8)";
-                setTimeout(function() {
-                    addNotification({ icon: "🔒", text: "You tried to escape " + escapeAttempts + " times", time: "PATHETIC" }, 'hell');
-                }, 200);
-            }
-        }
-
-        setInterval(function() {
-            if (isHellMode) {
-                var darkColors = ['#0a0a0a', '#1a0a0a', '#2a0a0a', '#0a1a0a', '#0a0a1a', '#1a1a0a', '#1a0a1a', '#0a1a1a', '#2a1a1a'];
-                var randomDark = darkColors[Math.floor(Math.random() * darkColors.length)];
-                document.body.style.background = 'linear-gradient(135deg, ' + randomDark + ' 0%, #8B0000 100%)';
-                setTimeout(function() {
-                    document.body.style.background = 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)';
-                }, 100);
-            }
-        }, 2000);
     </script>
 </body>
 </html>

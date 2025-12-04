@@ -74,6 +74,28 @@ For EACH state you identify, provide:
    - Associated function/onclick handler
    - What properties can be modified
 
+   CRITICAL - JAVASCRIPT EVENT ANALYSIS:
+   - Analyze ALL addEventListener() calls in the JavaScript code
+   - Identify ALL event types: click, dblclick, contextmenu, wheel, mouseover, mousedown, keypress, etc.
+   - For each event listener, document:
+     * What element it's attached to
+     * What event triggers it
+     * What function/action it performs
+     * Whether it creates new UI elements
+   - Include events on dynamically created elements (created via createElement, innerHTML, etc.)
+   - Distinguish between different click types (single-click vs double-click vs right-click)
+
+   DYNAMIC ELEMENTS:
+   - List elements created at runtime (createElement, appendChild, innerHTML assignments)
+   - Include conditional elements (shown/hidden based on state/mode)
+   - Document context menus and their menu items
+   - List popup overlays, tooltips, animations that appear on interaction
+
+   CONDITIONAL INTERACTIONS:
+   - Identify interactions that change based on variables (e.g., mode === 'perfect' vs 'real')
+   - Document what interactions are enabled/disabled in each state
+   - Note if certain elements only respond to interactions in specific states
+
 4. **Key Variables:**
    - Variable name
    - Current/initial value in this state
@@ -96,6 +118,15 @@ For EACH state you identify, provide:
    - What classes are PRESENT on elements? (element selector + class name)
    - What text content is visible? (element selector + expected text)
    - This is critical for when variables are inaccessible due to scope
+
+COMPLETENESS CHECK - Before finalizing, verify you have identified:
+✓ All event listeners (not just onclick attributes in HTML)
+✓ All interaction types: single-click, double-click, right-click, long-press, scroll, wheel, hover
+✓ All dynamically created UI (menus, popups, overlays, animations)
+✓ All keyboard interactions
+✓ All context menus and their individual options/actions
+✓ State-dependent interactions (what works in mode A vs mode B)
+✓ Animation triggers and visual feedback elements
 
 IMPORTANT: Return your analysis as a valid JSON object with this EXACT structure:
 
