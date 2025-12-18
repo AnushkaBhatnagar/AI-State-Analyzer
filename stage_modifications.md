@@ -3,10 +3,9 @@
 ## Metadata
 - **Stage:** 1
 - **Function:** `startHell()`
-- **Timestamp:** 2025-11-29 16:07:54
+- **Timestamp:** 2025-12-04 14:36:35
 - **Status:** Applied ✅
-- **Applied at:** 2025-11-29 16:08:47
-- **Applied by:** Cline
+- **Applied At:** 2025-12-04 14:37:31
 
 ---
 
@@ -34,18 +33,21 @@ function startHell() {
                     var notif = positiveNotifications[Math.floor(Math.random() * positiveNotifications.length)];
                     addNotification(notif);
                     
-                    if (notificationCount >= 5) {
+                    if (notificationCount >= 15) {
                         stage = 2;
                         clearInterval(interval);
                         setTimeout(startStage2, 2000);
                     }
+                }
+            }, notificationSpeed);
+        }
 ```
 
 ---
 
 ## Instructions for Cline
 
-Please apply these changes to `index.html`:
+Please apply these changes to `index_with_panel.html`:
 
 1. Locate the `startHell()` function
 2. Replace it with the modified version above

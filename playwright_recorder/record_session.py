@@ -327,35 +327,34 @@ class SessionRecorder:
             return -1
         
         try:
-            # Check each state's detection condition
-            for state in STATES_SCHEMA['states']:
-                state_id = state['id']
-                condition = state['detection_condition']
-                
-                # Evaluate the detection condition
-                try:
-                    # For State 5 (Flood Overlay), check if overlay is visible
-                    if state_id == 5:
-                        notif_count = page.evaluate('typeof notificationCount !== "undefined" ? notificationCount : 0')
-                        overlay_visible = page.evaluate('document.getElementById("floodOverlay") && document.getElementById("floodOverlay").style.display === "flex"')
-                        if notif_count >= 150 and overlay_visible:
-                            return 5
-                    
-                    # For State 4 (Hell Mode), check stage and isHellMode
-                    elif state_id == 4:
-                        stage = page.evaluate('typeof stage !== "undefined" ? stage : -1')
-                        is_hell = page.evaluate('typeof isHellMode !== "undefined" ? isHellMode : false')
-                        if stage == 4 and is_hell:
-                            return 4
-                    
-                    # For States 0-3, check stage variable
-                    else:
-                        stage = page.evaluate('typeof stage !== "undefined" ? stage : -1')
-                        if stage == state_id:
-                            return state_id
-                
-                except:
-                    continue
+            # Check State 5 FIRST (Flood Overlay) - most specific condition
+            # Must check before State 4 since stage variable stays at 4 when overlay appears
+            try:
+                notif_count = page.evaluate('typeof notificationCount !== "undefined" ? notificationCount : 0')
+                overlay_visible = page.evaluate('document.getElementById("floodOverlay") && document.getElementById("floodOverlay").style.display === "flex"')
+                if notif_count >= 150 and overlay_visible:
+                    return 5
+            except:
+                pass
+            
+            # Check State 4 (Hell Mode) - check stage and isHellMode
+            try:
+                stage = page.evaluate('typeof stage !== "undefined" ? stage : -1')
+                is_hell = page.evaluate('typeof isHellMode !== "undefined" ? isHellMode : false')
+                notif_count = page.evaluate('typeof notificationCount !== "undefined" ? notificationCount : 0')
+                # Only return State 4 if we haven't reached overlay threshold yet
+                if stage == 4 and is_hell and notif_count < 150:
+                    return 4
+            except:
+                pass
+            
+            # Check States 0-3 based on stage variable
+            try:
+                stage = page.evaluate('typeof stage !== "undefined" ? stage : -1')
+                if 0 <= stage <= 3:
+                    return stage
+            except:
+                pass
             
             return -1
         except:

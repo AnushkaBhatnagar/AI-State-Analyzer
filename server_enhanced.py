@@ -84,7 +84,7 @@ def save_modification():
 
 ## Instructions for Cline
 
-Please apply these changes to `index.html`:
+Please apply these changes to `index_with_panel.html`:
 
 1. Locate the `{function_name}()` function
 2. Replace it with the modified version above
@@ -115,7 +115,7 @@ Once you've applied these changes:
         
         # Save to MD file
         md_file = BASE_DIR / 'stage_modifications.md'
-        with open(md_file, 'w') as f:
+        with open(md_file, 'w', encoding='utf-8') as f:
             f.write(md_content)
         
         # Also append to history
@@ -135,10 +135,10 @@ Once you've applied these changes:
         
         # Append to history (create if doesn't exist)
         if history_file.exists():
-            with open(history_file, 'a') as f:
+            with open(history_file, 'a', encoding='utf-8') as f:
                 f.write(history_entry)
         else:
-            with open(history_file, 'w') as f:
+            with open(history_file, 'w', encoding='utf-8') as f:
                 f.write("# Stage Modification History\n\n")
                 f.write(history_entry)
         
@@ -206,7 +206,7 @@ def load_stage(session, stage):
                 'error': f'Snapshot not found: {snapshot_file}'
             }), 404
         
-        with open(snapshot_file, 'r') as f:
+        with open(snapshot_file, 'r', encoding='utf-8') as f:
             snapshot = json.load(f)
         
         return jsonify({
@@ -220,19 +220,19 @@ def load_stage(session, stage):
             'error': str(e)
         }), 500
 
-# API: Get function code from index.html
+# API: Get function code from index_with_panel.html
 @app.route('/api/get-function/<function_name>', methods=['GET'])
 def get_function(function_name):
     try:
-        index_file = BASE_DIR / 'index.html'
+        index_file = BASE_DIR / 'index_with_panel.html'
         
         if not index_file.exists():
             return jsonify({
                 'success': False,
-                'error': 'index.html not found'
+                'error': 'index_with_panel.html not found'
             }), 404
         
-        with open(index_file, 'r') as f:
+        with open(index_file, 'r', encoding='utf-8') as f:
             content = f.read()
         
         # Special handling for floodOverlay (State 5)

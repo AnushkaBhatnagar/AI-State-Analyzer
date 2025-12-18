@@ -1,0 +1,385 @@
+{
+  "metadata": {
+    "total_states": 6,
+    "state_variable": "stage",
+    "primary_counter": "notificationCount"
+  },
+  "states": [
+    {
+      "id": 0,
+      "name": "Initial",
+      "description": "App start screen with start button visible",
+      "range_description": "Before user starts the experience",
+      "detection_condition": "stage === 0",
+      "dom_detection": {
+        "visible_elements": [
+          ".start-button"
+        ],
+        "hidden_elements": [
+          "#escapeButton",
+          "#tapCounter"
+        ],
+        "has_class": [],
+        "text_content": [
+          {
+            "selector": ".start-button",
+            "contains": "Start"
+          }
+        ]
+      },
+      "color_theme": {
+        "primary": "rgba(255, 107, 107, 0.15)",
+        "active": "rgba(255, 107, 107, 0.3)",
+        "border": "rgba(255, 107, 107, 0.6)"
+      },
+      "interactive_elements": [
+        {
+          "name": "Start Button",
+          "selector": ".start-button",
+          "type": "button",
+          "visibility": "visible",
+          "state": "enabled",
+          "onclick": "startHell()"
+        }
+      ],
+      "key_variables": [
+        {
+          "name": "stage",
+          "value": "0",
+          "type": "number",
+          "purpose": "Tracks current stage of experience"
+        },
+        {
+          "name": "notificationCount",
+          "value": "0",
+          "type": "number",
+          "purpose": "Counts total notifications shown"
+        }
+      ],
+      "transition_to_next": {
+        "condition": "User clicks start button",
+        "trigger": "startHell()",
+        "threshold": null
+      }
+    },
+    {
+      "id": 1,
+      "name": "Positive Hook",
+      "description": "Shows positive notifications to hook user",
+      "range_description": "0-15 notifications, all positive",
+      "detection_condition": "stage === 1 && notificationCount < 15",
+      "dom_detection": {
+        "visible_elements": [
+          "#escapeButton",
+          "#tapCounter",
+          ".notification"
+        ],
+        "hidden_elements": [
+          ".start-button"
+        ],
+        "has_class": [],
+        "text_content": [
+          {
+            "selector": "#escapeButton",
+            "contains": "Disabled"
+          }
+        ]
+      },
+      "color_theme": {
+        "primary": "rgba(255, 255, 255, 0.1)",
+        "active": "rgba(255, 255, 255, 0.15)",
+        "border": "rgba(255, 255, 255, 0.2)"
+      },
+      "interactive_elements": [
+        {
+          "name": "Escape Button",
+          "selector": "#escapeButton",
+          "type": "button",
+          "visibility": "visible",
+          "state": "disabled",
+          "onclick": "tryEscape()"
+        },
+        {
+          "name": "Notifications",
+          "selector": ".notification",
+          "type": "div",
+          "visibility": "visible",
+          "state": "enabled",
+          "onclick": "handleNotificationClick()"
+        }
+      ],
+      "key_variables": [
+        {
+          "name": "stage",
+          "value": "1",
+          "type": "number",
+          "purpose": "Current stage identifier"
+        },
+        {
+          "name": "notificationSpeed",
+          "value": "800",
+          "type": "number",
+          "purpose": "Milliseconds between notifications"
+        }
+      ],
+      "transition_to_next": {
+        "condition": "Notification count reaches 15",
+        "trigger": null,
+        "threshold": 15
+      }
+    },
+    {
+      "id": 2,
+      "name": "Addictive Mechanics",
+      "description": "Introduces FOMO, urgency, and mystery notifications",
+      "range_description": "15-50 notifications, mixed types with escape enabled",
+      "detection_condition": "stage === 2 && notificationCount >= 15 && notificationCount < 50",
+      "dom_detection": {
+        "visible_elements": [
+          ".notification.dark",
+          ".notification.urgent",
+          ".notification.mystery"
+        ],
+        "hidden_elements": [],
+        "has_class": [
+          {
+            "selector": "#escapeButton",
+            "class": "enabled"
+          }
+        ],
+        "text_content": [
+          {
+            "selector": "#escapeButton",
+            "contains": "Turn Off Notifications"
+          }
+        ]
+      },
+      "color_theme": {
+        "primary": "rgba(255, 0, 0, 0.2)",
+        "active": "rgba(255, 0, 0, 0.3)",
+        "border": "rgba(255, 51, 51, 0.6)"
+      },
+      "interactive_elements": [
+        {
+          "name": "Escape Button",
+          "selector": "#escapeButton",
+          "type": "button",
+          "visibility": "visible",
+          "state": "enabled",
+          "onclick": "tryEscape()"
+        },
+        {
+          "name": "Dark Notifications",
+          "selector": ".notification.dark",
+          "type": "div",
+          "visibility": "visible",
+          "state": "enabled",
+          "onclick": "handleNotificationClick()"
+        }
+      ],
+      "key_variables": [
+        {
+          "name": "stage",
+          "value": "2",
+          "type": "number",
+          "purpose": "Current stage identifier"
+        },
+        {
+          "name": "tapCount",
+          "value": "0+",
+          "type": "number",
+          "purpose": "Tracks user interaction count"
+        }
+      ],
+      "transition_to_next": {
+        "condition": "Notification count reaches 50",
+        "trigger": null,
+        "threshold": 50
+      }
+    },
+    {
+      "id": 3,
+      "name": "Acceleration",
+      "description": "Faster notifications with multiplier effects",
+      "range_description": "50-100 notifications, increased speed and frequency",
+      "detection_condition": "stage === 3 && notificationCount >= 50 && notificationCount < 100",
+      "dom_detection": {
+        "visible_elements": [
+          ".notification.dark",
+          ".notification.urgent",
+          ".notification.mystery"
+        ],
+        "hidden_elements": [],
+        "has_class": [],
+        "text_content": []
+      },
+      "color_theme": {
+        "primary": "rgba(255, 0, 0, 0.25)",
+        "active": "rgba(255, 0, 0, 0.4)",
+        "border": "rgba(255, 51, 51, 0.8)"
+      },
+      "interactive_elements": [
+        {
+          "name": "Escape Button",
+          "selector": "#escapeButton",
+          "type": "button",
+          "visibility": "visible",
+          "state": "enabled",
+          "onclick": "tryEscape()"
+        },
+        {
+          "name": "Multiplying Notifications",
+          "selector": ".notification",
+          "type": "div",
+          "visibility": "visible",
+          "state": "enabled",
+          "onclick": "handleNotificationClick()"
+        }
+      ],
+      "key_variables": [
+        {
+          "name": "stage",
+          "value": "3",
+          "type": "number",
+          "purpose": "Current stage identifier"
+        },
+        {
+          "name": "notificationSpeed",
+          "value": "200+",
+          "type": "number",
+          "purpose": "Reduced delay between notifications"
+        }
+      ],
+      "transition_to_next": {
+        "condition": "Notification count reaches 100",
+        "trigger": null,
+        "threshold": 100
+      }
+    },
+    {
+      "id": 4,
+      "name": "Hell Mode",
+      "description": "Aggressive hell notifications, escape attempts fail",
+      "range_description": "100-150 notifications, hell mode active",
+      "detection_condition": "stage === 4 && isHellMode === true && notificationCount < 150",
+      "dom_detection": {
+        "visible_elements": [
+          ".notification.hell"
+        ],
+        "hidden_elements": [],
+        "has_class": [],
+        "text_content": [
+          {
+            "selector": ".notification.hell",
+            "contains": "YOU CAN'T LEAVE"
+          }
+        ]
+      },
+      "color_theme": {
+        "primary": "rgba(139, 0, 0, 0.4)",
+        "active": "rgba(139, 0, 0, 0.6)",
+        "border": "rgba(139, 0, 0, 0.8)"
+      },
+      "interactive_elements": [
+        {
+          "name": "Hell Notifications",
+          "selector": ".notification.hell",
+          "type": "div",
+          "visibility": "visible",
+          "state": "enabled",
+          "onclick": "handleNotificationClick()"
+        },
+        {
+          "name": "Failing Escape Button",
+          "selector": "#escapeButton",
+          "type": "button",
+          "visibility": "visible",
+          "state": "conditional",
+          "onclick": "tryEscape()"
+        }
+      ],
+      "key_variables": [
+        {
+          "name": "isHellMode",
+          "value": "true",
+          "type": "boolean",
+          "purpose": "Indicates hell mode is active"
+        },
+        {
+          "name": "escapeAttempts",
+          "value": "0+",
+          "type": "number",
+          "purpose": "Tracks failed escape attempts"
+        }
+      ],
+      "transition_to_next": {
+        "condition": "Notification count reaches 150",
+        "trigger": null,
+        "threshold": 150
+      }
+    },
+    {
+      "id": 5,
+      "name": "Flood Overlay",
+      "description": "Final overlay message with continuous hell notifications",
+      "range_description": "150+ notifications, overlay visible",
+      "detection_condition": "notificationCount >= 150 && document.getElementById('floodOverlay').style.display === 'flex'",
+      "dom_detection": {
+        "visible_elements": [
+          "#floodOverlay",
+          ".flood-text"
+        ],
+        "hidden_elements": [],
+        "has_class": [],
+        "text_content": [
+          {
+            "selector": ".flood-text",
+            "contains": "YOU DON'T EXIST"
+          }
+        ]
+      },
+      "color_theme": {
+        "primary": "rgba(139, 0, 0, 0.9)",
+        "active": "rgba(139, 0, 0, 1.0)",
+        "border": "rgba(139, 0, 0, 1.0)"
+      },
+      "interactive_elements": [
+        {
+          "name": "Flood Overlay",
+          "selector": "#floodOverlay",
+          "type": "div",
+          "visibility": "visible",
+          "state": "enabled",
+          "onclick": null
+        },
+        {
+          "name": "Background Hell Notifications",
+          "selector": ".notification.hell",
+          "type": "div",
+          "visibility": "visible",
+          "state": "enabled",
+          "onclick": "handleNotificationClick()"
+        }
+      ],
+      "key_variables": [
+        {
+          "name": "isHellMode",
+          "value": "true",
+          "type": "boolean",
+          "purpose": "Hell mode remains active"
+        },
+        {
+          "name": "notificationSpeed",
+          "value": "50",
+          "type": "number",
+          "purpose": "Maximum speed notifications"
+        }
+      ],
+      "transition_to_next": {
+        "condition": "No transition - final state",
+        "trigger": null,
+        "threshold": null
+      }
+    }
+  ]
+}

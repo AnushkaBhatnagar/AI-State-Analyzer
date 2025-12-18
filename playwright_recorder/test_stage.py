@@ -124,8 +124,21 @@ def test_stage(session_name, stage_number, html_path, headless=False):
         restore_state(page, snapshot)
         print()
         
+        # Resume the experience by calling the appropriate stage function
+        stage_functions = {
+            1: 'startHell()',
+            2: 'startStage2()',
+            3: 'startStage3()',
+            4: 'startHell4()'
+        }
+        
+        if stage_number in stage_functions and stage_number > 0:
+            print(f"Resuming experience by calling {stage_functions[stage_number]}...")
+            page.evaluate(stage_functions[stage_number])
+            print("✅ Experience resumed - notifications should be spawning\n")
+        
         print("=" * 70)
-        print(f"✅ STAGE {stage_number} LOADED")
+        print(f"✅ STAGE {stage_number} LOADED AND RUNNING")
         print("=" * 70)
         print()
         print("The app is now at the beginning of Stage", stage_number)

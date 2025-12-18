@@ -501,17 +501,38 @@
                         showStatus(`State ${currentState} loaded in main window!`, 'success');
                     } else {
                         // Open in new window
-                        const newWindow = window.open('/index.html', '_blank');
+                        const newWindow = window.open('/index_with_panel.html', '_blank');
                         newWindow.addEventListener('load', () => {
                             setTimeout(() => {
+                                // Restore all state variables
                                 Object.keys(snapshot).forEach(key => {
                                     if (key !== 'dom' && key !== 'timestamp') {
                                         newWindow[key] = snapshot[key];
                                     }
                                 });
                                 
+                                // Restore DOM
                                 if (snapshot.dom) {
                                     newWindow.document.getElementById('contentArea').innerHTML = snapshot.dom;
+                                }
+                                
+                                // Update counter display
+                                if (snapshot.notificationCount !== undefined) {
+                                    newWindow.document.getElementById('counter').textContent = snapshot.notificationCount;
+                                }
+                                
+                                // Resume the experience by calling the appropriate stage function
+                                const stageFunctions = {
+                                    1: 'startHell',
+                                    2: 'startStage2',
+                                    3: 'startStage3',
+                                    4: 'startHell4'
+                                };
+                                
+                                const stage = snapshot.stage;
+                                if (stage && stageFunctions[stage]) {
+                                    console.log(`Resuming Stage ${stage} by calling ${stageFunctions[stage]}()`);
+                                    newWindow[stageFunctions[stage]]();
                                 }
                             }, 500);
                         });
