@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Behind the Filter - Instagram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            zoom: 0.7;
+        }
+
+        .phone {
+            width: 375px;
+            height: 812px;
+            background: #000;
+            border-radius: 40px;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            border-radius: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Choice Screen */
+        .choice-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            z-index: 1000;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .choice-screen.hidden {
+            display: none;
+        }
+
+        .choice-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .choice-subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+            text-align: center;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .choice-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .choice-btn {
+            padding: 20px 30px;
+            border-radius: 20px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .choice-btn.perfect {
+            background: white;
+            color: #f5576c;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .choice-btn.perfect:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .choice-btn.real {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .choice-btn.real:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        /* Instagram Header */
+        .insta-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dbdbdb;
+            background: white;
+        }
+
+        .insta-logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .truth-meter {
+            font-size: 12px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        /* Feed */
+        .feed {
+            height: calc(100% - 60px);
+            overflow-y: auto;
+            background: #fafafa;
+        }
+
+        .feed::-webkit-scrollbar {
+            width: 0;
+        }
+
+        /* Post */
+        .post {
+            background: white;
+            margin-bottom: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            gap: 10px;
+        }
+
+        .post-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+        }
+
+        .post-username {
+            font-size: 14px;
+            font-weight: 600;
+            color: #262626;
+        }
+
+        .post-image-container {
+            position: relative;
+            width: 100%;
+            height: 375px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .post-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.4s ease;
+        }
+
+        .post-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            text-align: center;
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            background: rgba(0, 0, 0, 0.7);
+            pointer-events: none;
+        }
+
+        /* Progress Indicator */
+        .layer-progress {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 10;
+            display: none;
+        }
+
+        .layer-progress.visible {
+            display: block;
+        }
+
+        .click-hint {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 500;
+            z-index: 10;
+            opacity: 0.7;
+        }
+
+        .post-image-container:hover .glitch-overlay {
+            opacity: 0.3;
+        }
+
+        .glitch-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 0, 0, 0.2) 50%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+            animation: glitchMove 3s infinite;
+        }
+
+        @keyframes glitchMove {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+        }
+
+        .post-caption {
+            padding: 12px 16px;
+        }
+
+        .post-caption-text {
+            font-size: 14px;
+            color: #262626;
+            line-height: 1.5;
+        }
+
+        .post-caption-username {
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .post-likes {
+            padding: 0 16px 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #262626;
+        }
+
+        /* Post Actions */
+        .post-actions {
+            display: flex;
+            gap: 15px;
+            padding: 8px 16px;
+            border-top: 1px solid #efefef;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            padding: 5px;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .action-btn.liked {
+            animation: likeAnimation 0.4s ease;
+        }
+
+        @keyframes likeAnimation {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .like-status {
+            font-size: 11px;
+            color: #8e8e8e;
+            margin-top: 3px;
+            font-style: italic;
+        }
+
+        /* Comment Section */
+        .comment-section {
+            padding: 12px 16px;
+            border-top: 1px solid #efefef;
+        }
+
+        .comment-label {
+            font-size: 12px;
+            color: #8e8e8e;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .comment-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .comment-input:focus {
+            outline: none;
+            border-color: #0095f6;
+        }
+
+        .comment-input::placeholder {
+            color: #8e8e8e;
+        }
+
+        .comment-submit {
+            margin-top: 8px;
+            padding: 8px 16px;
+            background: #0095f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .comment-submit:hover {
+            background: #0081d5;
+        }
+
+        .comment-feedback {
+            margin-top: 6px;
+            font-size: 11px;
+            color: #00c853;
+            font-style: italic;
+        }
+
+        /* Double Click Like Animation */
+        .like-burst {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            color: #ed4956;
+            pointer-events: none;
+            animation: likeBurst 0.8s ease-out forwards;
+            z-index: 25;
+        }
+
+        @keyframes likeBurst {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0);
+            }
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1.5);
+            }
+        }
+
+        /* Context Menu */
+        .context-menu {
+            position: fixed;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            padding: 8px 0;
+            min-width: 180px;
+            z-index: 1001;
+            display: none;
+        }
+
+        .context-menu.visible {
+            display: block;
+        }
+
+        .context-menu-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #262626;
+            transition: background 0.2s ease;
+        }
+
+        .context-menu-item:hover {
+            background: #f0f0f0;
+        }
+
+        .context-menu-item.danger {
+            color: #ed4956;
+        }
+
+        /* Interaction Hint */
+        .interaction-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 12px;
+            z-index: 100;
+        }
+
+        /* Reflection Moment */
+        .reflection-moment {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            z-index: 1000;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .reflection-moment.active {
+            display: flex;
+        }
+
+        .reflection-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .reflection-question {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.9);
+            text-align: center;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .reflection-btn {
+            padding: 15px 30px;
+            border-radius: 25px;
+            border: 2px solid white;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .reflection-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        /* Mirror Moment */
+        .mirror-moment {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            z-index: 1000;
+        }
+
+        .mirror-moment.active {
+            display: flex;
+        }
+
+        .mirror-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .mirror-post {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 20px;
+        }
+
+        .mirror-post-text {
+            font-size: 14px;
+            color: #262626;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .mirror-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .mirror-option {
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: 2px solid white;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .mirror-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .final-message {
+            display: none;
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            line-height: 1.8;
+            padding: 20px;
+        }
+
+        .final-message.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Layer States */
+        .post.layer-1 .post-image { filter: brightness(1.2) contrast(1.1) saturate(1.3); }
+        .post.layer-2 .post-image { filter: brightness(1) contrast(1) saturate(1); }
+        .post.layer-3 .post-image { filter: brightness(0.9) contrast(0.95) saturate(0.8); }
+        .post.layer-4 .post-image { filter: brightness(0.8) contrast(0.9) saturate(0.6); }
+        .post.layer-5 .post-image { filter: grayscale(0.3) brightness(0.7); }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <div class="screen">
+            <!-- Choice Screen -->
+            <div class="choice-screen" id="choiceScreen">
+                <div class="choice-title">How do you want to experience Instagram?</div>
+                <div class="choice-subtitle">
+                    Choose your path. But remember:<br>
+                    Once you see behind the filter, you can't unsee it.
+                </div>
+                <div class="choice-buttons">
+                    <button class="choice-btn perfect" onclick="startExperience('perfect')">
+                        ✨ The Perfect Feed
+                        <div style="font-size: 12px; margin-top: 5px; opacity: 0.8;">See Instagram as it's meant to be seen</div>
+                    </button>
+                    <button class="choice-btn real" onclick="startExperience('real')">
+                        🔍 Behind the Filter
+                        <div style="font-size: 12px; margin-top: 5px;">Discover what's really happening</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Instagram Interface -->
+            <div class="insta-header">
+                <div class="insta-logo">Instagram</div>
+                <div class="truth-meter" id="truthMeter">Reality: 0%</div>
+            </div>
+
+            <div class="feed" id="feed">
+                <!-- Posts will be inserted here -->
+            </div>
+
+            <!-- Interaction Hint -->
+            <div class="interaction-hint" id="interactionHint"></div>
+
+            <!-- Reflection Moment -->
+            <div class="reflection-moment" id="reflectionMoment">
+                <div class="reflection-text" id="reflectionText"></div>
+                <div class="reflection-question" id="reflectionQuestion"></div>
+                <button class="reflection-btn" onclick="continueFromReflection()">Continue</button>
+            </div>
+
+            <!-- Mirror Moment -->
+            <div class="mirror-moment" id="mirrorMoment">
+                <div class="mirror-title">Now it's YOUR turn...</div>
+                <div class="mirror-post">
+                    <div class="mirror-post-text" id="mirrorPostText"></div>
+                </div>
+                <div class="mirror-options">
+                    <div class="mirror-option" onclick="makeMirrorChoice('perfect')">Post the perfect version</div>
+                    <div class="mirror-option" onclick="makeMirrorChoice('real')">Share the real story</div>
+                    <div class="mirror-option" onclick="makeMirrorChoice('nothing')">Don't post anything</div>
+                </div>
+                <div class="final-message" id="finalMessage"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let mode = 'perfect';
+        let truthLevel = 0;
+        let postsRevealed = 0;
+        let currentHint = 0;
+
+        const hints = [
+            'Hover over posts to see imperfections...',
+            'Hold down on a post to peel back layers...',
+            'The longer you look, the more you see...',
+            'Scroll slowly to notice the cracks...'
+        ];
+
+        const posts = [
+            {
+                username: 'sarah_travels',
+                avatar: 'ST',
+                image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop',
+                caption: 'Living my best life in paradise! 🌴☀️ #blessed #wanderlust',
+                likes: '1,247',
+                time: '2 hours ago',
+                layers: [
+                    '',
+                    'Photo taken after 47 attempts to get the right angle',
+                    'Actually on a budget trip, sleeping in hostels',
+                    'Posted this while feeling lonely and homesick',
+                    'Real caption: "Spent all my savings on this trip. Worth it?"'
+                ]
+            },
+            {
+                username: 'fitness_mike',
+                avatar: 'FM',
+                image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&h=400&fit=crop',
+                caption: 'Another day, another gain 💪 Hard work pays off! #fitness #motivation',
+                likes: '3,891',
+                time: '5 hours ago',
+                layers: [
+                    '',
+                    'Flexing + perfect lighting + post-workout pump',
+                    'Been going to gym for 2 weeks, used old progress photos',
+                    'Actually struggling with body image issues',
+                    'Real caption: "Why do I still feel like it\'s never enough?"'
+                ]
+            },
+            {
+                username: 'couple_goals',
+                avatar: 'CG',
+                image: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400&h=400&fit=crop',
+                caption: 'Perfect date night with my forever person ❤️✨ #couplegoals #love',
+                likes: '2,456',
+                time: '8 hours ago',
+                layers: [
+                    '',
+                    'Took 20 minutes to stage this "candid" moment',
+                    'They had a big argument right before this photo',
+                    'Posting to make ex jealous, relationship is struggling',
+                    'Real caption: "We barely talk anymore but at least we look good"'
+                ]
+            },
+            {
+                username: 'foodie_emma',
+                avatar: 'FE',
+                image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=400&fit=crop',
+                caption: 'Treating myself! Life is too short not to enjoy it 🧁💕 #foodie #selflove',
+                likes: '987',
+                time: '12 hours ago',
+                layers: [
+                    '',
+                    'Restaurant lighting + 15 filter adjustments',
+                    'Can\'t actually afford this, maxed out credit card',
+                    'Struggling with disordered eating, this is compensating',
+                    'Real caption: "I don\'t even know who I am anymore"'
+                ]
+            },
+            {
+                username: 'success_jay',
+                avatar: 'SJ',
+                image: 'https://images.unsplash.com/photo-1551135049-8a33b5883817?w=400&h=400&fit=crop',
+                caption: 'Closed another deal today! 📈💼 Dreams do come true #entrepreneur #success',
+                likes: '5,234',
+                time: '1 day ago',
+                layers: [
+                    '',
+                    'Rented office space for photos, doesn\'t actually work here',
+                    'The "deal" was a $100 freelance gig',
+                    'Drowning in debt, projecting success to cope',
+                    'Real caption: "I\'m scared I\'m failing but can\'t let anyone know"'
+                ]
+            }
+        ];
+
+        function startExperience(selectedMode) {
+            mode = selectedMode;
+            document.getElementById('choiceScreen').classList.add('hidden');
+            
+            if (mode === 'real') {
+                document.getElementById('interactionHint').style.display = 'block';
+                startHintRotation();
+            } else {
+                document.getElementById('interactionHint').style.display = 'none';
+                document.getElementById('truthMeter').style.display = 'none';
+            }
+            
+            loadFeed();
+        }
+
+        function startHintRotation() {
+            // Static hint - no rotation
+            document.getElementById('interactionHint').textContent = 'Click to reveal layers • Double-click to like • Right-click for menu';
+        }
+
+        function loadFeed() {
+            const feed = document.getElementById('feed');
+            feed.innerHTML = '';
+            
+            posts.forEach((post, index) => {
+                const postEl = createPost(post, index);
+                feed.appendChild(postEl);
+            });
+        }
+
+        function createPost(post, index) {
+            const postEl = document.createElement('div');
+            postEl.className = 'post';
+            postEl.dataset.index = index;
+            postEl.dataset.layer = '1';
+            
+            // Build HTML conditionally based on mode
+            let imageContainerHTML = '';
+            
+            if (mode === 'real') {
+                // Interactive mode - include all layer reveal elements
+                imageContainerHTML = `
+                    <div class="post-image-container">
+                        <img src="${post.image}" alt="Post" class="post-image">
+                        <div class="glitch-overlay"></div>
+                        <div class="layer-progress" data-progress>Layer 1/5</div>
+                        <div class="click-hint">Tap to reveal</div>
+                        <div class="post-layer" data-layer="2">${post.layers[1]}</div>
+                        <div class="post-layer" data-layer="3">${post.layers[2]}</div>
+                        <div class="post-layer" data-layer="4">${post.layers[3]}</div>
+                        <div class="post-layer" data-layer="5">${post.layers[4]}</div>
+                    </div>
+                `;
+            } else {
+                // Perfect mode - clean static image with no interactive elements
+                imageContainerHTML = `
+                    <div class="post-image-container" style="cursor: default;">
+                        <img src="${post.image}" alt="Post" class="post-image">
+                    </div>
+                `;
+            }
+            
+            postEl.innerHTML = `
+                <div class="post-header">
+                    <div class="post-avatar">${post.avatar}</div>
+                    <div class="post-username">${post.username}</div>
+                </div>
+                ${imageContainerHTML}
+                <div class="post-likes">${post.likes} likes</div>
+                <div class="post-caption">
+                    <span class="post-caption-text">
+                        <span class="post-caption-username">${post.username}</span>
+                        ${post.caption}
+                    </span>
+                </div>
+                <div class="post-actions">
+                    <button class="action-btn like-btn" data-like onclick="toggleLike(this, ${index})">🤍</button>
+                    <div class="like-status" data-like-status></div>
+                </div>
+                <div class="comment-section">
+                    <div class="comment-label">Your thoughts?</div>
+                    <textarea class="comment-input" placeholder="Share your reaction..." rows="2" data-comment></textarea>
+                    <button class="comment-submit" onclick="submitComment(this, ${index})">Post</button>
+                    <div class="comment-feedback" data-comment-feedback></div>
+                </div>
+            `;
+            
+            if (mode === 'real') {
+                setupInteractions(postEl, post, index);
+            }
+            
+            return postEl;
+        }
+
+        function setupInteractions(postEl, post, index) {
+            const container = postEl.querySelector('.post-image-container');
+            
+            // Click interaction - advance to next layer
+            container.addEventListener('click', (e) => {
+                if (mode === 'real') {
+                    let currentLayer = parseInt(postEl.dataset.layer);
+                    if (currentLayer < 5) {
+                        revealLayer(postEl, currentLayer + 1);
+                    } else {
+                        onFullReveal(index);
+                    }
+                }
+            });
+        }
+
+        function revealLayer(postEl, layer) {
+            postEl.dataset.layer = layer;
+            postEl.className = `post layer-${layer}`;
+            
+            // Update progress indicator
+            const progressEl = postEl.querySelector('[data-progress]');
+            if (progressEl) {
+                progressEl.textContent = `Layer ${layer}/5`;
+                progressEl.classList.add('visible');
+            }
+            
+            // Hide all layers
+            postEl.querySelectorAll('.post-layer').forEach(l => {
+                l.style.opacity = '0';
+            });
+            
+            // Show current layer
+            const layerEl = postEl.querySelector(`.post-layer[data-layer="${layer}"]`);
+            if (layerEl) {
+                layerEl.style.opacity = '1';
+                setTimeout(() => {
+                    layerEl.style.opacity = '0';
+                }, 4000);
+            }
+            
+            // Update truth meter
+            truthLevel = Math.max(truthLevel, (layer / 5) * 100);
+            document.getElementById('truthMeter').textContent = `Reality: ${Math.round(truthLevel)}%`;
+        }
+
+        function onFullReveal(postIndex) {
+            postsRevealed++;
+            
+            if (postsRevealed === 2) {
+                setTimeout(() => showReflection(1), 1000);
+            } else if (postsRevealed === 4) {
+                setTimeout(() => showReflection(2), 1000);
+            } else if (postsRevealed === posts.length) {
+                setTimeout(() => showMirror(), 1000);
+            }
+        }
+
+        function showReflection(stage) {
+            const reflectionEl = document.getElementById('reflectionMoment');
+            const textEl = document.getElementById('reflectionText');
+            const questionEl = document.getElementById('reflectionQuestion');
+            
+            if (stage === 1) {
+                textEl.textContent = 'You\'re starting to see behind the filters...';
+                questionEl.textContent = 'How does it feel knowing the truth? Does it change how you see these posts?';
+            } else {
+                textEl.textContent = 'The more you know, the harder it is to enjoy the surface...';
+                questionEl.textContent = 'Do you wish you could go back to just seeing the perfect versions?';
+            }
+            
+            reflectionEl.classList.add('active');
+            document.getElementById('interactionHint').style.display = 'none';
+        }
+
+        function continueFromReflection() {
+            document.getElementById('reflectionMoment').classList.remove('active');
+            document.getElementById('interactionHint').style.display = 'block';
+        }
+
+        function showMirror() {
+            const mirrorEl = document.getElementById('mirrorMoment');
+            const postTextEl = document.getElementById('mirrorPostText');
+            
+            postTextEl.textContent = 'You just had a moment worth sharing. A photo that could get likes. But you know the full story behind it...';
+            
+            mirrorEl.classList.add('active');
+            document.getElementById('interactionHint').style.display = 'none';
+        }
+
+        function makeMirrorChoice(choice) {
+            const finalEl = document.getElementById('finalMessage');
+            const optionsEl = document.querySelector('.mirror-options');
+            const titleEl = document.querySelector('.mirror-title');
+            const postEl = document.querySelector('.mirror-post');
+            
+            optionsEl.style.display = 'none';
+            postEl.style.display = 'none';
+            titleEl.style.display = 'none';
+            
+            let message = '';
+            
+            if (choice === 'perfect') {
+                message = 'You chose to share the perfect version.<br><br>After seeing everyone else\'s truth, you still chose the filter.<br><br>We all do. Because we know what the game is.<br><br>The question is: are you okay with that?';
+            } else if (choice === 'real') {
+                message = 'You chose to share the real story.<br><br>Brave. But will anyone believe you?<br><br>In a world of filters, authenticity looks like a cry for attention.<br><br>That\'s the trap.';
+            } else {
+                message = 'You chose not to post.<br><br>Maybe that\'s the wisest choice.<br><br>If nobody sees it, did it even happen?<br><br>But then... what\'s the point?';
+            }
+            
+            finalEl.innerHTML = message + '<br><br><span style="opacity: 0.7; font-size: 14px;">Refresh to experience again</span>';
+            finalEl.classList.add('active');
+        }
+
+        // Interactive Functions
+        function toggleLike(btn, postIndex) {
+            const postEl = btn.closest('.post');
+            const layer = parseInt(postEl.dataset.layer);
+            const statusEl = postEl.querySelector('[data-like-status]');
+            
+            if (btn.textContent === '🤍') {
+                btn.textContent = '❤️';
+                btn.classList.add('liked');
+                
+                if (layer === 1) {
+                    statusEl.textContent = 'Liked at surface level';
+                } else if (layer <= 3) {
+                    statusEl.textContent = 'Liked knowing some truth';
+                } else {
+                    statusEl.textContent = 'Liked knowing the full reality';
+                }
+            } else {
+                btn.textContent = '🤍';
+                btn.classList.remove('liked');
+                statusEl.textContent = '';
+            }
+        }
+
+        // Comment Submit Function
+        function submitComment(btn, postIndex) {
+            const postEl = btn.closest('.post');
+            const commentInput = postEl.querySelector('[data-comment]');
+            const feedback = postEl.querySelector('[data-comment-feedback]');
+            const layer = parseInt(postEl.dataset.layer);
+            const comment = commentInput.value.trim();
+            
+            if (comment) {
+                feedback.textContent = `✓ Commented at Layer ${layer}: "${comment.substring(0, 30)}${comment.length > 30 ? '...' : ''}"`;
+                commentInput.value = '';
+                console.log(`Post ${postIndex}: Commented "${comment}" at layer ${layer}`);
+                
+                setTimeout(() => {
+                    feedback.textContent = '';
+                }, 5000);
+            } else {
+                feedback.textContent = 'Please write something first!';
+                feedback.style.color = '#ed4956';
+                setTimeout(() => {
+                    feedback.textContent = '';
+                    feedback.style.color = '#00c853';
+                }, 2000);
+            }
+        }
+
+        // Scroll to Zoom Function
+        function setupScrollZoom(container) {
+            const image = container.querySelector('.post-image');
+            let scale = 1;
+            
+            container.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                scale = Math.min(Math.max(scale + delta, 1), 2);
+                
+                image.style.transform = `scale(${scale})`;
+                image.style.transformOrigin = 'center';
+                
+                console.log(`Zoom level: ${scale.toFixed(2)}x`);
+            }, { passive: false });
+        }
+
+        // Right-Click Context Menu
+        let contextMenu = null;
+        
+        function setupContextMenu(container, postEl, postIndex) {
+            container.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                
+                // Remove existing menu
+                if (contextMenu) {
+                    contextMenu.remove();
+                }
+                
+                // Create context menu
+                contextMenu = document.createElement('div');
+                contextMenu.className = 'context-menu visible';
+                contextMenu.style.left = `${e.clientX}px`;
+                contextMenu.style.top = `${e.clientY}px`;
+                
+                contextMenu.innerHTML = `
+                    <div class="context-menu-item" data-action="full-reality">🔍 See Full Reality</div>
+                    <div class="context-menu-item" data-action="reset">↺ Reset to Perfect</div>
+                    <div class="context-menu-item" data-action="real-caption">💬 View Real Caption</div>
+                    <div class="context-menu-item danger" data-action="skip">⏭ Skip This Post</div>
+                `;
+                
+                document.body.appendChild(contextMenu);
+                
+                // Handle menu clicks
+                contextMenu.querySelectorAll('.context-menu-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const action = item.dataset.action;
+                        handleContextAction(action, postEl, postIndex);
+                        contextMenu.remove();
+                        contextMenu = null;
+                    });
+                });
+                
+                // Close on outside click
+                setTimeout(() => {
+                    document.addEventListener('click', closeContextMenu);
+                }, 0);
+            });
+        }
+        
+        function closeContextMenu() {
+            if (contextMenu) {
+                contextMenu.remove();
+                contextMenu = null;
+            }
+            document.removeEventListener('click', closeContextMenu);
+        }
+        
+        function handleContextAction(action, postEl, postIndex) {
+            const currentLayer = parseInt(postEl.dataset.layer);
+            
+            switch (action) {
+                case 'full-reality':
+                    revealLayer(postEl, 5);
+                    console.log('Jumped to full reality!');
+                    break;
+                case 'reset':
+                    revealLayer(postEl, 1);
+                    console.log('Reset to perfect view');
+                    break;
+                case 'real-caption':
+                    alert(posts[postIndex].layers[4]);
+                    break;
+                case 'skip':
+                    postEl.style.display = 'none';
+                    console.log('Post skipped');
+                    break;
+            }
+        }
+
+        // Update setupInteractions to include all new features
+        function setupInteractions(postEl, post, index) {
+            const container = postEl.querySelector('.post-image-container');
+            let clickTimer = null;
+            
+            // Single click - advance layer (with delay to detect double-click)
+            container.addEventListener('click', (e) => {
+                if (clickTimer === null) {
+                    clickTimer = setTimeout(() => {
+                        if (mode === 'real') {
+                            let currentLayer = parseInt(postEl.dataset.layer);
+                            if (currentLayer < 5) {
+                                revealLayer(postEl, currentLayer + 1);
+                            } else {
+                                onFullReveal(index);
+                            }
+                        }
+                        clickTimer = null;
+                    }, 250);
+                }
+            });
+            
+            // Double-click to like
+            container.addEventListener('dblclick', (e) => {
+                if (clickTimer) {
+                    clearTimeout(clickTimer);
+                    clickTimer = null;
+                }
+                
+                // Show heart burst
+                const burst = document.createElement('div');
+                burst.className = 'like-burst';
+                burst.textContent = '❤️';
+                container.appendChild(burst);
+                
+                // Auto-like
+                const likeBtn = postEl.querySelector('[data-like]');
+                if (likeBtn.textContent === '🤍') {
+                    toggleLike(likeBtn, index);
+                }
+                
+                setTimeout(() => burst.remove(), 800);
+            });
+            
+            // Scroll to zoom
+            setupScrollZoom(container);
+            
+            // Right-click context menu
+            setupContextMenu(container, postEl, index);
+        }
+
+    </script>
+</body>
+</html>
