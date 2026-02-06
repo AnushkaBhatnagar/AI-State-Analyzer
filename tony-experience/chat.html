@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - Instagram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            zoom: 0.8;
+        }
+
+        .phone {
+            width: 375px;
+            height: 812px;
+            background: #000;
+            border-radius: 40px;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            border-radius: 25px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #dbdbdb;
+            background: #fafafa;
+            gap: 12px;
+        }
+
+        .chat-back {
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+            text-decoration: none;
+            color: #262626;
+        }
+
+        .chat-back:hover {
+            color: #0095f6;
+        }
+
+        .chat-user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #833ab4, #fd1d1d, #fcb045);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .chat-user-info {
+            flex: 1;
+        }
+
+        .chat-username {
+            font-size: 14px;
+            font-weight: 600;
+            color: #262626;
+        }
+
+        .chat-status {
+            font-size: 11px;
+            color: #8e8e8e;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #fff;
+        }
+
+        .chat-message {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .chat-message.them {
+            align-self: flex-start;
+            background: #efefef;
+            color: #262626;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-message.me {
+            align-self: flex-end;
+            background: #0095f6;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-message.typing {
+            background: #efefef;
+            color: #8e8e8e;
+            font-style: italic;
+        }
+
+        .chat-input-area {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-top: 1px solid #dbdbdb;
+            gap: 10px;
+            background: white;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #dbdbdb;
+            border-radius: 22px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .chat-input:focus {
+            border-color: #8e8e8e;
+        }
+
+        .chat-send {
+            background: none;
+            border: none;
+            color: #0095f6;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .chat-send:disabled {
+            color: #b3dffc;
+            cursor: not-allowed;
+        }
+
+        /* Error state */
+        .error-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #8e8e8e;
+        }
+
+        .error-message a {
+            color: #0095f6;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <div class="screen">
+            <div class="chat-header">
+                <a href="index.html#feed" class="chat-back">←</a>
+                <div class="chat-user-avatar" id="chatAvatar"></div>
+                <div class="chat-user-info">
+                    <div class="chat-username" id="chatUsername"></div>
+                    <div class="chat-status">Active now</div>
+                </div>
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Message..." autocomplete="off">
+                <button class="chat-send" id="chatSend" disabled>Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const AI_SERVER_URL = 'http://localhost:5000';
+        
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const username = urlParams.get('user') || 'unknown';
+        const initialMessage = urlParams.get('msg') || '';
+        
+        let chatHistory = [];
+        let currentDMContext = initialMessage;
+        
+        // Fallback responses if AI fails
+        const fallbackResponses = [
+            "k",
+            "lol ok",
+            "sure",
+            "whatever",
+            "lol",
+            "ok",
+            "cool story",
+            "anyway",
+            "mhm",
+            "and?",
+            "why are you telling me this",
+            "ok and",
+            "didn't ask",
+            "who asked",
+            "lmao",
+            "...",
+            "yikes",
+            "weird but ok"
+        ];
+        
+        // Initialize chat on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set up header
+            document.getElementById('chatUsername').textContent = username;
+            document.getElementById('chatAvatar').textContent = username.charAt(0).toUpperCase();
+            
+            // Add initial message if provided
+            if (initialMessage) {
+                addChatMessage(initialMessage, 'them');
+                chatHistory.push({ from: 'ai', text: initialMessage });
+            } else {
+                // Show error if no message
+                document.getElementById('chatMessages').innerHTML = `
+                    <div class="error-message">
+                        No conversation to show.<br><br>
+                        <a href="index.html">← Back to feed</a>
+                    </div>
+                `;
+            }
+            
+            // Set up input handlers
+            const chatInput = document.getElementById('chatInput');
+            const chatSend = document.getElementById('chatSend');
+            
+            chatInput.addEventListener('input', () => {
+                chatSend.disabled = !chatInput.value.trim();
+            });
+            
+            chatSend.addEventListener('click', sendChatMessage);
+            
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendChatMessage();
+                }
+            });
+            
+            // Focus input
+            setTimeout(() => chatInput.focus(), 100);
+        });
+        
+        function addChatMessage(text, sender) {
+            const chatMessages = document.getElementById('chatMessages');
+            const msgEl = document.createElement('div');
+            msgEl.className = `chat-message ${sender}`;
+            msgEl.textContent = text;
+            chatMessages.appendChild(msgEl);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function showTypingIndicator() {
+            const chatMessages = document.getElementById('chatMessages');
+            const typingEl = document.createElement('div');
+            typingEl.className = 'chat-message them typing';
+            typingEl.id = 'typingIndicator';
+            typingEl.textContent = 'typing...';
+            chatMessages.appendChild(typingEl);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function removeTypingIndicator() {
+            const typingEl = document.getElementById('typingIndicator');
+            if (typingEl) typingEl.remove();
+        }
+        
+        async function sendChatMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addChatMessage(message, 'me');
+            chatHistory.push({ from: 'user', text: message });
+            
+            // Clear input
+            chatInput.value = '';
+            document.getElementById('chatSend').disabled = true;
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            // Get AI response
+            const aiResponse = await getAIChatResponse(message);
+            
+            // Quick typing delay (300-800ms)
+            const typingDelay = 300 + Math.random() * 500;
+            setTimeout(() => {
+                removeTypingIndicator();
+                addChatMessage(aiResponse, 'them');
+                chatHistory.push({ from: 'ai', text: aiResponse });
+            }, typingDelay);
+        }
+        
+        async function getAIChatResponse(userMessage) {
+            try {
+                const response = await fetch(`${AI_SERVER_URL}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: userMessage,
+                        dm_context: currentDMContext,
+                        history: chatHistory.slice(-6)
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Chat API error');
+                
+                const data = await response.json();
+                return data.response || fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+            } catch (error) {
+                console.log('Chat API failed, using fallback:', error);
+                return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+            }
+        }
+    </script>
+</body>
+</html>
