@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Last Light of Morrow Point</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            line-height: 1.9;
+            overflow-x: hidden;
+            cursor: default;
+        }
+
+        /* Sound toggle */
+        .sound-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(244, 208, 63, 0.5);
+            color: #f4d03f;
+            padding: 10px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sound-toggle:hover {
+            background: rgba(244, 208, 63, 0.2);
+        }
+
+        /* Instructions overlay */
+        .instructions-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 15, 0.95);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .instructions-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .instructions-content {
+            text-align: center;
+            max-width: 500px;
+            padding: 40px;
+        }
+
+        .instructions-content h2 {
+            color: #f4d03f;
+            font-size: 2rem;
+            margin-bottom: 30px;
+        }
+
+        .instructions-content p {
+            margin-bottom: 15px;
+            color: #aaa;
+        }
+
+        .instructions-content .key-hint {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(244, 208, 63, 0.1);
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin: 5px;
+            font-size: 0.9rem;
+        }
+
+        .instructions-content .key-hint kbd {
+            background: rgba(244, 208, 63, 0.3);
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        .start-btn {
+            margin-top: 30px;
+            padding: 15px 50px;
+            font-size: 1.1rem;
+            font-family: inherit;
+            background: linear-gradient(135deg, #f4d03f 0%, #eb9c0d 100%);
+            color: #0a0a0f;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(244, 208, 63, 0.5);
+        }
+
+        /* Navigation dots */
+        .nav-dots {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .nav-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-dot:hover, .nav-dot.active {
+            background: #f4d03f;
+            box-shadow: 0 0 15px rgba(244, 208, 63, 0.6);
+        }
+
+        .nav-dot::after {
+            content: attr(data-label);
+            position: absolute;
+            right: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            white-space: nowrap;
+            font-size: 0.75rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            color: #f4d03f;
+        }
+
+        .nav-dot:hover::after {
+            opacity: 1;
+        }
+
+        /* Section styling */
+        .chapter {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chapter-content {
+            max-width: 750px;
+            position: relative;
+            z-index: 2;
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 1s ease-out;
+        }
+
+        .chapter-content.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Opening/Title */
+        .chapter-opening {
+            background: linear-gradient(180deg, #0a0a0f 0%, #1a1a2e 50%, #0f2027 100%);
+            text-align: center;
+        }
+
+        .chapter-opening h1 {
+            font-size: 3.5rem;
+            color: #f4d03f;
+            margin-bottom: 10px;
+            text-shadow: 0 0 40px rgba(244, 208, 63, 0.3);
+            letter-spacing: 2px;
+        }
+
+        .chapter-opening .subtitle {
+            font-size: 1.2rem;
+            color: #888;
+            font-style: italic;
+            margin-bottom: 40px;
+        }
+
+        .chapter-opening .scroll-hint {
+            margin-top: 60px;
+            color: #666;
+            font-size: 0.9rem;
+            animation: pulse 2s infinite;
+        }
+
+        .scroll-arrow {
+            display: block;
+            margin: 15px auto 0;
+            font-size: 1.5rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(10px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Exposition */
+        .chapter-exposition {
+            background: linear-gradient(180deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+        }
+
+        /* Rising Action */
+        .chapter-rising {
+            background: linear-gradient(180deg, #2c5364 0%, #3d5a6c 30%, #2c3e50 100%);
+        }
+
+        /* Climax */
+        .chapter-climax {
+            background: linear-gradient(180deg, #2c3e50 0%, #1a1a2e 30%, #0a0a0f 60%, #1a0a0a 100%);
+        }
+
+        /* Falling Action */
+        .chapter-falling {
+            background: linear-gradient(180deg, #1a0a0a 0%, #2a1a1a 30%, #1a1a2e 70%, #0f2027 100%);
+        }
+
+        /* Resolution */
+        .chapter-resolution {
+            background: linear-gradient(180deg, #0f2027 0%, #203a43 30%, #2c5364 60%, #f4d03f 150%);
+        }
+
+        /* Arc labels */
+        .arc-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: #f4d03f;
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+
+        .chapter-title {
+            font-size: 2rem;
+            color: #fff;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(244, 208, 63, 0.3);
+            padding-bottom: 15px;
+        }
+
+        .story-text {
+            font-size: 1.15rem;
+            margin-bottom: 25px;
+            text-align: justify;
+        }
+
+        .story-text.highlight {
+            font-style: italic;
+            color: #f4d03f;
+            text-align: center;
+            font-size: 1.3rem;
+            margin: 40px 0;
+            padding: 20px;
+            border-left: 3px solid #f4d03f;
+            border-right: 3px solid #f4d03f;
+        }
+
+        /* Interactive reveal text */
+        .reveal-text {
+            opacity: 0.3;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+
+        .reveal-text::after {
+            content: '🔍 Click to reveal';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(244, 208, 63, 0.9);
+            color: #0a0a0f;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .reveal-text:hover::after {
+            opacity: 1;
+        }
+
+        .reveal-text.revealed {
+            opacity: 1;
+            cursor: default;
+        }
+
+        .reveal-text.revealed::after {
+            display: none;
+        }
+
+        /* Decorative elements */
+        .lighthouse-icon {
+            font-size: 4rem;
+            margin-bottom: 30px;
+            display: block;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .lighthouse-icon:hover {
+            transform: scale(1.2);
+        }
+
+        .lighthouse-icon.clicked {
+            animation: lighthouse-glow 0.5s ease;
+        }
+
+        @keyframes lighthouse-glow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(2) drop-shadow(0 0 30px #f4d03f); }
+        }
+
+        .wave-divider {
+            width: 100%;
+            height: 60px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120'%3E%3Cpath fill='rgba(244,208,63,0.2)' d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z'%3E%3C/path%3E%3C/svg%3E");
+            background-size: cover;
+            margin: 30px 0;
+            opacity: 0.5;
+        }
+
+        /* Storm effects */
+        .storm-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .storm-overlay.active {
+            opacity: 1;
+        }
+
+        .rain {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(transparent, rgba(100, 150, 200, 0.1));
+            animation: rain 0.3s linear infinite;
+        }
+
+        @keyframes rain {
+            0% { background-position: 0 0; }
+            100% { background-position: 20px 40px; }
+        }
+
+        .lightning {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            opacity: 0;
+        }
+
+        .lightning.flash {
+            animation: lightning-flash 0.1s ease;
+        }
+
+        @keyframes lightning-flash {
+            0% { opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { opacity: 0; }
+        }
+
+        /* Interactive lighthouse beam */
+        .interactive-lighthouse {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            background: rgba(0,0,0,0.7);
+            padding: 15px 25px;
+            border-radius: 30px;
+            display: none;
+            align-items: center;
+            gap: 20px;
+            border: 1px solid rgba(244, 208, 63, 0.3);
+        }
+
+        .interactive-lighthouse.show {
+            display: flex;
+        }
+
+        .interactive-lighthouse span {
+            color: #f4d03f;
+            font-size: 0.9rem;
+        }
+
+        .beam-control {
+            width: 150px;
+            height: 8px;
+            -webkit-appearance: none;
+            background: rgba(244, 208, 63, 0.3);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .beam-control::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #f4d03f;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(244, 208, 63, 0.8);
+        }
+
+        /* Light beam animation */
+        .light-beam {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .beam {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            width: 6px;
+            height: 400px;
+            background: linear-gradient(to bottom, rgba(244, 208, 63, 0.9), transparent);
+            transform-origin: top center;
+            transition: transform 0.1s ease-out;
+        }
+
+        .beam.auto {
+            animation: sweep 8s infinite ease-in-out;
+        }
+
+        @keyframes sweep {
+            0%, 100% { transform: rotate(-45deg); opacity: 0.6; }
+            50% { transform: rotate(45deg); opacity: 0.8; }
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #f4d03f, #eb9c0d);
+            z-index: 1000;
+            transition: width 0.1s linear;
+        }
+
+        /* Storm intensity meter */
+        .storm-meter {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            z-index: 100;
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            border: 1px solid rgba(244, 208, 63, 0.3);
+        }
+
+        .storm-meter.show {
+            display: flex;
+        }
+
+        .storm-meter label {
+            color: #f4d03f;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .storm-meter-bar {
+            width: 100px;
+            height: 6px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .storm-meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2c5364, #e94560);
+            transition: width 0.3s ease;
+        }
+
+        /* Final section */
+        .chapter-resolution .chapter-content {
+            text-align: center;
+        }
+
+        .the-end {
+            font-size: 1.8rem;
+            color: #f4d03f;
+            margin-top: 50px;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+        }
+
+        .restart-btn {
+            margin-top: 30px;
+            padding: 15px 40px;
+            font-size: 1rem;
+            font-family: inherit;
+            background: transparent;
+            color: #f4d03f;
+            border: 2px solid #f4d03f;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 2px;
+        }
+
+        .restart-btn:hover {
+            background: #f4d03f;
+            color: #0a0a0f;
+        }
+
+        /* Stars background */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* Click ripple effect */
+        .ripple {
+            position: fixed;
+            border-radius: 50%;
+            background: rgba(244, 208, 63, 0.3);
+            transform: scale(0);
+            animation: ripple-effect 0.6s ease-out;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        @keyframes ripple-effect {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Choice moment */
+        .choice-section {
+            background: rgba(0,0,0,0.5);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 40px 0;
+            border: 1px solid rgba(244, 208, 63, 0.3);
+        }
+
+        .choice-section h3 {
+            color: #f4d03f;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .choice-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .choice-btn {
+            padding: 15px 25px;
+            font-size: 1rem;
+            font-family: inherit;
+            background: linear-gradient(135deg, rgba(244, 208, 63, 0.2) 0%, rgba(235, 156, 13, 0.2) 100%);
+            color: #f4d03f;
+            border: 1px solid #f4d03f;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .choice-btn:hover {
+            background: linear-gradient(135deg, #f4d03f 0%, #eb9c0d 100%);
+            color: #0a0a0f;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(244, 208, 63, 0.3);
+        }
+
+        .choice-result {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .choice-result.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Keyboard hints */
+        .keyboard-hints {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            z-index: 100;
+            font-size: 0.75rem;
+            color: #666;
+        }
+
+        .keyboard-hints kbd {
+            background: rgba(255,255,255,0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin: 0 2px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Instructions Overlay -->
+    <div class="instructions-overlay" id="instructionsOverlay">
+        <div class="instructions-content">
+            <h2>🏠 The Last Light of Morrow Point</h2>
+            <p>An interactive story of courage, loss, and hope</p>
+            <div style="margin: 30px 0;">
+                <p class="key-hint"><kbd>↓</kbd> <kbd>↑</kbd> Scroll to navigate</p>
+                <p class="key-hint"><kbd>Space</kbd> Next section</p>
+                <p class="key-hint"><kbd>L</kbd> Toggle lighthouse beam</p>
+                <p class="key-hint"><kbd>S</kbd> Toggle sounds</p>
+            </div>
+            <p style="color: #f4d03f;">Click elements marked with 🔍 to reveal hidden text</p>
+            <button class="start-btn" onclick="startStory()">Begin the Journey</button>
+        </div>
+    </div>
+
+    <div class="progress-bar" id="progressBar"></div>
+    
+    <button class="sound-toggle" id="soundToggle" onclick="toggleSound()">
+        <span id="soundIcon">🔇</span> <span id="soundText">Sound Off</span>
+    </button>
+    
+    <div class="stars" id="stars"></div>
+    
+    <div class="storm-overlay" id="stormOverlay">
+        <div class="rain"></div>
+        <div class="lightning" id="lightning"></div>
+    </div>
+    
+    <nav class="nav-dots">
+        <div class="nav-dot active" data-section="0" data-label="Title"></div>
+        <div class="nav-dot" data-section="1" data-label="Exposition"></div>
+        <div class="nav-dot" data-section="2" data-label="Rising Action"></div>
+        <div class="nav-dot" data-section="3" data-label="Climax"></div>
+        <div class="nav-dot" data-section="4" data-label="Falling Action"></div>
+        <div class="nav-dot" data-section="5" data-label="Resolution"></div>
+    </nav>
+
+    <div class="storm-meter" id="stormMeter">
+        <label>⚡ Storm Intensity</label>
+        <div class="storm-meter-bar">
+            <div class="storm-meter-fill" id="stormMeterFill" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <div class="interactive-lighthouse" id="interactiveLighthouse">
+        <span>🏠 Control the Light</span>
+        <input type="range" class="beam-control" id="beamControl" min="-60" max="60" value="0">
+        <span id="beamAngle">0°</span>
+    </div>
+
+    <div class="keyboard-hints">
+        <kbd>Space</kbd> Next · <kbd>L</kbd> Light · <kbd>S</kbd> Sound
+    </div>
+
+    <!-- Opening -->
+    <section class="chapter chapter-opening" data-section="0">
+        <div class="light-beam"><div class="beam auto" id="mainBeam"></div></div>
+        <div class="chapter-content">
+            <span class="lighthouse-icon" id="lighthouseIcon" onclick="clickLighthouse()">🏠</span>
+            <h1>The Last Light of Morrow Point</h1>
+            <p class="subtitle">A Story of Courage, Loss, and Hope</p>
+            <div class="wave-divider"></div>
+            <p class="scroll-hint">Scroll or press <kbd>Space</kbd> to begin<span class="scroll-arrow">↓</span></p>
+        </div>
+    </section>
+
+    <!-- Exposition -->
+    <section class="chapter chapter-exposition" data-section="1">
+        <div class="chapter-content">
+            <p class="arc-label">I. Exposition</p>
+            <h2 class="chapter-title">The Lighthouse Keeper</h2>
+            
+            <p class="story-text">
+                Eleanor Marsh had tended the lighthouse at Morrow Point for forty-three years. Her father had kept it before her, and his mother before him. The light had never gone dark—not in storms, not in war, not in the deepest grief. It was a promise made to the sea, and the Marsh family always kept their promises.
+            </p>
+            
+            <p class="story-text">
+                At seventy-one, Eleanor's hands trembled slightly as she climbed the 217 steps each evening. Her knees ached. Her eyes weren't what they used to be. But the lighthouse had been automated years ago, they said. It didn't need a keeper anymore.
+            </p>
+            
+            <p class="story-text reveal-text" onclick="revealText(this)">
+                She stayed anyway. "The light needs a heart," she would say to anyone who asked. "Machines keep it burning, but only a keeper gives it meaning."
+            </p>
+
+            <p class="story-text highlight">
+                "Ships don't just need to see the light. They need to know someone's watching over them."
+            </p>
+            
+            <p class="story-text">
+                Her small cottage sat nestled against the tower's base, warmed by a wood stove and filled with the smell of salt and old books. She had a cat named Compass and a radio that crackled with weather reports and the lonely voices of night fishermen.
+            </p>
+        </div>
+    </section>
+
+    <!-- Rising Action -->
+    <section class="chapter chapter-rising" data-section="2">
+        <div class="chapter-content">
+            <p class="arc-label">II. Rising Action</p>
+            <h2 class="chapter-title">The Storm Warning</h2>
+            
+            <p class="story-text">
+                The morning of October 14th began with an unsettling stillness. Compass refused to leave his hiding spot under the bed. The barometer dropped so fast Eleanor thought it was broken. Then the radio crackled to life with words that made her blood run cold.
+            </p>
+
+            <p class="story-text highlight">
+                "Storm of the century... all vessels return to harbor immediately... hurricane-force winds expected..."
+            </p>
+            
+            <p class="story-text">
+                Eleanor checked her supplies. Checked the generator. Checked the backup generator. But as she scanned the darkening horizon through her binoculars, her heart stopped. A small fishing boat was heading toward the point—not away from it.
+            </p>
+            
+            <p class="story-text reveal-text" onclick="revealText(this)">
+                She grabbed her radio. "Vessel approaching Morrow Point, this is the lighthouse keeper. Please respond."
+            </p>
+            
+            <p class="story-text">
+                Static. Then a young voice, shaking with fear: "This is the Sarah Mae. Our engine's dead. We can't—we're drifting. There are five of us. Three children."
+            </p>
+
+            <div class="choice-section" id="choiceSection">
+                <h3>What would you do?</h3>
+                <div class="choice-buttons" id="choiceButtons">
+                    <button class="choice-btn" onclick="makeChoice('brave')">🦸 "I'll guide you in. Trust my light."</button>
+                    <button class="choice-btn" onclick="makeChoice('cautious')">📻 "Hold on, I'm calling the coast guard."</button>
+                </div>
+                <div class="choice-result" id="braveResult">
+                    <p style="color: #f4d03f;">You chose courage. Eleanor steeled herself...</p>
+                </div>
+                <div class="choice-result" id="cautiousResult">
+                    <p style="color: #f4d03f;">The coast guard was hours away. Eleanor knew what she had to do...</p>
+                </div>
+            </div>
+            
+            <p class="story-text">
+                Eleanor looked at the sky. The wall of clouds on the horizon was moving faster than anything she'd ever seen. They had maybe ninety minutes before hell arrived.
+            </p>
+            
+            <p class="story-text">
+                "Stay calm," she said, her own voice steadier than she felt. "Keep your eyes on my light. I'll guide you in."
+            </p>
+        </div>
+    </section>
+
+    <!-- Climax -->
+    <section class="chapter chapter-climax" data-section="3">
+        <div class="chapter-content">
+            <p class="arc-label">III. Climax</p>
+            <h2 class="chapter-title">The Longest Night</h2>
+            
+            <p class="story-text">
+                The storm hit like a fist. Windows shattered. The automated light flickered—then died. The generators, both of them, had flooded in the surge.
+            </p>
+            
+            <p class="story-text reveal-text" onclick="revealText(this)">
+                Eleanor stood in the darkness, rain slashing sideways through the broken gallery, and felt something she hadn't felt in decades: true fear. Not for herself. For the five souls on that boat, now invisible in the chaos, who had only one hope of finding the rocks—her light.
+            </p>
+
+            <p class="story-text highlight">
+                "No. Not tonight. Not on my watch."
+            </p>
+            
+            <p class="story-text">
+                She descended the stairs faster than her old bones should have allowed. In the cottage, she grabbed every lantern, every flashlight, every candle. She stripped the batteries from every device she owned. And then, step by agonizing step, she climbed back up—217 stairs through howling wind and horizontal rain.
+            </p>
+            
+            <p class="story-text">
+                At the top, she arranged her lights. A flashlight duct-taped to the railing. Lanterns hung from every hook. Candles in jars, flickering but alive. It wasn't the great beacon her family had tended for generations. It was a feeble thing, a desperate thing.
+            </p>
+            
+            <p class="story-text reveal-text" onclick="revealText(this)">
+                But Eleanor Marsh stood in that gallery through the longest night of her life, physically turning the flashlight beam in slow sweeps across the water, her arms burning, her voice hoarse from shouting into the radio: "Keep coming. I see you. Keep coming."
+            </p>
+            
+            <p class="story-text">
+                Three times the wind nearly took her over the railing. Three times she held on.
+            </p>
+        </div>
+    </section>
+
+    <!-- Falling Action -->
+    <section class="chapter chapter-falling" data-section="4">
+        <div class="chapter-content">
+            <p class="arc-label">IV. Falling Action</p>
+            <h2 class="chapter-title">The Dawn</h2>
+            
+            <p class="story-text">
+                She saw them at 4:47 AM. A shape in the first gray light, impossibly close to the rocks but still afloat. The Sarah Mae, battered and listing, but whole.
+            </p>
+            
+            <p class="story-text">
+                The family made it to shore just as Eleanor's last flashlight died. A father, a mother, three children with wide eyes and salt-crusted hair. They found her collapsed against the lighthouse door, hypothermic and barely conscious.
+            </p>
+            
+            <p class="story-text highlight">
+                "We saw your light," the mother kept saying, tears streaming down her face. "We saw your light."
+            </p>
+            
+            <p class="story-text reveal-text" onclick="revealText(this)">
+                The coast guard arrived at noon. They wrapped Eleanor in blankets, pumped her full of warm fluids, told her she was lucky to be alive. They called her reckless. They called her a hero. She didn't hear any of it. She was watching the lighthouse through the ambulance window, making sure its great eye was turning again.
+            </p>
+            
+            <p class="story-text">
+                The storm had destroyed most of the cottage. Compass was found three days later, somehow alive in what remained of the woodshed. The lighthouse itself still stood, scarred but unbowed, as it had for over a century.
+            </p>
+        </div>
+    </section>
+
+    <!-- Resolution -->
+    <section class="chapter chapter-resolution" data-section="5">
+        <div class="chapter-content">
+            <p class="arc-label">V. Resolution</p>
+            <h2 class="chapter-title">A New Promise</h2>
+            
+            <p class="story-text">
+                Eleanor spent three weeks in the hospital. The day she was released, she found a crowd waiting at the lighthouse. Reporters, officials, the family from the Sarah Mae—and someone else.
+            </p>
+            
+            <p class="story-text">
+                A young woman with weathered hands and determined eyes stepped forward. "I'm Maya Chen. Marine biology student. I heard what you did." She paused. "The lighthouse needs a keeper. I'd like to learn how."
+            </p>
+            
+            <p class="story-text reveal-text" onclick="revealText(this)">
+                Eleanor studied her for a long moment. Then she smiled—the first real smile in weeks.
+            </p>
+            
+            <p class="story-text highlight">
+                "The light doesn't just need someone to keep it burning. It needs someone who understands why it matters."
+            </p>
+            
+            <p class="story-text">
+                That evening, Eleanor climbed the 217 steps one more time—slowly, with Maya beside her. At the top, they watched the sun sink into a calm sea, and Eleanor began to teach her everything she knew.
+            </p>
+            
+            <p class="story-text">
+                The lighthouse at Morrow Point still stands. The light has never gone dark. And if you visit on a quiet evening, you might see two figures in the gallery—one old, one young—watching over the ships that pass in the night.
+            </p>
+            
+            <p class="story-text">
+                Some promises, after all, are worth keeping.
+            </p>
+            
+            <div class="wave-divider"></div>
+            
+            <p class="the-end">The End</p>
+            
+            <button class="restart-btn" onclick="restartStory()">↑ Experience Again</button>
+        </div>
+    </section>
+
+    <script>
+        // State
+        let soundEnabled = false;
+        let stormIntensity = 0;
+        let currentSection = 0;
+        let storyStarted = false;
+
+        // Audio context for sounds
+        let audioContext = null;
+
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playTone(frequency, duration, volume = 0.1) {
+            if (!soundEnabled || !audioContext) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        function playWaveSound() {
+            if (!soundEnabled) return;
+            playTone(80 + Math.random() * 40, 2, 0.05);
+        }
+
+        function playThunderSound() {
+            if (!soundEnabled) return;
+            playTone(40 + Math.random() * 30, 0.5, 0.2);
+            setTimeout(() => playTone(30 + Math.random() * 20, 0.8, 0.15), 100);
+        }
+
+        // Start story
+        function startStory() {
+            document.getElementById('instructionsOverlay').classList.add('hidden');
+            storyStarted = true;
+            initAudio();
+        }
+
+        // Create stars
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = Math.random() * 2 + 1 + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+        createStars();
+
+        // Sound toggle
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            initAudio();
+            document.getElementById('soundIcon').textContent = soundEnabled ? '🔊' : '🔇';
+            document.getElementById('soundText').textContent = soundEnabled ? 'Sound On' : 'Sound Off';
+            
+            if (soundEnabled) {
+                playTone(440, 0.1, 0.1);
+                setTimeout(() => playTone(550, 0.1, 0.1), 100);
+            }
+        }
+
+        // Reveal text interaction
+        function revealText(element) {
+            if (!element.classList.contains('revealed')) {
+                element.classList.add('revealed');
+                playTone(600, 0.15, 0.1);
+            }
+        }
+
+        // Click lighthouse
+        function clickLighthouse() {
+            const icon = document.getElementById('lighthouseIcon');
+            icon.classList.add('clicked');
+            playTone(800, 0.2, 0.15);
+            playTone(1000, 0.2, 0.1);
+            setTimeout(() => icon.classList.remove('clicked'), 500);
+        }
+
+        // Choice system
+        function makeChoice(choice) {
+            document.getElementById('choiceButtons').style.display = 'none';
+            
+            if (choice === 'brave') {
+                document.getElementById('braveResult').classList.add('show');
+            } else {
+                document.getElementById('cautiousResult').classList.add('show');
+            }
+            
+            playTone(500, 0.1, 0.1);
+            playTone(700, 0.2, 0.1);
+        }
+
+        // Beam control
+        const beamControl = document.getElementById('beamControl');
+        const mainBeam = document.getElementById('mainBeam');
+        const beamAngle = document.getElementById('beamAngle');
+
+        beamControl.addEventListener('input', function() {
+            const angle = this.value;
+            mainBeam.classList.remove('auto');
+            mainBeam.style.transform = `rotate(${angle}deg)`;
+            beamAngle.textContent = `${angle}°`;
+        });
+
+        // Lightning effect
+        function triggerLightning() {
+            const lightning = document.getElementById('lightning');
+            lightning.classList.add('flash');
+            playThunderSound();
+            setTimeout(() => lightning.classList.remove('flash'), 200);
+        }
+
+        // Update storm effects based on section
+        function updateStormEffects() {
+            const stormOverlay = document.getElementById('stormOverlay');
+            const stormMeter = document.getElementById('stormMeter');
+            const stormMeterFill = document.getElementById('stormMeterFill');
+            const interactiveLighthouse = document.getElementById('interactiveLighthouse');
+
+            if (currentSection === 2 || currentSection === 3) {
+                stormOverlay.classList.add('active');
+                stormMeter.classList.add('show');
+                
+                if (currentSection === 3) {
+                    stormIntensity = 100;
+                    interactiveLighthouse.classList.add('show');
+                    // Random lightning during climax
+                    if (Math.random() < 0.1) {
+                        triggerLightning();
+                    }
+                } else {
+                    stormIntensity = 50;
+                    interactiveLighthouse.classList.remove('show');
+                }
+            } else {
+                stormOverlay.classList.remove('active');
+                stormMeter.classList.remove('show');
+                interactiveLighthouse.classList.remove('show');
+                stormIntensity = 0;
+            }
+            
+            stormMeterFill.style.width = stormIntensity + '%';
+        }
+
+        // Scroll effects
+        const chapters = document.querySelectorAll('.chapter');
+        const navDots = document.querySelectorAll('.nav-dot');
+        const progressBar = document.getElementById('progressBar');
+
+        function updateOnScroll() {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            
+            progressBar.style.width = scrollPercent + '%';
+
+            chapters.forEach((chapter, index) => {
+                const rect = chapter.getBoundingClientRect();
+                const content = chapter.querySelector('.chapter-content');
+                
+                if (rect.top < window.innerHeight * 0.7 && rect.bottom > window.innerHeight * 0.3) {
+                    content.classList.add('visible');
+                    navDots.forEach(dot => dot.classList.remove('active'));
+                    navDots[index].classList.add('active');
+                    
+                    if (currentSection !== index) {
+                        currentSection = index;
+                        updateStormEffects();
+                        playWaveSound();
+                    }
+                }
+            });
+        }
+
+        // Nav dot click handling
+        navDots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                const sectionIndex = parseInt(dot.dataset.section);
+                chapters[sectionIndex].scrollIntoView({ behavior: 'smooth' });
+                playTone(400 + sectionIndex * 100, 0.15, 0.1);
+            });
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!storyStarted && e.key !== 'Enter' && e.key !== ' ') return;
+            
+            switch(e.key) {
+                case ' ':
+                case 'Enter':
+                    e.preventDefault();
+                    if (!storyStarted) {
+                        startStory();
+                    } else {
+                        const nextSection = Math.min(currentSection + 1, chapters.length - 1);
+                        chapters[nextSection].scrollIntoView({ behavior: 'smooth' });
+                    }
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    window.scrollBy({ top: window.innerHeight * 0.5, behavior: 'smooth' });
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    window.scrollBy({ top: -window.innerHeight * 0.5, behavior: 'smooth' });
+                    break;
+                case 'l':
+                case 'L':
+                    const beam = document.getElementById('mainBeam');
+                    beam.classList.toggle('auto');
+                    if (!beam.classList.contains('auto')) {
+                        beam.style.transform = 'rotate(0deg)';
+                    }
+                    playTone(600, 0.1, 0.1);
+                    break;
+                case 's':
+                case 'S':
+                    toggleSound();
+                    break;
+            }
+        });
+
+        // Click ripple effect
+        document.addEventListener('click', function(e) {
+            if (!storyStarted) return;
+            
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            ripple.style.left = e.clientX - 25 + 'px';
+            ripple.style.top = e.clientY - 25 + 'px';
+            ripple.style.width = '50px';
+            ripple.style.height = '50px';
+            document.body.appendChild(ripple);
+            
+            setTimeout(() => ripple.remove(), 600);
+        });
+
+        // Scroll to top
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Restart story
+        function restartStory() {
+            // Reset all reveal texts
+            document.querySelectorAll('.reveal-text').forEach(el => {
+                el.classList.remove('revealed');
+            });
+            
+            // Reset choice
+            document.getElementById('choiceButtons').style.display = 'flex';
+            document.getElementById('braveResult').classList.remove('show');
+            document.getElementById('cautiousResult').classList.remove('show');
+            
+            // Scroll to top
+            scrollToTop();
+            
+            playTone(400, 0.1, 0.1);
+            playTone(500, 0.1, 0.1);
+            playTone(600, 0.2, 0.1);
+        }
+
+        // Lightning interval during storm
+        setInterval(() => {
+            if (currentSection === 3 && storyStarted) {
+                if (Math.random() < 0.2) {
+                    triggerLightning();
+                }
+            }
+        }, 3000);
+
+        // Initialize
+        window.addEventListener('scroll', updateOnScroll);
+        window.addEventListener('load', () => {
+            updateOnScroll();
+            chapters[0].querySelector('.chapter-content').classList.add('visible');
+        });
+    </script>
+</body>
+</html>

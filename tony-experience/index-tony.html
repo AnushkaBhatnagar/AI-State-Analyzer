@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Behind the Filter - Instagram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            zoom: 0.7;
+        }
+
+        .phone {
+            width: 375px;
+            height: 812px;
+            background: #000;
+            border-radius: 40px;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            border-radius: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Instagram Header */
+        .insta-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dbdbdb;
+            background: white;
+        }
+
+        .insta-logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+
+        /* Feed */
+        .feed {
+            height: calc(100% - 60px);
+            overflow-y: auto;
+            background: #fafafa;
+        }
+
+        .feed::-webkit-scrollbar {
+            width: 0;
+        }
+
+        /* Post */
+        .post {
+            background: white;
+            margin-bottom: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            gap: 10px;
+        }
+
+        .post-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+        }
+
+        .post-username {
+            font-size: 14px;
+            font-weight: 600;
+            color: #262626;
+        }
+
+        .post-image-container {
+            position: relative;
+            width: 100%;
+            height: 375px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .post-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.4s ease;
+        }
+
+        .click-hint {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 500;
+            z-index: 10;
+            opacity: 0.7;
+        }
+
+        .post-image-container:hover .glitch-overlay {
+            opacity: 0.3;
+        }
+
+
+        .post-caption {
+            padding: 12px 16px;
+        }
+
+        .post-caption-text {
+            font-size: 14px;
+            color: #262626;
+            line-height: 1.5;
+        }
+
+        .post-caption-username {
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        /* Post Actions - Instagram style */
+        .post-actions {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px 0;
+            gap: 8px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .action-btn.liked {
+            animation: likeAnimation 0.4s ease;
+        }
+
+        @keyframes likeAnimation {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .post-likes {
+            font-size: 14px;
+            font-weight: 600;
+            color: #262626;
+            padding: 0;
+        }
+
+        /* Comment Section */
+        .comment-section {
+            padding: 12px 16px;
+            border-top: 1px solid #efefef;
+        }
+
+        .comment-label {
+            font-size: 12px;
+            color: #8e8e8e;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .comment-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .comment-input:focus {
+            outline: none;
+            border-color: #0095f6;
+        }
+
+        .comment-input::placeholder {
+            color: #8e8e8e;
+        }
+
+        .comment-submit {
+            margin-top: 8px;
+            padding: 8px 16px;
+            background: #0095f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .comment-submit:hover {
+            background: #0081d5;
+        }
+
+        .comment-feedback {
+            margin-top: 6px;
+            font-size: 11px;
+            color: #00c853;
+            font-style: italic;
+        }
+
+        /* Double Click Like Animation */
+        .like-burst {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            color: #ed4956;
+            pointer-events: none;
+            animation: likeBurst 0.8s ease-out forwards;
+            z-index: 25;
+        }
+
+        @keyframes likeBurst {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0);
+            }
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1.5);
+            }
+        }
+
+
+        /* Interaction Hint */
+        .interaction-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 12px;
+            z-index: 100;
+        }
+
+
+        /* Notification Container - stacks notifications properly */
+        .notification-container {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        /* iOS-style Instagram Notification */
+        .ios-notification {
+            position: relative;
+            background: rgba(255, 255, 255, 0.95);
+            pointer-events: auto;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 12px 14px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+            z-index: 500;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            animation: notifSlideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .ios-notification.hiding {
+            animation: notifSlideOut 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+        }
+
+        .ios-notification .notif-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .ios-notification .notif-icon img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .ios-notification .notif-icon-text {
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .ios-notification .notif-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .ios-notification .notif-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+
+        .ios-notification .notif-app {
+            font-size: 13px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .ios-notification .notif-time {
+            font-size: 12px;
+            color: #8e8e8e;
+        }
+
+        .ios-notification .notif-text {
+            font-size: 13px;
+            color: #262626;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .ios-notification .notif-text strong {
+            font-weight: 600;
+        }
+
+        .ios-notification.clickable {
+            cursor: pointer;
+        }
+
+        .ios-notification.clickable:active {
+            transform: scale(0.98);
+            background: rgba(240, 240, 240, 0.95);
+        }
+
+        /* Dramatic notification styles - flashy background */
+        .ios-notification.dramatic {
+            animation: notifSlideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1), notifFlash 0.8s ease-in-out 0.5s 3;
+        }
+
+        .ios-notification.pulse {
+            animation: notifSlideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1), notifFlash 0.6s ease-in-out 0.3s infinite;
+        }
+
+        @keyframes notifFlash {
+            0%, 100% { 
+                background: rgba(255, 128, 128, 0.95);
+            }
+            50% { 
+                background: rgba(255, 219, 219, 0.95);
+                box-shadow: 0 4px 30px rgba(237, 73, 86, 0.3), 0 0 25px rgba(237, 73, 86, 0.25);
+            }
+        }
+
+        @keyframes notifSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-100%) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes notifSlideOut {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-100%) scale(0.9);
+            }
+        }
+
+        /* Dark Signup Page */
+        .signup-page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 30px;
+            z-index: 2000;
+        }
+
+        .signup-page.hidden {
+            display: none;
+        }
+
+        .signup-logo {
+            font-size: 36px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #833ab4, #fd1d1d, #fcb045);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 40px;
+        }
+
+        .signup-form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .signup-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: #121212;
+            border: 1px solid #363636;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .signup-input:focus {
+            outline: none;
+            border-color: #0095f6;
+        }
+
+        .signup-input::placeholder {
+            color: #8e8e8e;
+        }
+
+        .signup-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(45deg, #833ab4, #fd1d1d, #fcb045);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: opacity 0.2s ease;
+        }
+
+        .signup-btn:hover {
+            opacity: 0.9;
+        }
+
+        .signup-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .signup-disclaimer {
+            margin-top: 20px;
+            font-size: 11px;
+            color: #8e8e8e;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        /* Clickable Notification */
+        .dm-notification.clickable {
+            cursor: pointer;
+        }
+
+        .dm-notification.clickable:hover {
+            background: #f5f5f5;
+        }
+
+        /* Mean Comment */
+        .mean-comment {
+            padding: 8px 16px 12px;
+            font-size: 13px;
+            color: #262626;
+        }
+
+        .mean-comment .comment-user {
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .mean-comment .comment-text {
+            color: #262626;
+        }
+
+        /* ====== CHAT OVERLAY ====== */
+        .chat-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #fff;
+            z-index: 1500;
+            display: none;
+            flex-direction: column;
+        }
+
+        .chat-overlay.active {
+            display: flex;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #dbdbdb;
+            background: #fafafa;
+            gap: 12px;
+        }
+
+        .chat-back {
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .chat-user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #833ab4, #fd1d1d, #fcb045);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .chat-user-info {
+            flex: 1;
+        }
+
+        .chat-username {
+            font-size: 14px;
+            font-weight: 600;
+            color: #262626;
+        }
+
+        .chat-status {
+            font-size: 11px;
+            color: #8e8e8e;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .chat-message {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .chat-message.them {
+            align-self: flex-start;
+            background: #efefef;
+            color: #262626;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-message.me {
+            align-self: flex-end;
+            background: #0095f6;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-message.typing {
+            background: #efefef;
+            color: #8e8e8e;
+            font-style: italic;
+        }
+
+        .chat-input-area {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-top: 1px solid #dbdbdb;
+            gap: 10px;
+            background: white;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #dbdbdb;
+            border-radius: 22px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .chat-input:focus {
+            border-color: #8e8e8e;
+        }
+
+        .chat-send {
+            background: none;
+            border: none;
+            color: #0095f6;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .chat-send:disabled {
+            color: #b3dffc;
+            cursor: not-allowed;
+        }
+
+        /* Context Menu Styling */
+        .post-context-menu {
+            position: absolute;
+            background: white;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            min-width: 150px;
+            display: none;
+            flex-direction: column;
+            padding: 4px 0;
+        }
+
+        .post-context-menu.active {
+            display: flex;
+        }
+
+        .post-context-menu.hidden {
+            display: none;
+        }
+
+        .context-menu-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            color: #262626;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            user-select: none;
+        }
+
+        .context-menu-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .context-menu-item:active {
+            background-color: #efefef;
+        }
+
+        /* Zoom Functionality */
+        .post-image-container.zoomable {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .post-image.zoomed {
+            cursor: grab;
+            transform-origin: center center;
+        }
+
+        .post-image.zoomed:active {
+            cursor: grabbing;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <div class="screen">
+            <!-- Dark Signup Page -->
+            <div class="signup-page" id="signupPage">
+                <div class="signup-logo">Instagram</div>
+                <div class="signup-form">
+                    <input type="text" class="signup-input" id="nameInput" placeholder="Name" autocomplete="off">
+                    <input type="text" class="signup-input" id="usernameInput" placeholder="Username" autocomplete="off">
+                    <button class="signup-btn" id="signupBtn" disabled>Log In</button>
+                </div>
+                <div class="signup-disclaimer">By signing up, you agree to experience what social media really feels like.</div>
+            </div>
+
+            <!-- Notification Container for proper stacking -->
+            <div class="notification-container" id="notificationContainer"></div>
+
+            <!-- Instagram Interface -->
+            <div class="insta-header">
+                <div class="insta-logo">Instagram</div>
+            </div>
+
+            <div class="feed" id="feed">
+                <!-- Posts will be inserted here -->
+            </div>
+
+            <!-- Interaction Hint -->
+            <div class="interaction-hint" id="interactionHint"></div>
+
+            <!-- Chat Overlay -->
+            <div class="chat-overlay" id="chatOverlay">
+                <div class="chat-header">
+                    <div class="chat-back" id="chatBack">←</div>
+                    <div class="chat-user-avatar" id="chatAvatar"></div>
+                    <div class="chat-user-info">
+                        <div class="chat-username" id="chatUsername"></div>
+                        <div class="chat-status">Active now</div>
+                    </div>
+                </div>
+                <div class="chat-messages" id="chatMessages"></div>
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="chatInput" placeholder="Message..." autocomplete="off">
+                    <button class="chat-send" id="chatSend">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // User info from signup
+        let userName = '';
+        let userUsername = '';
+        let likeCount = 0;
+        
+        // Always in "Behind the Filter" mode
+        let truthLevel = 0;
+        let postsRevealed = 0;
+        
+        // Random usernames for notifications (realistic formats)
+        const fakeUsers = ['emma.j', 'sarah.m22', 'jess_97', 'alex.chen_', 'tyler.k23', '_hannah.m', 'olivia.rose_', 'mikeyy.b', 'jake_r', 'sofia.l_'];
+
+        // Category-based posts with increasing envy levels
+        // Each category has 5-6 posts that get progressively more extreme
+        const categories = {
+            travel: {
+                name: 'Travel',
+                currentLevel: 0,
+                posts: [
+                    { username: 'amy.wanders', avatar: '✈️', image: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=400&h=400&fit=crop', caption: 'Quick weekend getaway! 🌲 #roadtrip #camping', likes: '234' },
+                    { username: 'mike_t23', avatar: '🌴', image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=400&fit=crop', caption: 'Finally made it to Bali! 🏝️ #blessed #beachlife', likes: '1,847' },
+                    { username: 'liv.luxe_', avatar: '✨', image: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=400&h=400&fit=crop', caption: 'Upgraded to the villa suite 🥂 #luxuryresort #treatyourself', likes: '4,521' },
+                    { username: 'rachel.k99', avatar: '👑', image: 'https://images.unsplash.com/photo-1700811476830-40d39b019461?q=80&w=1371&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', caption: 'First class to the Maldives ✈️💎 #firstclass #livingmybestlife', likes: '12,893' },
+                    { username: '_daniels.life_', avatar: '🛥️', image: 'https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=400&h=400&fit=crop', caption: 'Our private yacht for the week 🛥️🌊 #yachtlife #blessed', likes: '45,672' },
+                    { username: 'chris.blair', avatar: '🏝️', image: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?w=400&h=400&fit=crop', caption: 'Just bought my own island... casual Tuesday 🏝️👑 #privateisland #goals', likes: '234,891' }
+                ]
+            },
+            food: {
+                name: 'Food',
+                currentLevel: 0,
+                posts: [
+                    { username: 'eatswith.em', avatar: '🍕', image: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400&h=400&fit=crop', caption: 'Yummy brunch spot! 🥑🍳 #brunch #foodie', likes: '156' },
+                    { username: 'nina.eats_', avatar: '🍣', image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400&h=400&fit=crop', caption: 'Omakase night! 🍣✨ #sushi #omakase #datenight', likes: '2,341' },
+                    { username: 'maya.k02', avatar: '⭐', image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=400&fit=crop', caption: '3 Michelin stars, 12 courses, pure art 🌟🍽️ #finedining', likes: '8,923' },
+                    { username: 'james.h_', avatar: '👨‍🍳', image: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=400&h=400&fit=crop', caption: 'Our private chef made this just for us 👨‍🍳💎 #privatechef', likes: '23,456' },
+                    { username: '_chloe.taste', avatar: '🥩', image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=400&h=400&fit=crop', caption: '$1000 A5 Wagyu with gold flakes... worth every penny 🥩✨ #wagyu', likes: '67,234' },
+                    { username: 'ben.harrison', avatar: '🍄', image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=400&fit=crop', caption: 'White truffle season at my villa in Alba 🍄👑 flown in fresh daily', likes: '156,789' }
+                ]
+            },
+            professional: {
+                name: 'Professional Success',
+                currentLevel: 0,
+                posts: [
+                    { username: 'mark.builds', avatar: '💼', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop', caption: 'Got the promotion! Hard work pays off 💪 #careergoals', likes: '342' },
+                    { username: 'jessica.w_', avatar: '🏢', image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=400&fit=crop', caption: 'New office, new chapter 🏢✨ #corneroffice #blessed', likes: '1,567' },
+                    { username: 'ryan_ceo', avatar: '📈', image: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop', caption: 'Closed a 7-figure deal today 📈💰 #entrepreneur #success', likes: '12,345' },
+                    { username: 'kate.nguyen', avatar: '📰', image: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=400&h=400&fit=crop', caption: 'Made the Forbes 30 Under 30 list! Dreams come true 🌟 #forbes', likes: '45,678' },
+                    { username: 'david.lin_', avatar: '🔔', image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=400&fit=crop', caption: 'Rang the bell at NYSE today 🔔📈 IPO dreams realized #wallstreet', likes: '234,567' },
+                    { username: 'alexandra.vp', avatar: '💎', image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=400&fit=crop', caption: 'Just acquired my 3rd company this quarter 💎🚀 #billionaire #empire', likes: '567,890' }
+                ]
+            },
+            relationships: {
+                name: 'Relationships',
+                currentLevel: 0,
+                posts: [
+                    { username: 'em.and.jack', avatar: '💕', image: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400&h=400&fit=crop', caption: 'Movie night with my person 🎬❤️ #datenight #cozy', likes: '423' },
+                    { username: 'nick.and.sarah', avatar: '💍', image: 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=400&h=400&fit=crop', caption: 'She said YES! 💍✨ #engaged #shesaidyes', likes: '5,678' },
+                    { username: 'mia.taylor_', avatar: '👰', image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=400&h=400&fit=crop', caption: 'Best day of our lives 👰🤵 #fairytalewedding #dreamwedding', likes: '23,456' },
+                    { username: 'the.millers', avatar: '👨‍👩‍👧‍👦', image: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400&h=400&fit=crop', caption: 'Our little perfect family 👨‍👩‍👧‍👦💕 #familygoals #blessed', likes: '56,789' },
+                    { username: 'harrison.fam', avatar: '🏰', image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=400&fit=crop', caption: 'Family photo at our new estate 🏰 generational wealth #mansion', likes: '123,456' },
+                    { username: 'the.kims_', avatar: '👑', image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&h=400&fit=crop', caption: 'Three generations of success, love, and legacy 👑💎 #dynasty', likes: '345,678' }
+                ]
+            },
+            wellness: {
+                name: 'Wellness',
+                currentLevel: 0,
+                posts: [
+                    { username: 'fitwithjosh', avatar: '💪', image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=400&fit=crop', caption: 'Morning workout done! 💪🌅 #fitness #gymlife', likes: '234' },
+                    { username: 'anna.transforms', avatar: '🔥', image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&h=400&fit=crop', caption: '6 month transformation! Hard work pays off 🔥 #gains', likes: '4,567' },
+                    { username: 'tara.heals_', avatar: '🧘', image: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=400&h=400&fit=crop', caption: 'Wellness retreat in Sedona 🧘‍♀️✨ #healing #retreat', likes: '12,345' },
+                    { username: 'matt.bio_', avatar: '🧬', image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=400&fit=crop', caption: 'My $50k biohacking setup 🧬💉 #biohacking #optimize', likes: '34,567' },
+                    { username: 'dr.lisa.k', avatar: '⚗️', image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400&h=400&fit=crop', caption: 'Just finished my stem cell treatment in Switzerland ⚗️✨', likes: '89,123' },
+                    { username: 'sophia.renew', avatar: '🌟', image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&h=400&fit=crop', caption: 'Age is just a number when you have unlimited resources 🌟👑 #ageless', likes: '234,567' }
+                ]
+            }
+        };
+
+        // Track which level each category is at
+        const categoryLevels = {
+            travel: 0,
+            food: 0,
+            professional: 0,
+            relationships: 0,
+            wellness: 0
+        };
+
+        // Mean DM messages for each category
+        const meanMessages = {
+            travel: [
+                "You'll never afford to go anywhere worth posting",
+                "Still pretending your staycation was 'self-care'?",
+                "Their weekend trip cost more than your rent",
+                "You're too broke to even dream about this",
+                "They're living your dream life. You're just watching.",
+                "Another trip you can't afford to take",
+                "Must be nice having rich parents"
+            ],
+            food: [
+                "No wonder you look the way you do",
+                "Your body already shows you can't afford this diet",
+                "Keep stress eating while they eat at Michelin stars",
+                "This is why you'll always hate how you look",
+                "Still eating garbage while pretending you're healthy",
+                "They can eat whatever they want. You can't.",
+                "Your metabolism gave up on you years ago"
+            ],
+            professional: [
+                "They started the same time as you. Look where they are.",
+                "You're nothing compared to them",
+                "Still telling people 'it's coming' while they've already made it",
+                "Your career peaked years ago and you know it",
+                "They actually have talent. You just have excuses.",
+                "Nobody will ever pay you what you're worth",
+                "You'll never escape your dead-end life"
+            ],
+            relationships: [
+                "Nobody will ever love you the way they're loved",
+                "You're going to die alone and you know it",
+                "Even if you found someone, they'd leave eventually",
+                "Your ex is happier without you. Everyone is.",
+                "You're not lovable. Accept it.",
+                "They have what you'll never have",
+                "Stop pretending you're okay being single"
+            ],
+            wellness: [
+                "You'll never have the discipline to look like that",
+                "They wake up early to work out. You wake up empty.",
+                "Your body is proof you've given up",
+                "No amount of 'self-care' will fix what's wrong with you",
+                "They're glowing. You're rotting.",
+                "You're too lazy to ever change",
+                "Mental health walk won't fix how pathetic you are"
+            ]
+        };
+
+        // ====== AI NOTIFICATION API ======
+        const AI_SERVER_URL = 'http://localhost:5000';
+        
+        // Get AI-generated notification (fast, async)
+        async function getAINotification(category, level) {
+            try {
+                const response = await fetch(`${AI_SERVER_URL}/generate-notification`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        category: category,
+                        level: level,
+                        username: userUsername,
+                        like_count: likeCount
+                    })
+                });
+                
+                if (!response.ok) throw new Error('API error');
+                
+                const data = await response.json();
+                return data.notification;
+            } catch (error) {
+                console.log('AI API failed, using fallback:', error);
+                return null; // Will use fallback
+            }
+        }
+
+        // ====== iOS-STYLE NOTIFICATION SYSTEM ======
+        
+        // Create iOS-style notification (uses flex container - auto stacks & shifts)
+        // isDM: if true, don't apply flashy effects (DMs stay clean, only notifs flash)
+        function showIOSNotification(text, clickHandler = null, duration = 4000, isDM = false) {
+            const container = document.getElementById('notificationContainer');
+            
+            // Don't stack more than 4 notifications
+            if (container.children.length >= 4) {
+                // Remove oldest notification (first child)
+                const oldest = container.firstChild;
+                if (oldest) {
+                    oldest.classList.add('hiding');
+                    setTimeout(() => oldest.remove(), 300);
+                }
+            }
+            
+            const notif = document.createElement('div');
+            notif.className = 'ios-notification' + (clickHandler ? ' clickable' : '');
+            notif.innerHTML = `
+                    <div class="notif-icon">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="white">
+                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                        </svg>
+                    </div>
+                    <div class="notif-body">
+                        <div class="notif-header">
+                            <span class="notif-app">Instagram</span>
+                            <span class="notif-time">now</span>
+                        </div>
+                        <div class="notif-text">${text}</div>
+                    </div>
+                `;
+                
+            if (clickHandler) {
+                notif.addEventListener('click', () => clickHandler(notif));
+            }
+            
+            // All NON-DM notifications get flash effect, 50% also pulse
+            if (!isDM) {
+                notif.classList.add('dramatic');
+                // 50% also get infinite pulse
+                if (Math.random() < 0.50) {
+                    notif.classList.add('pulse');
+                }
+            }
+            
+            // Add to container (flexbox handles stacking & shift when removed)
+            container.appendChild(notif);
+            
+            // Auto-dismiss
+            if (duration > 0) {
+                setTimeout(() => {
+                    if (notif.parentNode) {
+                        notif.classList.add('hiding');
+                        setTimeout(() => notif.remove(), 300);
+                    }
+                }, duration);
+            }
+        }
+
+        // Show mean DM notification (with anti-repetition) - CLICKABLE to chat
+        function showMeanDM(category) {
+            const cats = Object.keys(meanMessages);
+            const cat = category || cats[Math.floor(Math.random() * cats.length)];
+            const messages = meanMessages[cat];
+            
+            // Get message that wasn't recently used in this category
+            const lastMessage = recentDMMessages[cat] || '';
+            let message;
+            let attempts = 0;
+            do {
+                message = messages[Math.floor(Math.random() * messages.length)];
+                attempts++;
+            } while (message === lastMessage && attempts < 10);
+            
+            // Track this message
+            recentDMMessages[cat] = message;
+            
+            // Get username that's different from last one
+            const randomUser = getRandomUsername();
+            
+            // Pass isDM=true so DMs don't flash, but make it clickable to chat
+            showIOSNotification(
+                `<strong>${randomUser}</strong> ${message}`,
+                (notif) => {
+                    // Remove notification
+                    notif.classList.add('hiding');
+                    setTimeout(() => notif.remove(), 300);
+                    // Redirect to chat page (same tab)
+                    window.location.href = `chat.html?user=${encodeURIComponent(randomUser)}&msg=${encodeURIComponent(message)}`;
+                },
+                3000, // Auto-dismiss after 3 seconds if not clicked
+                true // isDM = true (no flash)
+            );
+        }
+
+        // Queue for revealing next intense post after a like
+        // Each item stores: { post, afterElement }
+        let revealQueue = [];
+
+        // Convert categories to feed posts (starting with level 0 from each)
+        function getInitialPosts() {
+            return Object.keys(categories).map(catKey => ({
+                ...categories[catKey].posts[0],
+                category: catKey,
+                level: 0
+            }));
+        }
+
+        let posts = getInitialPosts();
+
+        // Auto-start on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('interactionHint').style.display = 'block';
+            document.getElementById('interactionHint').textContent = 'Double-tap to like ❤️ • Likes unlock more intense posts';
+            loadFeed();
+        });
+
+        function loadFeed() {
+            const feed = document.getElementById('feed');
+            feed.innerHTML = '';
+            
+            posts.forEach((post, index) => {
+                const postEl = createPost(post, index);
+                feed.appendChild(postEl);
+            });
+        }
+
+        function createPost(post, index) {
+            const postEl = document.createElement('div');
+            postEl.className = 'post';
+            postEl.dataset.index = index;
+            postEl.dataset.category = post.category;
+            postEl.dataset.level = post.level;
+            
+            postEl.innerHTML = `
+                <div class="post-header">
+                    <div class="post-avatar" style="display:flex;align-items:center;justify-content:center;font-size:18px;">${post.avatar}</div>
+                    <div class="post-username">${post.username}</div>
+                </div>
+                <div class="post-image-container">
+                    <img src="${post.image}" alt="Post" class="post-image" onerror="this.onerror=null; this.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; this.style.display='flex'; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22><rect fill=%22%23667eea%22 width=%22400%22 height=%22400%22/><text x=%22200%22 y=%22200%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2224%22 font-family=%22Arial%22>${categories[post.category].name} L${post.level + 1}</text></svg>'">
+                    <div class="click-hint">Double-tap to like ❤️</div>
+                </div>
+                <div class="post-actions">
+                    <button class="action-btn like-btn" data-like data-category="${post.category}">🤍</button>
+                    <span class="post-likes">${post.likes} likes</span>
+                </div>
+                <div class="post-caption">
+                    <span class="post-caption-text">
+                        <span class="post-caption-username">${post.username}</span>
+                        ${post.caption}
+                    </span>
+                </div>
+            `;
+            
+            setupInteractions(postEl, post, index);
+            
+            return postEl;
+        }
+
+
+        // Upgrade a category to the next intensity level
+        function upgradeCategory(category, afterElement) {
+            const currentLevel = categoryLevels[category];
+            const maxLevel = categories[category].posts.length - 1;
+            
+            if (currentLevel < maxLevel) {
+                categoryLevels[category]++;
+                const newLevel = categoryLevels[category];
+                const newPost = {
+                    ...categories[category].posts[newLevel],
+                    category: category,
+                    level: newLevel
+                };
+                
+                // Queue this post to appear after the liked post
+                revealQueue.push({ post: newPost, afterElement: afterElement });
+                console.log(`📈 ${categories[category].name} upgraded to level ${newLevel + 1}!`);
+            }
+        }
+
+        // Update the envy/intensity meter
+        function updateEnvyMeter() {
+            const totalLevels = Object.values(categoryLevels).reduce((a, b) => a + b, 0);
+            const maxTotal = Object.keys(categories).length * 5; // 5 max levels per category
+            const percentage = Math.round((totalLevels / maxTotal) * 100);
+            document.getElementById('truthMeter').textContent = `Envy: ${percentage}%`;
+        }
+
+        // Insert queued posts into feed
+        function processRevealQueue() {
+            if (revealQueue.length > 0) {
+                const feed = document.getElementById('feed');
+                const item = revealQueue.shift();
+                const newPost = item.post;
+                const afterElement = item.afterElement;
+                const postEl = createPost(newPost, posts.length);
+                
+                // Add to posts array
+                posts.push(newPost);
+                
+                // Insert after a delay with animation
+                postEl.style.opacity = '0';
+                postEl.style.transform = 'translateY(-20px)';
+                
+                // Insert immediately after the liked post
+                if (afterElement && afterElement.nextSibling) {
+                    feed.insertBefore(postEl, afterElement.nextSibling);
+                } else if (afterElement) {
+                    feed.appendChild(postEl);
+                } else {
+                    feed.insertBefore(postEl, feed.children[1]);
+                }
+                
+                setTimeout(() => {
+                    postEl.style.transition = 'all 0.5s ease';
+                    postEl.style.opacity = '1';
+                    postEl.style.transform = 'translateY(0)';
+                }, 100);
+                
+                console.log(`✨ New ${categories[newPost.category].name} post appeared below liked post!`);
+            }
+        }
+
+        // Setup all interactive features
+        function setupInteractions(postEl, post, index) {
+            const container = postEl.querySelector('.post-image-container');
+            const postImage = postEl.querySelector('.post-image');
+            
+            // Track zoom level and pan position
+            let currentZoom = 1;
+            let offsetX = 0;
+            let offsetY = 0;
+            
+            // Desktop double-click to like
+            container.addEventListener('dblclick', function(e) {
+                e.preventDefault();
+                triggerLike(postEl, container);
+            });
+            
+            // Right-click context menu
+            container.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                
+                // Remove any existing context menu
+                const existingMenu = container.querySelector('.post-context-menu');
+                if (existingMenu) existingMenu.remove();
+                
+                // Create context menu
+                const contextMenu = document.createElement('div');
+                contextMenu.className = 'post-context-menu active';
+                contextMenu.style.top = (e.clientY - container.getBoundingClientRect().top) + 'px';
+                contextMenu.style.left = (e.clientX - container.getBoundingClientRect().left) + 'px';
+                
+                // Add menu items
+                const copyLinkItem = document.createElement('div');
+                copyLinkItem.className = 'context-menu-item';
+                copyLinkItem.textContent = 'Copy Link';
+                copyLinkItem.addEventListener('click', () => {
+                    contextMenu.remove();
+                    console.log('Copy Link clicked');
+                });
+                
+                const seeMoreItem = document.createElement('div');
+                seeMoreItem.className = 'context-menu-item';
+                seeMoreItem.textContent = 'See More';
+                seeMoreItem.addEventListener('click', () => {
+                    contextMenu.remove();
+                    console.log('See More clicked');
+                });
+                
+                contextMenu.appendChild(copyLinkItem);
+                contextMenu.appendChild(seeMoreItem);
+                container.appendChild(contextMenu);
+                
+                // Close menu when clicking outside
+                document.addEventListener('click', function closeMenu() {
+                    if (contextMenu && contextMenu.parentNode) {
+                        contextMenu.remove();
+                    }
+                    document.removeEventListener('click', closeMenu);
+                });
+            });
+            
+            // Scroll wheel zoom
+            container.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                
+                // Calculate zoom change
+                const zoomSpeed = 0.1;
+                const oldZoom = currentZoom;
+                
+                if (e.deltaY < 0) {
+                    currentZoom = Math.min(currentZoom + zoomSpeed, 3); // Max zoom 3x
+                } else {
+                    currentZoom = Math.max(currentZoom - zoomSpeed, 1); // Min zoom 1x
+                }
+                
+                // Apply zoom transform
+                postImage.style.transform = `scale(${currentZoom})`;
+                
+                // Visual feedback
+                if (currentZoom > 1) {
+                    postImage.classList.add('zoomed');
+                } else {
+                    postImage.classList.remove('zoomed');
+                    currentZoom = 1;
+                    postImage.style.transform = 'scale(1)';
+                }
+            }, { passive: false });
+            
+            // Helper function to trigger like
+            function triggerLike(postEl, container) {
+                const likeBtn = postEl.querySelector('[data-like]');
+                const category = postEl.dataset.category;
+                
+                // Only process if not already liked
+                if (likeBtn.textContent === '🤍') {
+                    // Show heart burst animation
+                    const burst = document.createElement('div');
+                    burst.className = 'like-burst';
+                    burst.textContent = '❤️';
+                    container.appendChild(burst);
+                    setTimeout(() => burst.remove(), 800);
+                    
+                    // Mark as liked
+                    likeBtn.textContent = '❤️';
+                    likeBtn.classList.add('liked');
+                    
+                    // Use centralized like handler
+                    handleLike(category, postEl);
+                }
+            }
+            
+            // Like button click
+            const likeBtn = postEl.querySelector('[data-like]');
+            likeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                // Read category from data attribute, not closure
+                const category = postEl.dataset.category;
+                
+                console.log('Clicked like button, category:', category);
+                
+                if (likeBtn.textContent === '🤍') {
+                    likeBtn.textContent = '❤️';
+                    likeBtn.classList.add('liked');
+                    handleLike(category, postEl);
+                } else {
+                    likeBtn.textContent = '🤍';
+                    likeBtn.classList.remove('liked');
+                }
+            });
+        }
+
+        // Centralized like handler - MIX of AI (30%) and hardcoded (70%)
+        async function handleLike(category, postEl) {
+            likeCount++;
+            
+            // Get the current level for this category (used for AI intensity)
+            const currentLevel = categoryLevels[category] + 1; // +1 because we're about to upgrade
+            
+            // 30% chance to try AI, 70% hardcoded
+            const useAI = Math.random() < 0.3;
+            
+            if (useAI) {
+                // Try AI notification
+                try {
+                    const aiMessage = await getAINotification(category, currentLevel);
+                    if (aiMessage) {
+                        const randomUser = getRandomUsername();
+                        // AI DMs: clickable, no flash, 3 second timeout
+                        showIOSNotification(
+                            `<strong>${randomUser}</strong> ${aiMessage}`,
+                            (notif) => {
+                                notif.classList.add('hiding');
+                                setTimeout(() => notif.remove(), 300);
+                                window.location.href = `chat.html?user=${encodeURIComponent(randomUser)}&msg=${encodeURIComponent(aiMessage)}`;
+                            },
+                            3000, // 3 second timeout
+                            true // isDM = true (no flash)
+                        );
+                        console.log(`[AI] Level ${currentLevel}: ${aiMessage}`);
+                    } else {
+                        // AI failed, use hardcoded
+                        showMeanDM(category);
+                    }
+                } catch (error) {
+                    console.log('AI failed, using hardcoded');
+                    showMeanDM(category);
+                }
+            } else {
+                // Use hardcoded notification (70% of the time)
+                showMeanDM(category);
+                console.log(`[Hardcoded] Category: ${category}`);
+            }
+            
+            upgradeCategory(category, postEl);
+            setTimeout(() => processRevealQueue(), 1000);
+        }
+
+        // Show "someone unfollowed you" notification
+        function showUnfollowedNotification() {
+            const randomUser = fakeUsers[Math.floor(Math.random() * fakeUsers.length)];
+            showIOSNotification(`<strong>${randomUser}</strong> unfollowed you`);
+        }
+
+        // Show "removed from group chat" notification
+        function showGroupChatNotification() {
+            showIOSNotification(`<strong>@${userUsername}</strong> was removed from a group chat`);
+        }
+
+        // Show fake "someone liked your post" notification (clickable)
+        function showFakeLikeNotification() {
+            showIOSNotification(
+                `Someone liked your post! Tap to see who 💗`,
+                (notif) => {
+                    notif.querySelector('.notif-text').innerHTML = `<strong>Just kidding.</strong> Nobody did. 💔`;
+                    notif.classList.remove('clickable');
+                    setTimeout(() => {
+                        notif.classList.add('hiding');
+                        setTimeout(() => notif.remove(), 300);
+                    }, 2500);
+                },
+                0 // Don't auto-dismiss - wait for click
+            );
+        }
+
+        // ====== RANDOM NOTIFICATION TIMER SYSTEM ======
+        let notificationTimer = null;
+        let notificationCount = 0;
+        
+        // ====== ANTI-REPETITION TRACKING ======
+        let recentNotificationIndexes = []; // Track last 4 notification types
+        let recentDMMessages = {}; // Track last message per category
+        let lastUsedUsername = ''; // Track last username used
+        
+        // Get a random item that wasn't recently used
+        function getRandomWithoutRepeat(array, recentItems, maxRecent = 3) {
+            if (array.length <= maxRecent) {
+                // If array is small, just pick random
+                return array[Math.floor(Math.random() * array.length)];
+            }
+            
+            let attempts = 0;
+            let item;
+            do {
+                item = array[Math.floor(Math.random() * array.length)];
+                attempts++;
+            } while (recentItems.includes(item) && attempts < 10);
+            
+            return item;
+        }
+        
+        // Get random username that's different from last one
+        function getRandomUsername() {
+            let username;
+            let attempts = 0;
+            do {
+                username = fakeUsers[Math.floor(Math.random() * fakeUsers.length)];
+                attempts++;
+            } while (username === lastUsedUsername && attempts < 10);
+            
+            lastUsedUsername = username;
+            return username;
+        }
+        
+        // All possible random notifications (exclusion-focused)
+        const randomNotifications = [
+            () => showClickableMeanDM(), // Random mean DM - CLICKABLE to open chat
+            () => showUnfollowedNotification(),
+            () => showGroupChatNotification(),
+            () => showFakeLikeNotification(),
+            // Exclusion notifications
+            () => {
+                const user1 = fakeUsers[Math.floor(Math.random() * fakeUsers.length)];
+                const user2 = fakeUsers[Math.floor(Math.random() * fakeUsers.length)];
+                showIOSNotification(`<strong>${user1}</strong> and <strong>${user2}</strong> are in a group chat without you`);
+            },
+            () => showIOSNotification(`<strong>${fakeUsers[Math.floor(Math.random() * fakeUsers.length)]}</strong> posted a story you weren't tagged in`),
+            () => showIOSNotification(`<strong>${fakeUsers[Math.floor(Math.random() * fakeUsers.length)]}</strong> started following you... then unfollowed 2 seconds later`),
+            () => showIOSNotification(`<strong>${fakeUsers[Math.floor(Math.random() * fakeUsers.length)]}</strong> is typing... (they never sent anything)`),
+            () => showIOSNotification(`Your story was viewed by 0 people`),
+            () => showIOSNotification(`<strong>${fakeUsers[Math.floor(Math.random() * fakeUsers.length)]}</strong> screenshotted your profile`),
+            () => {
+                const user1 = fakeUsers[Math.floor(Math.random() * fakeUsers.length)];
+                const user2 = fakeUsers[Math.floor(Math.random() * fakeUsers.length)];
+                showIOSNotification(`<strong>${user1}</strong> liked <strong>${user2}</strong>'s post but not yours`);
+            },
+            () => showIOSNotification(`3 people from your school posted but didn't follow you back`),
+            () => showIOSNotification(`You weren't invited to <strong>${fakeUsers[Math.floor(Math.random() * fakeUsers.length)]}</strong>'s birthday`),
+            () => showIOSNotification(`<strong>${fakeUsers[Math.floor(Math.random() * fakeUsers.length)]}</strong> removed you from their Close Friends`),
+        ];
+
+        // Start random notification timer
+        function startNotificationTimer() {
+            scheduleNextNotification();
+        }
+
+        // Schedule next random notification (with anti-repetition)
+        function scheduleNextNotification() {
+            // Random interval between 3-8 seconds (more frequent)
+            const delay = 3000 + Math.random() * 5000;
+            
+            notificationTimer = setTimeout(() => {
+                notificationCount++;
+                
+                // Pick a notification type that wasn't recently used
+                let notifIndex;
+                let attempts = 0;
+                do {
+                    notifIndex = Math.floor(Math.random() * randomNotifications.length);
+                    attempts++;
+                } while (recentNotificationIndexes.includes(notifIndex) && attempts < 10);
+                
+                // Track this notification type (keep last 4)
+                recentNotificationIndexes.push(notifIndex);
+                if (recentNotificationIndexes.length > 4) {
+                    recentNotificationIndexes.shift();
+                }
+                
+                // Execute the notification
+                randomNotifications[notifIndex]();
+                
+                // Continue scheduling if under 15 notifications
+                if (notificationCount < 15) {
+                    scheduleNextNotification();
+                }
+            }, delay);
+        }
+
+        // Stop notification timer
+        function stopNotificationTimer() {
+            if (notificationTimer) {
+                clearTimeout(notificationTimer);
+                notificationTimer = null;
+            }
+        }
+
+        // Personalized mean comments for posts
+        const meanComments = {
+            travel: [
+                "you should try this sometime! oh wait...",
+                "imagine being able to afford this 😂",
+                "must be nice not having student loans"
+            ],
+            relationships: [
+                "will never have this energy fr",
+                "couldn't be you lol",
+                "still waiting for your turn huh"
+            ]
+        };
+
+        // Add mean comment to a post
+        function addMeanComment(postEl, category) {
+            if (!userUsername || !meanComments[category]) return;
+            
+            const comments = meanComments[category];
+            const comment = comments[Math.floor(Math.random() * comments.length)];
+            
+            const commentEl = document.createElement('div');
+            commentEl.className = 'mean-comment';
+            commentEl.innerHTML = `
+                <span class="comment-user">brutal_honesty</span>
+                <span class="comment-text">@${userUsername} ${comment}</span>
+            `;
+            
+            // Insert after caption (at end of post)
+            const captionEl = postEl.querySelector('.post-caption');
+            if (captionEl) {
+                captionEl.parentNode.insertBefore(commentEl, captionEl.nextSibling);
+            } else {
+                // Fallback: append to post
+                postEl.appendChild(commentEl);
+            }
+        }
+
+        // Setup signup form
+        document.addEventListener('DOMContentLoaded', () => {
+            const nameInput = document.getElementById('nameInput');
+            const usernameInput = document.getElementById('usernameInput');
+            const signupBtn = document.getElementById('signupBtn');
+            const signupPage = document.getElementById('signupPage');
+            
+            // Check if coming back from chat (skip signup)
+            if (window.location.hash === '#feed') {
+                // Set default user values
+                userName = 'User';
+                userUsername = 'user';
+                
+                // Skip signup and show feed
+                signupPage.classList.add('hidden');
+                document.getElementById('interactionHint').style.display = 'block';
+                document.getElementById('interactionHint').textContent = 'Double-tap to like ❤️';
+                loadFeed();
+                
+                // Start notification timer
+                setTimeout(() => {
+                    startNotificationTimer();
+                }, 3000);
+                
+                // Clear hash
+                history.replaceState(null, '', window.location.pathname);
+                return;
+            }
+            
+            // Enable button when both fields have content
+            function checkInputs() {
+                signupBtn.disabled = !(nameInput.value.trim() && usernameInput.value.trim());
+            }
+            
+            nameInput.addEventListener('input', checkInputs);
+            usernameInput.addEventListener('input', checkInputs);
+            
+            // Handle signup
+            signupBtn.addEventListener('click', () => {
+                userName = nameInput.value.trim();
+                userUsername = usernameInput.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+                
+                // Hide signup page
+                signupPage.classList.add('hidden');
+                
+                // Show hint and load feed
+                document.getElementById('interactionHint').style.display = 'block';
+                document.getElementById('interactionHint').textContent = 'Double-tap to like ❤️';
+                loadFeed();
+                
+                // Start random notification timer (notifications appear unprompted)
+                setTimeout(() => {
+                    startNotificationTimer();
+                }, 3000); // First notification after 3 seconds
+                
+                // Add mean comments to travel and relationship posts
+                setTimeout(() => {
+                    const feedPosts = document.querySelectorAll('.post');
+                    feedPosts.forEach(postEl => {
+                        const cat = postEl.dataset.category;
+                        if (cat === 'travel' || cat === 'relationships') {
+                            addMeanComment(postEl, cat);
+                        }
+                    });
+                }, 500);
+            });
+            
+            // Setup chat functionality
+            setupChat();
+        });
+
+        // ====== CHAT SYSTEM ======
+        let currentChatUser = '';
+        let currentDMContext = '';
+        let chatHistory = [];
+        
+        function setupChat() {
+            const chatOverlay = document.getElementById('chatOverlay');
+            const chatBack = document.getElementById('chatBack');
+            const chatInput = document.getElementById('chatInput');
+            const chatSend = document.getElementById('chatSend');
+            
+            // Back button closes chat
+            chatBack.addEventListener('click', () => {
+                closeChat();
+            });
+            
+            // Send button
+            chatSend.addEventListener('click', () => {
+                sendChatMessage();
+            });
+            
+            // Enter key to send
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendChatMessage();
+                }
+            });
+            
+            // Enable/disable send button
+            chatInput.addEventListener('input', () => {
+                chatSend.disabled = !chatInput.value.trim();
+            });
+        }
+        
+        // Open chat with a specific user and their DM message
+        function openChat(username, dmMessage) {
+            currentChatUser = username;
+            currentDMContext = dmMessage;
+            chatHistory = [];
+            
+            // Set chat header info
+            document.getElementById('chatUsername').textContent = username;
+            document.getElementById('chatAvatar').textContent = username.charAt(0).toUpperCase();
+            
+            // Clear messages and add the initial DM
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = '';
+            
+            // Add their initial message
+            addChatMessage(dmMessage, 'them');
+            chatHistory.push({ from: 'ai', text: dmMessage });
+            
+            // Show chat overlay
+            document.getElementById('chatOverlay').classList.add('active');
+            
+            // Focus input
+            setTimeout(() => {
+                document.getElementById('chatInput').focus();
+            }, 100);
+        }
+        
+        function closeChat() {
+            document.getElementById('chatOverlay').classList.remove('active');
+            currentChatUser = '';
+            currentDMContext = '';
+            chatHistory = [];
+        }
+        
+        function addChatMessage(text, sender) {
+            const chatMessages = document.getElementById('chatMessages');
+            const msgEl = document.createElement('div');
+            msgEl.className = `chat-message ${sender}`;
+            msgEl.textContent = text;
+            chatMessages.appendChild(msgEl);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function showTypingIndicator() {
+            const chatMessages = document.getElementById('chatMessages');
+            const typingEl = document.createElement('div');
+            typingEl.className = 'chat-message them typing';
+            typingEl.id = 'typingIndicator';
+            typingEl.textContent = 'typing...';
+            chatMessages.appendChild(typingEl);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function removeTypingIndicator() {
+            const typingEl = document.getElementById('typingIndicator');
+            if (typingEl) typingEl.remove();
+        }
+        
+        async function sendChatMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message to chat
+            addChatMessage(message, 'me');
+            chatHistory.push({ from: 'user', text: message });
+            
+            // Clear input
+            chatInput.value = '';
+            document.getElementById('chatSend').disabled = true;
+            
+            // Show typing indicator (fast - 300-800ms)
+            showTypingIndicator();
+            
+            // Get AI response
+            const aiResponse = await getAIChatResponse(message);
+            
+            // Quick typing delay (300-800ms)
+            const typingDelay = 300 + Math.random() * 500;
+            setTimeout(() => {
+                removeTypingIndicator();
+                addChatMessage(aiResponse, 'them');
+                chatHistory.push({ from: 'ai', text: aiResponse });
+            }, typingDelay);
+        }
+        
+        async function getAIChatResponse(userMessage) {
+            try {
+                const response = await fetch(`${AI_SERVER_URL}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: userMessage,
+                        dm_context: currentDMContext,
+                        history: chatHistory.slice(-6)
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Chat API error');
+                
+                const data = await response.json();
+                return data.response || "...";
+            } catch (error) {
+                console.log('Chat API failed:', error);
+                return "...";
+            }
+        }
+        
+        // Show clickable mean DM notification
+        function showClickableMeanDM(category) {
+            const cats = Object.keys(meanMessages);
+            const cat = category || cats[Math.floor(Math.random() * cats.length)];
+            const messages = meanMessages[cat];
+            
+            // Get message that wasn't recently used
+            const lastMessage = recentDMMessages[cat] || '';
+            let message;
+            let attempts = 0;
+            do {
+                message = messages[Math.floor(Math.random() * messages.length)];
+                attempts++;
+            } while (message === lastMessage && attempts < 10);
+            
+            recentDMMessages[cat] = message;
+            const randomUser = getRandomUsername();
+            
+            // Create clickable DM notification - redirects to chat.html
+            showIOSNotification(
+                `<strong>${randomUser}</strong> ${message}`,
+                (notif) => {
+                    // Remove notification
+                    notif.classList.add('hiding');
+                    setTimeout(() => notif.remove(), 300);
+                    // Redirect to chat page (same tab)
+                    window.location.href = `chat.html?user=${encodeURIComponent(randomUser)}&msg=${encodeURIComponent(message)}`;
+                },
+                3000, // Auto-dismiss after 3 seconds if not clicked
+                true // isDM = true (no flash)
+            );
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "stage": 0,
+  "notificationCount": 0,
+  "tapCount": 0,
+  "notificationSpeed": 800,
+  "escapeAttempts": 0,
+  "rewardStreak": 0,
+  "totalRewards": 0,
+  "isHellMode": false,
+  "urgentTimers": [],
+  "dom": "\n                <div style=\"text-align: center; color: white; margin-top: 100px;\">\n                    <button class=\"start-button state-highlight\" onclick=\"startHell()\">Start</button>\n                </div>\n            ",
+  "timestamp": 0.05136585235595703
+}

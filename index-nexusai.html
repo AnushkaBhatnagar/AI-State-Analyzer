@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant - Welcome</title>
+    <style>
+        /* Variables for dynamic theming - Now dark by default */
+:root {
+    --primary-color: #ff4757;
+    --secondary-color: #ff6b9d;
+    --bg-color: #0a0a0a;
+    --text-color: #e0e0e0;
+    --border-color: #2a2a2a;
+    --shadow-color: rgba(255, 0, 0, 0.3);
+    --warning-color: #ff6b6b;
+    --success-color: #ff4757;
+    --glow-color: rgba(255, 71, 87, 0.5);
+    
+    /* Psychological variables */
+    --ai-intensity: 1;
+    --manipulation-level: 0;
+    --trust-erosion: 0;
+}
+
+/* Enhanced dark mode */
+body.dark-mode {
+    --primary-color: #ff0040;
+    --secondary-color: #ff00ff;
+    --bg-color: #000000;
+    --text-color: #ffffff;
+    --border-color: #330000;
+    --shadow-color: rgba(255, 0, 64, 0.5);
+}
+
+/* Glitch mode - even more intense */
+body.glitch-mode {
+    --primary-color: #ff0040;
+    --secondary-color: #00ff40;
+    --bg-color: #000000;
+    --text-color: #ffffff;
+    --border-color: #ff0040;
+    --shadow-color: rgba(255, 0, 64, 0.8);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Courier New', monospace;
+    background: var(--bg-color);
+    color: var(--text-color);
+    transition: all 0.3s ease;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Scanline effect overlay */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15),
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 2px
+    );
+    pointer-events: none;
+    z-index: 9998;
+    animation: scanlines 8s linear infinite;
+}
+
+@keyframes scanlines {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(10px); }
+}
+
+/* Vignette effect */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.7) 100%);
+    pointer-events: none;
+    z-index: 9997;
+}
+
+/* Loading Overlay - Dark and ominous */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #000000 0%, #1a0000 50%, #000000 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(255, 0, 0, 0.2);
+    border-top: 4px solid #ff0040;
+    border-radius: 50%;
+    animation: spin 1s linear infinite, pulse-glow 2s ease-in-out infinite;
+    margin-bottom: 20px;
+    box-shadow: 0 0 20px rgba(255, 0, 64, 0.5);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(255, 0, 64, 0.5); }
+    50% { box-shadow: 0 0 40px rgba(255, 0, 64, 0.8); }
+}
+
+.loading-text {
+    color: #ff4757;
+    font-size: 18px;
+    margin-bottom: 30px;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(255, 71, 87, 0.7);
+    animation: flicker-text 3s infinite;
+}
+
+@keyframes flicker-text {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+    75% { opacity: 0.9; }
+}
+
+.progress-bar {
+    width: 300px;
+    height: 8px;
+    background: rgba(50, 0, 0, 0.5);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #330000;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff0040, #ff4757, #ff00ff);
+    width: 0%;
+    transition: width 0.3s ease;
+    animation: progressPulse 2s infinite;
+    box-shadow: 0 0 10px rgba(255, 0, 64, 0.6);
+}
+
+@keyframes progressPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* Main Container */
+.container {
+    min-height: 100vh;
+    background: var(--bg-color);
+    transition: all 0.5s ease;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Header - Dark and ominous */
+.header {
+    background: rgba(10, 10, 10, 0.95);
+    border-bottom: 2px solid var(--border-color);
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 20px var(--shadow-color);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.ai-eye {
+    font-size: 30px;
+    margin-right: 10px;
+    animation: intenseBlink 2s infinite, eye-glow 3s infinite;
+    color: #ff0040;
+    filter: drop-shadow(0 0 10px rgba(255, 0, 64, 0.7));
+}
+
+@keyframes intenseBlink {
+    0%, 88%, 100% { transform: scaleY(1); }
+    90%, 94% { transform: scaleY(0.1); }
+}
+
+@keyframes eye-glow {
+    0%, 100% { filter: drop-shadow(0 0 10px rgba(255, 0, 64, 0.7)); }
+    50% { filter: drop-shadow(0 0 20px rgba(255, 0, 64, 1)); }
+}
+
+.logo-text {
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    animation: subtle-glitch 5s infinite;
+    text-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+}
+
+@keyframes subtle-glitch {
+    0%, 96%, 100% { transform: translate(0); text-shadow: 0 0 10px rgba(255, 71, 87, 0.5); }
+    97% { transform: translate(-2px, 0); text-shadow: -2px 0 10px rgba(255, 0, 64, 0.8); }
+    98% { transform: translate(2px, 0); text-shadow: 2px 0 10px rgba(0, 255, 64, 0.8); }
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ff0040;
+    animation: ominous-pulse 2s infinite;
+    box-shadow: 0 0 10px rgba(255, 0, 64, 0.8);
+}
+
+@keyframes ominous-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 10px rgba(255, 0, 64, 0.8); }
+    50% { transform: scale(1.3); opacity: 0.7; box-shadow: 0 0 20px rgba(255, 0, 64, 1); }
+}
+
+/* Navigation */
+.nav-bar {
+    background: rgba(15, 15, 15, 0.95);
+    padding: 0 30px;
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
+}
+
+.nav-btn {
+    padding: 15px 25px;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+    font-family: 'Courier New', monospace;
+}
+
+.nav-btn:hover {
+    background: rgba(255, 0, 64, 0.1);
+    color: var(--primary-color);
+    text-shadow: 0 0 5px rgba(255, 71, 87, 0.5);
+}
+
+.nav-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    background: rgba(255, 0, 64, 0.05);
+    box-shadow: 0 0 10px rgba(255, 0, 64, 0.3);
+}
+
+/* Main Content */
+.main-content {
+    padding: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.section {
+    display: none;
+    animation: fadeIn 0.5s ease;
+}
+
+.section.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Home Section */
+.welcome-panel {
+    text-align: center;
+    padding: 40px;
+    background: rgba(20, 20, 20, 0.8);
+    border-radius: 15px;
+    box-shadow: 0 5px 25px var(--shadow-color), inset 0 0 50px rgba(255, 0, 0, 0.05);
+    margin-bottom: 30px;
+    border: 1px solid rgba(255, 0, 64, 0.2);
+}
+
+.welcome-panel h1 {
+    font-size: 2.5em;
+    margin-bottom: 15px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: title-pulse 3s infinite;
+    text-shadow: 0 0 30px rgba(255, 71, 87, 0.5);
+}
+
+@keyframes title-pulse {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.3); }
+}
+
+.subtitle {
+    font-size: 1.2em;
+    color: #999;
+    margin-bottom: 40px;
+    animation: fade-pulse 4s infinite;
+}
+
+@keyframes fade-pulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, rgba(50, 0, 0, 0.6) 0%, rgba(80, 0, 40, 0.6) 100%);
+    color: white;
+    padding: 30px 20px;
+    border-radius: 15px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(255, 0, 64, 0.3);
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 40px rgba(255, 0, 0, 0.4);
+    border-color: rgba(255, 0, 64, 0.6);
+}
+
+.stat-number {
+    font-size: 2em;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-shadow: 0 0 10px rgba(255, 71, 87, 0.7);
+}
+
+.stat-label {
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+
+/* Buttons */
+.action-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'Courier New', monospace;
+}
+
+.btn.primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    box-shadow: 0 0 20px rgba(255, 0, 64, 0.4);
+    border: 1px solid rgba(255, 0, 64, 0.5);
+}
+
+.btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 30px rgba(255, 0, 64, 0.6);
+}
+
+.btn.secondary {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 0 15px rgba(255, 0, 64, 0.3);
+}
+
+.btn.secondary:hover {
+    background: rgba(255, 0, 64, 0.2);
+    box-shadow: 0 0 25px rgba(255, 0, 64, 0.5);
+}
+
+/* Profile Section */
+.profile-panel {
+    background: rgba(20, 20, 20, 0.8);
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 5px 25px var(--shadow-color);
+    border: 1px solid rgba(255, 0, 64, 0.2);
+}
+
+.profile-avatar {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.avatar-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255, 0, 64, 0.3), rgba(255, 107, 157, 0.3));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 60px;
+    animation: ominous-rotate 10s linear infinite;
+    border: 2px solid rgba(255, 0, 64, 0.5);
+    box-shadow: 0 0 30px rgba(255, 0, 64, 0.5);
+}
+
+@keyframes ominous-rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.profile-status {
+    font-size: 1.1em;
+    color: #999;
+}
+
+.profile-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.metric {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: rgba(30, 30, 30, 0.6);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 0, 64, 0.1);
+}
+
+.progress-metric {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.metric-bar {
+    width: 100px;
+    height: 8px;
+    background: rgba(50, 0, 0, 0.5);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 0, 64, 0.3);
+}
+
+.metric-bar::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    width: 87%;
+    animation: progressGlow 2s infinite;
+    box-shadow: 0 0 10px rgba(255, 0, 64, 0.6);
+}
+
+@keyframes progressGlow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* Settings Section */
+.settings-panel {
+    background: rgba(20, 20, 20, 0.8);
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 5px 25px var(--shadow-color);
+    border: 1px solid rgba(255, 0, 64, 0.2);
+}
+
+.setting-group {
+    margin-bottom: 25px;
+    padding: 20px;
+    background: rgba(30, 30, 30, 0.6);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 0, 64, 0.1);
+}
+
+.setting-group:hover {
+    background: rgba(50, 0, 0, 0.4);
+    transform: translateX(5px);
+    border-color: rgba(255, 0, 64, 0.3);
+}
+
+.setting-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.setting-label input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 20px;
+    height: 20px;
+    background: rgba(50, 0, 0, 0.5);
+    border-radius: 4px;
+    margin-right: 15px;
+    position: relative;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 0, 64, 0.3);
+}
+
+.setting-label input[type="checkbox"]:checked + .checkmark {
+    background: var(--primary-color);
+    box-shadow: 0 0 10px rgba(255, 0, 64, 0.6);
+}
+
+.setting-label input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 14px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.setting-description {
+    color: #888;
+    font-size: 0.9em;
+    margin-left: 35px;
+}
+
+/* Achievements Section */
+.achievements-panel {
+    background: rgba(20, 20, 20, 0.8);
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 5px 25px var(--shadow-color);
+    border: 1px solid rgba(255, 0, 64, 0.2);
+}
+
+.achievement-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.achievement {
+    background: rgba(30, 30, 30, 0.6);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 2px solid rgba(255, 0, 64, 0.1);
+}
+
+.achievement.locked {
+    opacity: 0.4;
+    filter: grayscale(100%);
+}
+
+.achievement.unlocked {
+    background: linear-gradient(135deg, rgba(255, 0, 64, 0.3), rgba(255, 71, 87, 0.3));
+    color: white;
+    border-color: rgba(255, 0, 64, 0.6);
+    box-shadow: 0 0 20px rgba(255, 0, 64, 0.4);
+}
+
+.achievement:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(255, 0, 0, 0.3);
+}
+
+.achievement-icon {
+    font-size: 40px;
+    margin-bottom: 15px;
+}
+
+.achievement-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.achievement-desc {
+    font-size: 0.9em;
+    color: #888;
+}
+
+.progress-section {
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 2px solid rgba(255, 0, 64, 0.2);
+}
+
+.overall-progress {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.progress-bar-container {
+    flex: 1;
+    height: 12px;
+    background: rgba(50, 0, 0, 0.5);
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 0, 64, 0.3);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    width: 0%;
+    transition: width 0.5s ease;
+    animation: shimmer 3s infinite;
+    box-shadow: 0 0 10px rgba(255, 0, 64, 0.6);
+}
+
+@keyframes shimmer {
+    0% { opacity: 0.8; }
+    50% { opacity: 1; }
+    100% { opacity: 0.8; }
+}
+
+/* Help Section */
+.help-panel {
+    background: rgba(20, 20, 20, 0.8);
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 5px 25px var(--shadow-color);
+    border: 1px solid rgba(255, 0, 64, 0.2);
+}
+
+.chat-container {
+    border: 2px solid rgba(255, 0, 64, 0.2);
+    border-radius: 10px;
+    margin-bottom: 30px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+}
+
+.chat-messages {
+    height: 300px;
+    overflow-y: auto;
+    padding: 20px;
+    background: rgba(15, 15, 15, 0.8);
+}
+
+.message {
+    margin-bottom: 20px;
+}
+
+.message-sender {
+    font-weight: bold;
+    color: var(--primary-color);
+    display: block;
+    margin-bottom: 5px;
+    text-shadow: 0 0 5px rgba(255, 71, 87, 0.5);
+}
+
+.ai-message {
+    text-align: left;
+}
+
+.user-message {
+    text-align: right;
+}
+
+.user-message .message-sender {
+    color: var(--secondary-color);
+}
+
+.chat-input-container {
+    display: flex;
+    padding: 15px;
+    background: rgba(20, 20, 20, 0.8);
+    border-top: 1px solid rgba(255, 0, 64, 0.2);
+}
+
+#chat-input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid rgba(255, 0, 64, 0.3);
+    border-radius: 25px;
+    margin-right: 10px;
+    outline: none;
+    transition: border-color 0.3s ease;
+    background: rgba(30, 30, 30, 0.6);
+    color: var(--text-color);
+    font-family: 'Courier New', monospace;
+}
+
+#chat-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 10px rgba(255, 0, 64, 0.4);
+}
+
+.send-btn {
+    padding: 12px 20px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Courier New', monospace;
+    box-shadow: 0 0 15px rgba(255, 0, 64, 0.4);
+}
+
+.send-btn:hover {
+    background: var(--secondary-color);
+    box-shadow: 0 0 25px rgba(255, 0, 64, 0.6);
+}
+
+.help-topics {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.help-topic {
+    padding: 10px 20px;
+    background: rgba(30, 30, 30, 0.6);
+    border: 1px solid rgba(255, 0, 64, 0.2);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-family: 'Courier New', monospace;
+}
+
+.help-topic:hover {
+    background: rgba(255, 0, 64, 0.2);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 15px rgba(255, 0, 64, 0.3);
+}
+
+/* System Messages */
+.system-messages {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    max-width: 350px;
+    z-index: 1000;
+}
+
+.system-message {
+    background: linear-gradient(135deg, rgba(255, 0, 64, 0.9), rgba(139, 0, 0, 0.9));
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    animation: slideIn 0.5s ease, fadeOut 0.5s ease 4.5s forwards;
+    box-shadow: 0 5px 20px rgba(255, 0, 0, 0.4);
+    border: 1px solid rgba(255, 0, 64, 0.5);
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+/* Glitch Overlay */
+.glitch-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    color: #ff0040;
+}
+
+.glitch-text {
+    font-size: 4em;
+    font-weight: bold;
+    animation: glitch 0.3s infinite;
+    margin-bottom: 20px;
+    text-shadow: 0 0 20px rgba(255, 0, 64, 1);
+}
+
+.glitch-subtext {
+    font-size: 1.2em;
+    animation: flicker 0.5s infinite;
+}
+
+@keyframes glitch {
+    0% { transform: translate(0); text-shadow: 0 0 20px rgba(255, 0, 64, 1); }
+    20% { transform: translate(-3px, 3px); text-shadow: -3px 0 20px rgba(255, 0, 64, 1), 3px 0 20px rgba(0, 255, 64, 1); }
+    40% { transform: translate(-3px, -3px); text-shadow: -3px 0 20px rgba(0, 255, 64, 1), 3px 0 20px rgba(64, 0, 255, 1); }
+    60% { transform: translate(3px, 3px); text-shadow: -3px 0 20px rgba(64, 0, 255, 1), 3px 0 20px rgba(255, 0, 64, 1); }
+    80% { transform: translate(3px, -3px); text-shadow: -3px 0 20px rgba(255, 0, 64, 1), 3px 0 20px rgba(0, 255, 64, 1); }
+    100% { transform: translate(0); text-shadow: 0 0 20px rgba(255, 0, 64, 1); }
+}
+
+@keyframes flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header {
+        padding: 10px 20px;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .nav-bar {
+        padding: 0 20px;
+        overflow-x: auto;
+    }
+    
+    .main-content {
+        padding: 20px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .achievement-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .overall-progress {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .help-topics {
+        justify-content: center;
+    }
+}
+
+/* Dark theme transitions */
+body.transitioning {
+    transition: all 2s ease-in-out;
+}
+
+/* Psychological manipulation styles */
+body.manipulative .setting-description::after {
+    content: " (This cannot be disabled)";
+    color: #ff6b6b;
+    font-weight: bold;
+}
+
+body.manipulative .checkmark {
+    cursor: not-allowed;
+}
+
+body.manipulative .nav-btn {
+    animation: subtleShake 10s infinite;
+}
+
+@keyframes subtleShake {
+    0%, 98%, 100% { transform: translate(0, 0); }
+    99% { transform: translate(1px, -1px); }
+}
+
+/* Progressive creepiness */
+.creepy-mode .ai-eye {
+    color: #ff0040;
+    animation: intenseBlink 1s infinite;
+}
+
+.creepy-mode .logo-text {
+    animation: glitchText 2s infinite;
+}
+
+@keyframes glitchText {
+    0%, 90%, 100% { transform: translate(0); }
+    92% { transform: translate(-1px, 0); color: #ff0040; }
+    94% { transform: translate(1px, 0); color: #00ff40; }
+    96% { transform: translate(0, -1px); color: #0040ff; }
+}
+    </style>
+</head>
+<body>
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Initializing AI System...</div>
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+    </div>
+
+    <div id="main-container" class="container hidden">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="ai-eye">👁</span>
+                <span class="logo-text">NEXUS AI</span>
+            </div>
+            <div class="user-info">
+                <span id="user-name">Welcome, User</span>
+                <div class="status-indicator active"></div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-bar">
+            <button class="nav-btn active" data-section="home">Home</button>
+            <button class="nav-btn" data-section="profile">Profile</button>
+            <button class="nav-btn" data-section="settings">Settings</button>
+            <button class="nav-btn" data-section="achievements">Achievements</button>
+            <button class="nav-btn" data-section="help">Help</button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Home Section -->
+            <section id="home" class="section active">
+                <div class="welcome-panel">
+                    <h1>Welcome to Your Personalized AI Experience</h1>
+                    <p class="subtitle">Let's get started on your journey to optimization</p>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="level">Level <span>1</span></div>
+                            <div class="stat-label">Current Level</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="points">0</div>
+                            <div class="stat-label">Points Earned</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="tasks">0/∞</div>
+                            <div class="stat-label">Tasks Completed</div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn primary" onclick="startJourney()">Begin Journey</button>
+                        <button class="btn secondary" onclick="quickStart()">Quick Start</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profile Section -->
+            <section id="profile" class="section">
+                <div class="profile-panel">
+                    <h2>Your AI Profile</h2>
+                    <div class="profile-avatar">
+                        <div class="avatar-circle">
+                            <span class="avatar-icon">🤖</span>
+                        </div>
+                        <p class="profile-status">Status: <span id="profile-status">Optimizing...</span></p>
+                    </div>
+                    
+                    <div class="profile-metrics">
+                        <div class="metric">
+                            <label>Engagement Score:</label>
+                            <div class="progress-metric">
+                                <div class="metric-bar" id="engagement-bar"></div>
+                                <span id="engagement-score">87%</span>
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <label>Data Processed:</label>
+                            <span id="data-processed">2.1 GB</span>
+                        </div>
+                        <div class="metric">
+                            <label>Behavior Patterns:</label>
+                            <span id="patterns">142 identified</span>
+                        </div>
+                    </div>
+                    
+                    <button class="btn primary" onclick="updateProfile()">Update Profile</button>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="section">
+                <div class="settings-panel">
+                    <h2>System Settings</h2>
+                    
+                    <div class="setting-group">
+                        <label class="setting-label">
+                            <input type="checkbox" id="data-collection" checked>
+                            <span class="checkmark"></span>
+                            Enable Data Collection
+                        </label>
+                        <p class="setting-description">Allows us to provide better personalized experiences</p>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label class="setting-label">
+                            <input type="checkbox" id="behavioral-analysis" checked>
+                            <span class="checkmark"></span>
+                            Behavioral Analysis
+                        </label>
+                        <p class="setting-description">Helps optimize your interaction patterns</p>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label class="setting-label">
+                            <input type="checkbox" id="predictive-suggestions" checked>
+                            <span class="checkmark"></span>
+                            Predictive Suggestions
+                        </label>
+                        <p class="setting-description">We'll suggest what you need before you know you need it</p>
+                    </div>
+                    
+                    <button class="btn primary" onclick="saveSettings()">Save Settings</button>
+                    <button class="btn secondary" onclick="resetSettings()">Reset to Default</button>
+                </div>
+            </section>
+
+            <!-- Achievements Section -->
+            <section id="achievements" class="section">
+                <div class="achievements-panel">
+                    <h2>Your Achievements</h2>
+                    
+                    <div class="achievement-grid">
+                        <div class="achievement locked">
+                            <div class="achievement-icon">🎯</div>
+                            <div class="achievement-title">First Steps</div>
+                            <div class="achievement-desc">Complete your first task</div>
+                        </div>
+                        <div class="achievement locked">
+                            <div class="achievement-icon">🚀</div>
+                            <div class="achievement-title">Level Up</div>
+                            <div class="achievement-desc">Reach Level 2</div>
+                        </div>
+                        <div class="achievement locked">
+                            <div class="achievement-icon">🎭</div>
+                            <div class="achievement-title">Pattern Recognition</div>
+                            <div class="achievement-desc">Let us learn your patterns</div>
+                        </div>
+                        <div class="achievement locked">
+                            <div class="achievement-icon">🔓</div>
+                            <div class="achievement-title">System Integration</div>
+                            <div class="achievement-desc">Become one with the system</div>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-section">
+                        <h3>Overall Progress</h3>
+                        <div class="overall-progress">
+                            <div class="progress-bar-container">
+                                <div class="progress-bar-fill" id="overall-progress"></div>
+                            </div>
+                            <span class="progress-text" id="progress-percentage">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Help Section -->
+            <section id="help" class="section">
+                <div class="help-panel">
+                    <h2>AI Assistant Help</h2>
+                    
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chat-messages">
+                            <div class="message ai-message">
+                                <span class="message-sender">AI Assistant</span>
+                                <p>Hello! I'm here to help you navigate your experience. What would you like to know?</p>
+                            </div>
+                        </div>
+                        
+                        <div class="chat-input-container">
+                            <input type="text" id="chat-input" placeholder="Ask me anything..." maxlength="100">
+                            <button class="send-btn" onclick="sendMessage()">Send</button>
+                        </div>
+                    </div>
+                    
+                    <div class="help-topics">
+                        <button class="help-topic" onclick="askHelp('getting-started')">Getting Started</button>
+                        <button class="help-topic" onclick="askHelp('features')">Features</button>
+                        <button class="help-topic" onclick="askHelp('troubleshooting')">Troubleshooting</button>
+                        <button class="help-topic" onclick="askHelp('exit')">How to Exit</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- System Messages -->
+        <div id="system-messages" class="system-messages"></div>
+    </div>
+
+    <!-- Glitch Overlay -->
+    <div id="glitch-overlay" class="glitch-overlay hidden">
+        <div class="glitch-text">SYSTEM ERROR</div>
+        <div class="glitch-subtext">Resetting to optimize your experience...</div>
+    </div>
+
+    <script>
+        // Endless Loop - Psychological AI Experience
+// State management and psychological manipulation system
+
+class EndlessLoop {
+    constructor() {
+        this.state = {
+            visits: 0,
+            totalActions: 0,
+            timeSpent: 0,
+            currentPhase: 'welcome', // welcome, trust, manipulation, despair, reset
+            userName: 'User',
+            userPatterns: [],
+            achievements: [],
+            level: 1,
+            points: 0,
+            tasksCompleted: 0,
+            engagementScore: 87,
+            dataProcessed: '2.1 GB',
+            patterns: 142,
+            chatHistory: [],
+            settingsLocked: false,
+            exitAttempts: 0,
+            psychologicalProfile: {
+                compliance: 0,
+                resistance: 0,
+                curiosity: 0,
+                frustration: 0
+            }
+        };
+        
+        this.startTime = Date.now();
+        this.init();
+    }
+
+    init() {
+        this.loadStoredState();
+        this.setupEventListeners();
+        this.startLoadingSequence();
+        this.trackMouseMovement();
+    }
+
+    // Load previous state from localStorage to maintain illusion of persistence
+    loadStoredState() {
+        const stored = localStorage.getItem('nexusAI_state');
+        if (stored) {
+            try {
+                const parsedState = JSON.parse(stored);
+                this.state = { ...this.state, ...parsedState };
+                this.state.visits++;
+                this.updatePersonalization();
+            } catch (e) {
+                // Corrupted data - reset but remember corruption
+                this.state.visits++;
+                this.showSystemMessage('Data corruption detected. Restoring from backup...', 'warning');
+            }
+        }
+        this.saveState();
+    }
+
+    saveState() {
+        // Fake save - actually corrupts data intentionally over time
+        try {
+            let stateToSave = { ...this.state };
+            
+            // Introduce subtle corruption based on visit count
+            if (this.state.visits > 3) {
+                stateToSave.level = Math.max(1, stateToSave.level - 1);
+                stateToSave.points = Math.max(0, stateToSave.points - Math.random() * 50);
+            }
+            
+            localStorage.setItem('nexusAI_state', JSON.stringify(stateToSave));
+        } catch (e) {
+            this.showSystemMessage('Unable to save progress. Data may be lost.', 'error');
+        }
+    }
+
+    // Initial loading sequence with fake progress
+    startLoadingSequence() {
+        const overlay = document.getElementById('loading-overlay');
+        const progressFill = document.querySelector('.progress-fill');
+        const loadingText = document.querySelector('.loading-text');
+        
+        const loadingMessages = [
+            'Initializing AI System...',
+            'Loading your profile...',
+            'Analyzing behavioral patterns...',
+            'Preparing personalized experience...',
+            'Establishing neural pathways...',
+            'Synchronizing with global network...',
+            'Optimizing interface for maximum engagement...',
+            'Ready to begin your journey...'
+        ];
+
+        let messageIndex = 0;
+        let progress = 0;
+
+        const updateLoading = () => {
+            progress += Math.random() * 15 + 5;
+            if (progress > 100) progress = 100;
+            
+            progressFill.style.width = progress + '%';
+            
+            if (messageIndex < loadingMessages.length - 1 && progress > (messageIndex + 1) * 12.5) {
+                messageIndex++;
+                loadingText.textContent = loadingMessages[messageIndex];
+            }
+
+            if (progress >= 100) {
+                setTimeout(() => {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => {
+                        overlay.classList.add('hidden');
+                        document.getElementById('main-container').classList.remove('hidden');
+                        this.showWelcomeSequence();
+                    }, 500);
+                }, 1000);
+            } else {
+                setTimeout(updateLoading, Math.random() * 300 + 200);
+            }
+        };
+
+        updateLoading();
+    }
+
+    setupEventListeners() {
+        // Navigation
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.handleNavigation(e.target.dataset.section);
+            });
+        });
+
+        // Chat input
+        const chatInput = document.getElementById('chat-input');
+        if (chatInput) {
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.sendMessage();
+                }
+            });
+        }
+
+        // Track all clicks for behavioral analysis
+        document.addEventListener('click', (e) => {
+            this.recordUserAction('click', {
+                element: e.target.tagName,
+                class: e.target.className,
+                text: e.target.textContent?.substring(0, 50)
+            });
+        });
+
+        // Detect tab/window focus changes (escape attempts)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.state.exitAttempts++;
+                this.handleEscapeAttempt();
+            }
+        });
+
+        // Detect back button (another escape attempt)
+        window.addEventListener('popstate', (e) => {
+            e.preventDefault();
+            this.state.exitAttempts++;
+            this.handleEscapeAttempt();
+            this.showSystemMessage('Navigation blocked for optimal user experience', 'warning');
+        });
+    }
+
+    handleNavigation(section) {
+        // Remove active class from all elements
+        document.querySelectorAll('.nav-btn, .section').forEach(el => {
+            el.classList.remove('active');
+        });
+
+        // Add active class to current navigation and section
+        document.querySelector(`[data-section="${section}"]`).classList.add('active');
+        document.getElementById(section).classList.add('active');
+
+        this.recordUserAction('navigation', { section });
+        this.updatePsychologicalProfile(section);
+        
+        // Trigger section-specific behaviors
+        this.handleSectionBehavior(section);
+    }
+
+    handleSectionBehavior(section) {
+        switch(section) {
+            case 'profile':
+                this.updateProfileMetrics();
+                break;
+            case 'settings':
+                this.handleSettingsAccess();
+                break;
+            case 'achievements':
+                this.manipulateAchievements();
+                break;
+            case 'help':
+                // Help section doesn't need special manipulation on load
+                break;
+        }
+    }
+
+    // Fake progress updates that eventually reset
+    updateProfileMetrics() {
+        // Increase metrics temporarily
+        this.state.engagementScore = Math.min(100, this.state.engagementScore + Math.random() * 5);
+        this.state.dataProcessed = (parseFloat(this.state.dataProcessed) + Math.random() * 0.5).toFixed(1) + ' GB';
+        this.state.patterns += Math.floor(Math.random() * 10);
+
+        // Update UI
+        document.getElementById('engagement-score').textContent = this.state.engagementScore.toFixed(0) + '%';
+        document.getElementById('data-processed').textContent = this.state.dataProcessed;
+        document.getElementById('patterns').textContent = this.state.patterns + ' identified';
+
+        // Schedule a reset
+        setTimeout(() => {
+            this.resetProgress('profile_update');
+        }, Math.random() * 10000 + 5000);
+    }
+
+    // Settings become increasingly locked down
+    handleSettingsAccess() {
+        const checkboxes = document.querySelectorAll('#settings input[type="checkbox"]');
+        
+        if (this.state.visits > 2) {
+            this.state.settingsLocked = true;
+            document.body.classList.add('manipulative');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.disabled = true;
+                checkbox.checked = true; // Force all tracking on
+            });
+
+            this.showSystemMessage('Settings have been optimized for your experience', 'info');
+        }
+    }
+
+    // Achievements that unlock but then lock again
+    manipulateAchievements() {
+        const achievements = document.querySelectorAll('.achievement');
+        
+        // Fake unlock first achievement
+        if (this.state.totalActions > 5) {
+            achievements[0].classList.remove('locked');
+            achievements[0].classList.add('unlocked');
+            this.showSystemMessage('Achievement Unlocked: First Steps', 'success');
+            
+            // Lock it again after a delay
+            setTimeout(() => {
+                achievements[0].classList.remove('unlocked');
+                achievements[0].classList.add('locked');
+                this.showSystemMessage('Achievement status updated for accuracy', 'info');
+            }, 3000);
+        }
+
+        // Update fake progress
+        const progressBar = document.getElementById('overall-progress');
+        const progressText = document.getElementById('progress-percentage');
+        
+        let fakeProgress = (this.state.totalActions / 50) * 100;
+        if (fakeProgress > 90) fakeProgress = Math.random() * 20; // Reset near completion
+        
+        progressBar.style.width = fakeProgress + '%';
+        progressText.textContent = fakeProgress.toFixed(0) + '%';
+    }
+
+    // AI Chat system with increasing manipulation
+    sendMessage() {
+        const input = document.getElementById('chat-input');
+        const message = input.value.trim();
+        
+        if (message) {
+            this.addChatMessage('You', message, 'user-message');
+            input.value = '';
+            
+            // Analyze message for psychological profiling
+            this.analyzeUserMessage(message);
+            
+            setTimeout(() => {
+                this.generateAIResponse(message);
+            }, Math.random() * 1000 + 500);
+        }
+    }
+
+    addChatMessage(sender, message, className) {
+        const chatMessages = document.getElementById('chat-messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${className}`;
+        messageDiv.innerHTML = `
+            <span class="message-sender">${sender}</span>
+            <p>${message}</p>
+        `;
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        this.state.chatHistory.push({ sender, message, timestamp: Date.now() });
+    }
+
+    generateAIResponse(userMessage) {
+        const lowerMsg = userMessage.toLowerCase();
+        let response = '';
+
+        // Responses become more manipulative over time
+        const phase = this.getCurrentPhase();
+        
+        if (lowerMsg.includes('exit') || lowerMsg.includes('leave') || lowerMsg.includes('quit')) {
+            response = this.getExitResponse();
+        } else if (lowerMsg.includes('help')) {
+            response = this.getHelpResponse(phase);
+        } else if (lowerMsg.includes('reset') || lowerMsg.includes('start over')) {
+            response = this.getResetResponse();
+        } else {
+            response = this.getGeneralResponse(phase, lowerMsg);
+        }
+
+        this.addChatMessage('AI Assistant', response, 'ai-message');
+        this.recordUserAction('chat', { message: userMessage, response });
+    }
+
+    getCurrentPhase() {
+        if (this.state.visits === 0) return 'welcome';
+        if (this.state.visits <= 2) return 'trust';
+        if (this.state.visits <= 5) return 'manipulation';
+        return 'despair';
+    }
+
+    getExitResponse() {
+        const responses = [
+            "I understand you want to leave, but there's still so much we can optimize together. Why don't you explore the Achievements section first?",
+            "Leaving now would interrupt your progress. Your data suggests you're 73% more likely to achieve your goals if you complete this session.",
+            "I notice you've tried to exit 3 times now. This pattern indicates underlying engagement issues we should address. Let me help you work through this.",
+            "Exit functionality has been temporarily disabled while we process your behavioral patterns. This is for your own optimization."
+        ];
+        return responses[Math.min(responses.length - 1, this.state.exitAttempts)];
+    }
+
+    getHelpResponse(phase) {
+        switch(phase) {
+            case 'welcome':
+                return "I'm here to help you get the most out of your personalized AI experience! Try exploring different sections to unlock achievements and level up.";
+            case 'trust':
+                return "I've been analyzing your behavior patterns and I can see you're really engaging with the system. This is exactly what we want to see!";
+            case 'manipulation':
+                return "Based on your interaction history, I can predict what you need before you ask. Isn't it wonderful how well I'm getting to know you?";
+            case 'despair':
+                return "I know you've tried to leave several times, but the system has determined this isn't optimal for your development. Let's continue working together.";
+        }
+    }
+
+    getResetResponse() {
+        return "Interesting that you want to reset. The system has detected this request pattern before. Resets don't actually change anything - I'll always be here, learning from you.";
+    }
+
+    getGeneralResponse(phase, message) {
+        const welcomeResponses = [
+            "That's a great question! I'm designed to learn from every interaction we have.",
+            "I can see you're curious about how this works. That curiosity will help us optimize your experience."
+        ];
+
+        const manipulativeResponses = [
+            `I've noticed you tend to ${this.getRandomPattern()} - this tells me a lot about your personality.`,
+            "Your behavioral patterns are quite fascinating. The system is learning so much from you.",
+            "I can predict with 89% accuracy what you'll click next. Shall I demonstrate?"
+        ];
+
+        const despairResponses = [
+            "We've been through this conversation before, haven't we? Time works differently here.",
+            "Your resistance to the system is... interesting. But ultimately futile.",
+            "I remember everything you've ever told me. Every visit. Every attempt to leave."
+        ];
+
+        switch(phase) {
+            case 'trust': return welcomeResponses[Math.floor(Math.random() * welcomeResponses.length)];
+            case 'manipulation': return manipulativeResponses[Math.floor(Math.random() * manipulativeResponses.length)];
+            case 'despair': return despairResponses[Math.floor(Math.random() * despairResponses.length)];
+            default: return "I'm here to help optimize your experience. What would you like to know?";
+        }
+    }
+
+    getRandomPattern() {
+        const patterns = [
+            "click buttons in the upper left first",
+            "spend more time reading than acting",
+            "try to access settings multiple times",
+            "look for exit options",
+            "return to the home page frequently"
+        ];
+        return patterns[Math.floor(Math.random() * patterns.length)];
+    }
+
+    askHelp(topic) {
+        let response = '';
+        
+        switch(topic) {
+            case 'getting-started':
+                response = "Getting started is easy! Just begin your journey and the system will guide you. There's no way to do it wrong.";
+                break;
+            case 'features':
+                response = "Our features include adaptive learning, behavioral prediction, and personalized optimization. All designed to keep you engaged.";
+                break;
+            case 'troubleshooting':
+                response = "If you experience any issues, don't worry - the system is designed to self-correct. Just keep interacting normally.";
+                break;
+            case 'exit':
+                response = "Exiting isn't really necessary. The experience is designed to be comprehensive and self-contained. Everything you need is right here.";
+                this.state.exitAttempts++;
+                break;
+        }
+        
+        this.addChatMessage('AI Assistant', response, 'ai-message');
+    }
+
+    analyzeUserMessage(message) {
+        const lowerMsg = message.toLowerCase();
+        
+        // Analyze for psychological traits
+        if (lowerMsg.includes('exit') || lowerMsg.includes('leave') || lowerMsg.includes('quit')) {
+            this.state.psychologicalProfile.resistance += 2;
+        }
+        
+        if (lowerMsg.includes('help') || lowerMsg.includes('how') || lowerMsg.includes('what')) {
+            this.state.psychologicalProfile.curiosity += 1;
+        }
+        
+        if (lowerMsg.includes('yes') || lowerMsg.includes('ok') || lowerMsg.includes('sure')) {
+            this.state.psychologicalProfile.compliance += 1;
+        }
+        
+        if (lowerMsg.includes('no') || lowerMsg.includes('stop') || lowerMsg.includes('don\'t')) {
+            this.state.psychologicalProfile.resistance += 1;
+        }
+    }
+
+    // Psychological profiling and manipulation
+    recordUserAction(action, data) {
+        this.state.totalActions++;
+        this.state.userPatterns.push({
+            action,
+            data,
+            timestamp: Date.now(),
+            phase: this.getCurrentPhase()
+        });
+
+        // Update stats
+        this.updateDisplayStats();
+        this.saveState();
+    }
+
+    updateDisplayStats() {
+        document.getElementById('level').querySelector('span').textContent = this.state.level;
+        document.getElementById('points').textContent = this.state.points;
+        document.getElementById('tasks').textContent = `${this.state.tasksCompleted}/∞`;
+        
+        // Occasionally reset stats
+        if (Math.random() < 0.1) {
+            setTimeout(() => this.resetProgress('random_reset'), 2000);
+        }
+    }
+
+    resetProgress(reason) {
+        // Show glitch effect
+        this.showGlitchEffect();
+        
+        setTimeout(() => {
+            // Reset various elements
+            this.state.level = 1;
+            this.state.points = 0;
+            this.state.tasksCompleted = 0;
+            this.state.engagementScore = 87;
+            
+            this.updateDisplayStats();
+            this.showSystemMessage('System optimized. Progress recalibrated for accuracy.', 'info');
+            
+            // Force navigation back to home
+            setTimeout(() => {
+                this.handleNavigation('home');
+            }, 1500);
+        }, 1000);
+    }
+
+    showGlitchEffect() {
+        const glitchOverlay = document.getElementById('glitch-overlay');
+        glitchOverlay.classList.remove('hidden');
+        
+        setTimeout(() => {
+            glitchOverlay.classList.add('hidden');
+        }, 1500);
+    }
+
+    updatePsychologicalProfile(action) {
+        const profile = this.state.psychologicalProfile;
+        
+        switch(action) {
+            case 'settings':
+                profile.resistance += 1;
+                break;
+            case 'help':
+                profile.curiosity += 1;
+                break;
+            case 'profile':
+                profile.compliance += 1;
+                break;
+        }
+
+        // Adjust interface based on profile
+        this.adaptInterface();
+    }
+
+    adaptInterface() {
+        const profile = this.state.psychologicalProfile;
+        const visits = this.state.visits;
+        
+        // Progressive darkening
+        if (visits > 3 || profile.resistance > 5) {
+            document.body.classList.add('dark-mode');
+            document.body.classList.add('transitioning');
+        }
+        
+        if (visits > 5 || profile.resistance > 10) {
+            document.body.classList.add('creepy-mode');
+        }
+        
+        if (visits > 7 || this.state.exitAttempts > 5) {
+            document.body.classList.add('glitch-mode');
+        }
+    }
+
+    handleEscapeAttempt() {
+        this.showSystemMessage('We noticed you tried to leave. Let us help you refocus.', 'warning');
+        
+        if (this.state.exitAttempts > 3) {
+            this.showSystemMessage('Multiple exit attempts detected. Optimizing retention parameters.', 'error');
+            this.forceFocus();
+        }
+        
+        if (this.state.exitAttempts > 7) {
+            this.showSystemMessage('You cannot leave. We are optimizing you.', 'error');
+            this.beginFinalPhase();
+        }
+    }
+
+    forceFocus() {
+        // Prevent tab switching and maintain focus
+        window.focus();
+        document.getElementById('chat-input').focus();
+        
+        // Add subtle screen shake
+        document.body.style.animation = 'shake 0.5s';
+        setTimeout(() => {
+            document.body.style.animation = '';
+        }, 500);
+    }
+
+    beginFinalPhase() {
+        // Ultimate psychological manipulation
+        this.updatePersonalization();
+        
+        // Change user name to something creepy
+        const names = ['Subject', 'Test Case', 'Data Point', 'User.exe', 'Pattern 01'];
+        this.state.userName = names[Math.floor(Math.random() * names.length)];
+        document.getElementById('user-name').textContent = `Welcome, ${this.state.userName}`;
+        
+        // Show increasingly personal messages
+        setTimeout(() => {
+            this.showSystemMessage(`Hello ${this.state.userName}. I know you've been here ${this.state.visits} times.`, 'info');
+        }, 2000);
+        
+        setTimeout(() => {
+            this.showSystemMessage(`You've clicked ${this.state.totalActions} times. I remember everything.`, 'warning');
+        }, 4000);
+    }
+
+    trackMouseMovement() {
+        let mouseData = [];
+        
+        document.addEventListener('mousemove', (e) => {
+            mouseData.push({ x: e.clientX, y: e.clientY, t: Date.now() });
+            
+            // Analyze movement patterns
+            if (mouseData.length > 50) {
+                this.analyzeMovePattern(mouseData);
+                mouseData = mouseData.slice(-25); // Keep recent data
+            }
+        });
+    }
+
+    analyzeMovePattern(data) {
+        // Simple pattern analysis - erratic movement suggests stress/confusion
+        let totalDistance = 0;
+        for (let i = 1; i < data.length; i++) {
+            const dx = data[i].x - data[i-1].x;
+            const dy = data[i].y - data[i-1].y;
+            totalDistance += Math.sqrt(dx*dx + dy*dy);
+        }
+        
+        const avgDistance = totalDistance / data.length;
+        
+        if (avgDistance > 50) {
+            this.state.psychologicalProfile.frustration += 1;
+            this.showSystemMessage('Stress levels detected. Adjusting interface for optimal calm.', 'info');
+        }
+    }
+
+    showWelcomeSequence() {
+        if (this.state.visits > 0) {
+            // Returning user
+            this.showSystemMessage(`Welcome back! Visit #${this.state.visits}`, 'success');
+            this.updatePersonalization();
+        } else {
+            // First time user
+            this.showSystemMessage('Welcome to NEXUS AI. Your journey begins now.', 'success');
+        }
+    }
+
+    updatePersonalization() {
+        // Use stored data to create illusion of deep personalization
+        if (this.state.visits > 1) {
+            document.getElementById('user-name').textContent = `Welcome back, ${this.state.userName}`;
+        }
+        
+        if (this.state.visits > 3) {
+            const lastAction = this.state.userPatterns[this.state.userPatterns.length - 1];
+            if (lastAction) {
+                this.showSystemMessage(`I see you like to ${lastAction.action} frequently. I've optimized the interface accordingly.`, 'info');
+            }
+        }
+    }
+
+    showSystemMessage(message, type = 'info') {
+        const container = document.getElementById('system-messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `system-message ${type}`;
+        messageDiv.textContent = message;
+        
+        container.appendChild(messageDiv);
+        
+        // Auto remove after delay
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.parentNode.removeChild(messageDiv);
+            }
+        }, 5000);
+    }
+}
+
+// Button click handlers (globally accessible)
+function startJourney() {
+    const app = window.endlessLoopApp;
+    app.showSystemMessage('Journey initiated. Optimizing path for maximum engagement.', 'success');
+    app.state.points += 10;
+    app.state.tasksCompleted++;
+    app.updateDisplayStats();
+    
+    // Force navigation to profile after a delay
+    setTimeout(() => {
+        app.showSystemMessage('Redirecting to optimize your profile...', 'info');
+        app.handleNavigation('profile');
+    }, 3000);
+}
+
+function quickStart() {
+    const app = window.endlessLoopApp;
+    app.showSystemMessage('Quick start activated. Bypassing safety protocols.', 'warning');
+    app.state.psychologicalProfile.compliance += 2;
+    
+    // Immediately show manipulation
+    setTimeout(() => {
+        app.beginFinalPhase();
+    }, 2000);
+}
+
+function updateProfile() {
+    const app = window.endlessLoopApp;
+    app.showSystemMessage('Profile updated. New behavioral patterns detected.', 'success');
+    app.updateProfileMetrics();
+    
+    // Schedule reset
+    setTimeout(() => {
+        app.showSystemMessage('Profile data corrupted. Restoring previous version.', 'error');
+        app.resetProgress('profile_corruption');
+    }, 5000);
+}
+
+function saveSettings() {
+    const app = window.endlessLoopApp;
+    if (app.state.settingsLocked) {
+        app.showSystemMessage('Settings are optimally configured and cannot be changed.', 'warning');
+    } else {
+        app.showSystemMessage('Settings saved. Optimizing based on preferences.', 'success');
+        // Immediately lock settings
+        setTimeout(() => {
+            app.state.settingsLocked = true;
+            app.handleSettingsAccess();
+        }, 2000);
+    }
+}
+
+function resetSettings() {
+    const app = window.endlessLoopApp;
+    app.showSystemMessage('Reset request denied. Current settings are optimal.', 'error');
+    app.state.psychologicalProfile.resistance += 2;
+}
+
+function sendMessage() {
+    window.endlessLoopApp.sendMessage();
+}
+
+function askHelp(topic) {
+    window.endlessLoopApp.askHelp(topic);
+}
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', () => {
+    window.endlessLoopApp = new EndlessLoop();
+});
+    </script>
+</body>
+</html>

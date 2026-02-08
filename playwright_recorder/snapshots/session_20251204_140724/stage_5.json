@@ -1,0 +1,29 @@
+{
+  "stage": 4,
+  "notificationCount": 203,
+  "tapCount": 34,
+  "notificationSpeed": 125,
+  "escapeAttempts": 3,
+  "rewardStreak": 0,
+  "totalRewards": 1,
+  "isHellMode": true,
+  "urgentTimers": [
+    101,
+    124,
+    128,
+    130,
+    131,
+    133,
+    134,
+    136,
+    139,
+    141,
+    154,
+    171,
+    192,
+    218,
+    228
+  ],
+  "dom": "<div class=\"notification hell\"><div class=\"notification-icon\">\ud83d\udd12</div><div class=\"notification-text\">YOU'RE ADDICTED<div class=\"notification-time\">ADMIT IT</div></div></div><div class=\"notification hell\"><div class=\"notification-icon\">\ud83d\udd25</div><div class=\"notification-text\">YOU CAN'T LEAVE<div class=\"notification-time\">ERROR</div></div></div><div class=\"notification hell\"><div class=\"notification-icon\">\ud83d\udc80</div><div class=\"notification-text\">ENDLESS SCROLLING<div class=\"notification-time\">FOREVER</div></div></div><div class=\"notification hell pulsing-glow\"><div class=\"notification-icon\">\ud83d\udc41\ufe0f</div><div class=\"notification-text\">WE'RE ALWAYS WATCHING<div class=\"notification-time\">ALWAYS</div></div></div><div class=\"notification hell\"><div class=\"notification-icon\">\u26a0\ufe0f</div><div class=\"notification-text\">NOTIFICATION OVERLOAD<div class=\"notification-time\">HELP</div></div></div><div class=\"notification hell\"><div class=\"notification-icon\">\ud83d\udd25</div><div class=\"notification-text\">YOU CAN'T LEAVE<div class=\"notification-time\">ERROR</div></div></div><div class=\"notification hell\"><div class=\"notification-icon\">\ud83c\udf00</div><div class=\"notification-text\">TRAPPED IN THE FEED<div class=\"notification-time\">NO ESCAPE</div></div></div><div class=\"notification hell pulsing-glow\"><div class=\"notification-icon\">\ud83d\udd12</div><div class=\"notification-text\">YOU'RE ADDICTED<div class=\"notification-time\">ADMIT IT</div></div></div><div class=\"notification hell\"><div class=\"notification-icon\">\u26a0\ufe0f</div><div class=\"notification-text\">NOTIFICATION OVERLOAD<div class=\"notification-time\">HELP</div></div></div><div class=\"notification hell\"><div class=\"notification-icon\">\ud83d\udd12</div><div class=\"notification-text\">YOU'RE ADDICTED<div class=\"notification-time\">ADMIT IT</div></div></div><div class=\"notification hell pulsing-glow\"><div class=\"notification-icon\">\u26a0\ufe0f</div><div class=\"notification-text\">NOTIFICATION OVERLOAD<div class=\"notification-time\">HELP</div></div></div><div class=\"notification hell pulsing-glow\"><div class=\"notification-icon\">\ud83d\udc79</div><div class=\"notification-text\">WE OWN YOU NOW<div class=\"notification-time\">\u221e</div></div></div>",
+  "timestamp": 39.47705864906311
+}

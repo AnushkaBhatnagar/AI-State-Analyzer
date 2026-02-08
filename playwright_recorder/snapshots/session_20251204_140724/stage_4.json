@@ -1,0 +1,29 @@
+{
+  "stage": 4,
+  "notificationCount": 105,
+  "tapCount": 34,
+  "notificationSpeed": 125,
+  "escapeAttempts": 3,
+  "rewardStreak": 0,
+  "totalRewards": 1,
+  "isHellMode": true,
+  "urgentTimers": [
+    101,
+    124,
+    128,
+    130,
+    131,
+    133,
+    134,
+    136,
+    139,
+    141,
+    154,
+    171,
+    192,
+    218,
+    228
+  ],
+  "dom": "<div class=\"notification hell pulsing-glow state-highlight\"><div class=\"notification-icon\">\ud83d\udd12</div><div class=\"notification-text\">YOU'RE ADDICTED<div class=\"notification-time\">ADMIT IT</div></div></div><div class=\"notification hell pulsing-glow state-highlight\"><div class=\"notification-icon\">\ud83d\udd25</div><div class=\"notification-text\">YOU CAN'T LEAVE<div class=\"notification-time\">ERROR</div></div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\ud83d\udc41\ufe0f</div><div class=\"notification-text\">We miss you. Come back.<div class=\"notification-time\">1m ago</div></div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\ud83d\udc65</div><div class=\"notification-text\">5 friends feel neglected by your silence<div class=\"notification-time\">GUILT TRIP</div></div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\ud83d\ude22</div><div class=\"notification-text\">Emma: 'Are you ignoring me?'<div class=\"notification-time\">3m ago</div></div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\ud83d\ude22</div><div class=\"notification-text\">Emma: 'Are you ignoring me?'<div class=\"notification-time\">3m ago</div></div></div><div class=\"notification dark pulsing-glow state-highlight\"><div class=\"notification-icon\">\ud83d\udc65</div><div class=\"notification-text\">5 friends feel neglected by your silence<div class=\"notification-time\">GUILT TRIP</div></div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\u23f0</div><div class=\"notification-text\">Your followers are waiting...<div class=\"notification-time\">2m ago</div></div></div><div class=\"notification urgent state-highlight\"><div class=\"notification-icon\">\ud83d\udd25</div><div class=\"notification-text\">Limited time offer ending NOW!<div class=\"notification-time\">LAST CHANCE</div></div><div class=\"countdown-timer\">8</div></div><div class=\"notification mystery state-highlight\"><div class=\"notification-icon\">\ud83c\udfb2</div><div class=\"notification-text\">Fortune or failure? Click to discover<div class=\"notification-time\">GAMBLE</div></div></div><div class=\"notification dark pulsing-glow state-highlight\"><div class=\"notification-icon\">\ud83d\ude15</div><div class=\"notification-text\">Mom: 'You never respond anymore...'<div class=\"notification-time\">FAMILY</div></div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\ud83d\udd0d</div><div class=\"notification-text\">Are you still real?<div class=\"notification-time\">3m ago</div></div></div>",
+  "timestamp": 31.251895904541016
+}
