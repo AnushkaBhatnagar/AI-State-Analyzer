@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            zoom: 0.7;
+        }
+        
+        .view-toggle-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10000;
+            background: rgba(20, 20, 20, 0.95);
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            display: flex;
+            gap: 8px;
+        }
+        
+        .view-toggle-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .view-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .view-toggle-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .original-view-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            background: white;
+            display: none;
+        }
+        
+        .original-view-container.active {
+            display: block;
+        }
+        
+        .original-view-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .state-panel {
+            position: fixed;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 450px;
+            background: rgba(20, 20, 20, 0.95);
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .stage-segment {
+            flex: 1;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            opacity: 0.5;
+        }
+        
+        .segment-content {
+            display: flex;
+            gap: 12px;
+            flex: 1;
+        }
+        
+        .logging-column {
+            flex: 0 0 160px;
+        }
+        
+        .params-column {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .param-item {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 8px;
+            font-size: 11px;
+            line-height: 1.4;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .param-item.highlighted {
+            border: 2px solid #2ecc71;
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+            background: rgba(46, 204, 113, 0.15);
+        }
+        
+        .param-name {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: bold;
+            margin-bottom: 3px;
+            font-size: 12px;
+        }
+        
+        .param-id, .param-state, .param-mod {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 10px;
+        }
+        
+        .param-id {
+            color: rgba(100, 200, 255, 0.8);
+            position: relative;
+        }
+        
+        .copy-icon {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: all 0.2s;
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.9);
+            z-index: 10;
+        }
+        
+        .copy-icon:hover {
+            opacity: 1;
+            color: rgba(100, 200, 255, 1);
+            transform: scale(1.15);
+        }
+        
+        .copy-icon.copied {
+            color: #2ecc71;
+        }
+
+        .stage-segment:last-child {
+            border-bottom: none;
+        }
+
+        .stage-segment.active {
+            opacity: 1;
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .stage-header {
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .jump-button {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .jump-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
+        
+        .jump-button:active {
+            transform: scale(0.95);
+        }
+
+        .stage-range {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 10px;
+            margin-bottom: 8px;
+        }
+
+        .stage-description {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 11px;
+            line-height: 1.5;
+            margin-bottom: 12px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .dots-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-content: flex-start;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.6);
+            animation: dotAppear 0.3s ease-out;
+        }
+
+        @keyframes dotAppear {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .state-highlight {
+            border: 2px solid #2ecc71 !important;
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.6) !important;
+            animation: highlightPulse 2s infinite;
+        }
+
+        @keyframes highlightPulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(46, 204, 113, 0.6); }
+            50% { box-shadow: 0 0 25px rgba(46, 204, 113, 0.9); }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            zoom: 0.65;
+        }
+
+        .phone {
+            width: 375px;
+            height: 812px;
+            background: #000;
+            border-radius: 40px;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+            border-radius: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        .app-title {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .notification-counter {
+            background: #ff3333;
+            color: white;
+            border-radius: 15px;
+            padding: 5px 12px;
+            font-size: 14px;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+
+        .content-area {
+            padding: 20px;
+            height: calc(100% - 120px);
+            overflow: hidden;
+        }
+
+        .notification {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 10px;
+            color: white;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .notification:hover {
+            transform: scale(1.02);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .start-button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .start-button:hover {
+            transform: scale(1.05);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <div class="screen">
+            <br><br>
+            <div class="app-header">
+                <div class="app-title">Instagram</div>
+                <div class="notification-counter" id="counter">0</div>
+            </div>
+            
+            <div class="content-area" id="contentArea">
+                <div style="text-align: center; color: white; margin-top: 100px;">
+                    <button class="start-button" onclick="startHell()">Start</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var notificationCount = 0;
+        var stage = 0;
+        var isHellMode = false;
+        var tapCount = 0;
+        var notificationSpeed = 800;
+        var escapeAttempts = 0;
+        var urgentTimers = [];
+        var rewardStreak = 0;
+        var totalRewards = 0;
+        
+        // Simplified startup - notifications arrays would be defined here in full implementation
+        function startHell() {
+            document.getElementById('contentArea').innerHTML = '';
+            notificationCount = 0;
+            tapCount = 0;
+            stage = 1;
+        }
+
+        // Placeholder for other functions
+        function logNotificationDot() { updateStateHighlight(); }
+        function copyElementHTML(selector) { }
+        function jumpToState(targetState) { }
+        function switchToOriginalView() { }
+        function switchToAnalysisView() { }
+    </script>
+
+    <script>
+        var currentTrackedState = 0;
+        var stateSegments = {};
+        var stateNames = {};
+        var statesData = null;
+        
+        function initStatePanel() {
+            stateSegments = {};
+            if (statesData && statesData.states) {
+                statesData.states.forEach(state => {
+                    const dotsId = 'state' + state.id + 'Dots';
+                    stateSegments[state.id] = document.getElementById(dotsId);
+                    stateNames[state.id] = state.name;
+                });
+            }
+        }
+        
+        function findVariable(varName) {
+            try {
+                if (typeof window[varName] !== 'undefined') {
+                    return window[varName];
+                }
+            } catch(e) {}
+            try {
+                for (let key in window) {
+                    if (window[key] && typeof window[key] === 'object') {
+                        try {
+                            if (varName in window[key]) {
+                                return window[key][varName];
+                            }
+                        } catch(e) {}
+                    }
+                }
+            } catch(e) {}
+            return undefined;
+        }
+        
+        function getCurrentState() {
+            if (!statesData || !statesData.states) return currentTrackedState;
+            
+            for (let state of statesData.states) {
+                try {
+                    const stage = findVariable('stage');
+                    if (state.detection_condition.includes('stage === ' + state.id) && stage === state.id) {
+                        return state.id;
+                    }
+                } catch(e) {}
+            }
+            
+            return currentTrackedState;
+        }
+        
+        function getTimestamp() {
+            const now = new Date();
+            return now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit', 
+                hour12: true 
+            });
+        }
+        
+        function checkVisible(selector) {
+            const el = document.querySelector(selector);
+            if (!el) return false;
+            const style = window.getComputedStyle(el);
+            return style.display !== 'none' && 
+                   style.visibility !== 'hidden' && 
+                   el.offsetParent !== null &&
+                   !el.classList.contains('hidden');
+        }
+        
+        function checkHidden(selector) {
+            const el = document.querySelector(selector);
+            if (!el) return true;
+            const style = window.getComputedStyle(el);
+            return style.display === 'none' || 
+                   style.visibility === 'hidden' || 
+                   el.offsetParent === null ||
+                   el.classList.contains('hidden');
+        }
+        
+        function checkClass(selector, className) {
+            const el = document.querySelector(selector);
+            return el ? el.classList.contains(className) : false;
+        }
+        
+        function checkText(selector, text) {
+            const el = document.querySelector(selector);
+            return el ? el.textContent.includes(text) : false;
+        }
+        
+        function updateStateHighlight() {
+            var newState = getCurrentState();
+            if (newState !== currentTrackedState) {
+                var oldState = currentTrackedState;
+                currentTrackedState = newState;
+                
+                var timestamp = getTimestamp();
+                var oldStateName = stateNames[oldState] || 'Unknown';
+                var newStateName = stateNames[newState] || 'Unknown';
+                console.log(
+                    '%c[State Change] ' + timestamp + ' %c| State ' + oldState + ' (' + oldStateName + ') → State ' + newState + ' (' + newStateName + ')',
+                    'color: #2ecc71; font-weight: bold;',
+                    'color: #3498db;'
+                );
+                
+                for (var i = 0; i < (statesData ? statesData.states.length : 6); i++) {
+                    var segment = document.getElementById('state' + i);
+                    if (segment) {
+                        if (i === currentTrackedState) {
+                            segment.classList.add('active');
+                        } else {
+                            segment.classList.remove('active');
+                        }
+                    }
+                }
+                
+                highlightUIElements(currentTrackedState);
+            }
+        }
+        
+        function highlightUIElements(state) {
+            var allElements = document.querySelectorAll('.state-highlight');
+            allElements.forEach(function(el) {
+                el.classList.remove('state-highlight');
+            });
+            
+            var allPanelItems = document.querySelectorAll('.param-item.highlighted');
+            allPanelItems.forEach(function(item) {
+                item.classList.remove('highlighted');
+            });
+        }
+        
+        function generateStatePanel() {
+            if (!statesData || !statesData.states) return;
+            
+            const panelContainer = document.getElementById('statePanel');
+            if (!panelContainer) return;
+            
+            panelContainer.innerHTML = '';
+            
+            statesData.states.forEach((state, index) => {
+                const segment = document.createElement('div');
+                segment.className = 'stage-segment stage-' + state.id;
+                segment.id = 'state' + state.id;
+                if (index === 0) segment.classList.add('active');
+                
+                // Apply color theme
+                if (state.color_theme) {
+                    segment.style.background = 'linear-gradient(135deg, ' + state.color_theme.primary + ' 0%, ' + state.color_theme.primary + ' 100%)';
+                }
+                
+                let html = `
+                    <div class="stage-header">
+                        State ${state.id}: ${state.name}
+                        <button class="jump-button" onclick="jumpToState(${state.id})">Jump</button>
+                    </div>
+                    <div class="stage-range">${state.range_description || 'N/A'}</div>
+                `;
+                
+                if (state.user_facing_description) {
+                    html += `<div class="stage-description">${state.user_facing_description}</div>`;
+                }
+                
+                html += `
+                    <div class="segment-content">
+                        <div class="logging-column">
+                            <div class="dots-container" id="state${state.id}Dots"></div>
+                        </div>
+                        <div class="params-column">
+                `;
+                
+                if (state.interactive_elements) {
+                    state.interactive_elements.forEach(elem => {
+                        html += `
+                            <div class="param-item">
+                                <span class="copy-icon" onclick="copyElementHTML('${elem.selector}')" title="Copy HTML">⎘</span>
+                                <div class="param-name">${elem.name}</div>
+                                <div class="param-id">Selector: ${elem.selector}</div>
+                                <div class="param-state">State: ${elem.state}</div>
+                                <div class="param-mod">Action: ${elem.onclick || 'None'}</div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                if (state.key_variables) {
+                    state.key_variables.forEach(variable => {
+                        html += `
+                            <div class="param-item">
+                                <span class="copy-icon" onclick="copyElementHTML('${variable.name}')" title="Copy value">⎘</span>
+                                <div class="param-name">${variable.name}</div>
+                                <div class="param-id">Variable</div>
+                                <div class="param-state">Value: ${variable.value}</div>
+                                <div class="param-mod">Purpose: ${variable.purpose}</div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+                
+                segment.innerHTML = html;
+                panelContainer.appendChild(segment);
+            });
+            
+            initStatePanel();
+        }
+        
+        // Load states from JSON
+        fetch('states_schema-og.json')
+            .then(response => response.json())
+            .then(data => {
+                statesData = data;
+                generateStatePanel();
+            })
+            .catch(error => console.error('Error loading states_schema.json:', error));
+        
+        window.addEventListener('DOMContentLoaded', function() {
+            updateStateHighlight();
+        });
+        
+        setInterval(updateStateHighlight, 500);
+    </script>
+
+    <!-- View Toggle Controls -->
+    <div class="view-toggle-container">
+        <button class="view-toggle-btn active" id="analysisViewBtn" onclick="switchToAnalysisView()">
+            Analysis View
+        </button>
+        <button class="view-toggle-btn" id="originalViewBtn" onclick="switchToOriginalView()">
+            Original View
+        </button>
+    </div>
+
+    <!-- Original View (iframe) -->
+    <div class="original-view-container" id="originalViewContainer">
+        <iframe class="original-view-iframe" id="originalViewIframe" src="index.html"></iframe>
+    </div>
+
+    <!-- Dynamic State Panel -->
+    <div class="state-panel" id="statePanel">
+        <!-- Dynamically populated from states_schema.json -->
+    </div>
+
+</body>
+</html>

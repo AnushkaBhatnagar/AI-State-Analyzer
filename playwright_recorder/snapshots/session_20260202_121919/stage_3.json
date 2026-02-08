@@ -1,0 +1,19 @@
+{
+  "stage": 3,
+  "notificationCount": 50,
+  "tapCount": 17,
+  "notificationSpeed": 650,
+  "escapeAttempts": 0,
+  "rewardStreak": 0,
+  "totalRewards": 0,
+  "isHellMode": false,
+  "urgentTimers": [
+    102,
+    138,
+    139,
+    140,
+    141
+  ],
+  "dom": "<div class=\"notification mystery\"><div class=\"notification-icon\">\u2753</div><div class=\"notification-text\">Mystery box - tap to reveal your fate<div class=\"notification-time\">???</div></div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\ud83d\udd0d</div><div class=\"notification-text\">Are you still real?<div class=\"notification-time\">3m ago</div></div></div><div class=\"notification urgent\"><div class=\"notification-icon\">\ud83d\udd25</div><div class=\"notification-text\">Limited time offer ending NOW!<div class=\"notification-time\">LAST CHANCE</div></div><div class=\"countdown-timer\">5</div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\u2753</div><div class=\"notification-text\">Where are you? You haven't posted in 5 minutes...<div class=\"notification-time\">now</div></div></div><div class=\"notification urgent\"><div class=\"notification-icon\">\u23f0</div><div class=\"notification-text\">15 seconds left to claim your reward!<div class=\"notification-time\">HURRY</div></div><div class=\"countdown-timer\">16</div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\u2753</div><div class=\"notification-text\">Where are you? You haven't posted in 5 minutes...<div class=\"notification-time\">now</div></div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\ud83d\udd25</div><div class=\"notification-text\">Your friends are all online now - 23 active<div class=\"notification-time\">now</div></div></div><div class=\"notification dark state-highlight\"><div class=\"notification-icon\">\u23f0</div><div class=\"notification-text\">Limited time: Double likes for next 5 minutes!<div class=\"notification-time\">EXPIRES SOON</div></div></div><div class=\"notification mystery\"><div class=\"notification-icon\">\u2753</div><div class=\"notification-text\">Mystery box - tap to reveal your fate<div class=\"notification-time\">???</div></div></div><div class=\"notification mystery\"><div class=\"notification-icon\">\ud83d\udd2e</div><div class=\"notification-text\">Something special awaits... or does it?<div class=\"notification-time\">MYSTERY</div></div></div><div class=\"notification urgent\"><div class=\"notification-icon\">\u23f0</div><div class=\"notification-text\">15 seconds left to claim your reward!<div class=\"notification-time\">HURRY</div></div><div class=\"countdown-timer\">8</div></div><div class=\"notification urgent\"><div class=\"notification-icon\">\ud83d\udea8</div><div class=\"notification-text\">URGENT: Tap before timer runs out!<div class=\"notification-time\">EXPIRING</div></div><div class=\"countdown-timer\">1</div></div>",
+  "timestamp": 38.64157176017761
+}

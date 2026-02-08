@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Mysterious Door - An Interactive Story</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .story-container {
+            max-width: 700px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .story-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #e94560, #533483, #0f3460);
+        }
+
+        h1 {
+            text-align: center;
+            color: #16213e;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 30px;
+        }
+
+        .story-text {
+            line-height: 1.8;
+            color: #333;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            min-height: 150px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .choice-btn {
+            padding: 15px 25px;
+            font-size: 1rem;
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #533483 0%, #e94560 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .choice-btn:hover {
+            transform: translateX(10px);
+            box-shadow: 0 5px 20px rgba(233, 69, 96, 0.4);
+        }
+
+        .choice-btn:active {
+            transform: scale(0.98);
+        }
+
+        .restart-btn {
+            display: none;
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-family: 'Georgia', serif;
+            background: #16213e;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            background: #0f3460;
+        }
+
+        .ending {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(83, 52, 131, 0.1) 0%, rgba(233, 69, 96, 0.1) 100%);
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .ending h2 {
+            color: #533483;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #eee;
+            border-radius: 2px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e94560, #533483);
+            transition: width 0.5s ease;
+        }
+
+        .scene-indicator {
+            text-align: center;
+            color: #999;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="story-container">
+        <h1>🚪 The Mysterious Door</h1>
+        <p class="subtitle">An Interactive Adventure</p>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress" style="width: 10%"></div>
+        </div>
+        
+        <p class="scene-indicator" id="scene-indicator">Chapter 1</p>
+        
+        <div class="story-text" id="story-text">
+            You're walking home late one evening when you notice something strange. In the alley between two old buildings, there's a door that wasn't there before—a magnificent oak door with intricate carvings and a softly glowing handle.
+            <br><br>
+            As you approach, you feel a strange warmth emanating from it. The carvings seem to move in the flickering streetlight, depicting scenes of distant lands and impossible creatures.
+            <br><br>
+            What do you do?
+        </div>
+        
+        <div class="choices" id="choices">
+            <button class="choice-btn" onclick="makeChoice('open')">🔓 Open the door and step through</button>
+            <button class="choice-btn" onclick="makeChoice('knock')">🤚 Knock first to see if anyone answers</button>
+            <button class="choice-btn" onclick="makeChoice('ignore')">🚶 Walk away—this seems too strange</button>
+        </div>
+        
+        <button class="restart-btn" id="restart-btn" onclick="restartStory()">🔄 Start Over</button>
+    </div>
+
+    <script>
+        const storyData = {
+            // Opening paths
+            open: {
+                text: `You grasp the warm handle and push. The door swings open silently, revealing not the brick wall you expected, but a vast forest bathed in eternal twilight.
+                <br><br>
+                Purple leaves drift from silver trees, and in the distance, you see two paths: one leading toward a glowing crystal tower, the other winding into a valley where mysterious music plays.
+                <br><br>
+                Behind you, the door begins to slowly close...`,
+                chapter: "Chapter 2 - The Twilight Forest",
+                progress: 25,
+                choices: [
+                    { text: "🏰 Run toward the crystal tower", action: "tower" },
+                    { text: "🎵 Follow the enchanting music", action: "music" },
+                    { text: "🚪 Quickly go back through the door", action: "return_early" }
+                ]
+            },
+            knock: {
+                text: `You knock three times. The sound echoes strangely, as if the door leads to a vast cavern. After a moment of silence, you hear footsteps approaching from the other side.
+                <br><br>
+                The door creaks open to reveal a small, elderly figure in a starlit cloak. Their eyes twinkle with ancient wisdom.
+                <br><br>
+                "Ah, a polite one! How refreshing," they say. "I am the Keeper. I can offer you a gift, but choose wisely..."`,
+                chapter: "Chapter 2 - The Keeper",
+                progress: 25,
+                choices: [
+                    { text: "💫 Ask for the gift of Knowledge", action: "knowledge" },
+                    { text: "⚔️ Ask for the gift of Courage", action: "courage" },
+                    { text: "❓ Ask what lies beyond the door", action: "ask_beyond" }
+                ]
+            },
+            ignore: {
+                text: `You turn away from the door, but with each step, you feel an inexplicable pull. The world around you starts to shimmer, and you realize the streetlights are flickering in an unusual pattern—spelling out words.
+                <br><br>
+                "CHOSEN ONE... RETURN..."
+                <br><br>
+                Suddenly, you're standing back in front of the door. This time, it's slightly ajar, and a warm golden light spills out.`,
+                chapter: "Chapter 2 - Destiny Calls",
+                progress: 25,
+                choices: [
+                    { text: "🌟 Accept your fate and enter", action: "accept_fate" },
+                    { text: "🏃 Try harder to run away", action: "run_harder" }
+                ]
+            },
+
+            // Second level choices
+            tower: {
+                text: `You sprint toward the crystal tower as the door clicks shut behind you. The tower is magnificent—made entirely of singing crystals that hum in harmony.
+                <br><br>
+                At its base, you find a spiral staircase ascending into clouds, and a pool of mirror-still water that shows not your reflection, but glimpses of other worlds.
+                <br><br>
+                A voice from within the tower calls: "Climb, seeker, and find what you seek... or gaze into the pool and learn what you fear."`,
+                chapter: "Chapter 3 - The Crystal Tower",
+                progress: 50,
+                choices: [
+                    { text: "⬆️ Climb the spiral staircase", action: "climb" },
+                    { text: "🪞 Gaze into the mysterious pool", action: "pool" }
+                ]
+            },
+            music: {
+                text: `You follow the haunting melody into the valley. The music grows stronger, and you find yourself in a clearing where ethereal beings made of light are dancing.
+                <br><br>
+                They notice you and the music stops. One approaches—their form shifting like aurora borealis.
+                <br><br>
+                "A mortal! How wonderful! Join our dance and be one of us forever, or... take this melody as a gift and return to your world, forever changed."`,
+                chapter: "Chapter 3 - The Light Dancers",
+                progress: 50,
+                choices: [
+                    { text: "💃 Join the eternal dance", action: "dance" },
+                    { text: "🎶 Accept the melody and return", action: "melody_gift" }
+                ]
+            },
+            return_early: {
+                text: `You dive back through the closing door, tumbling onto the familiar cobblestones of the alley. The door slams shut and immediately begins to fade.
+                <br><br>
+                But something is different. In your pocket, you find a small crystal that wasn't there before—it pulses with a soft, warm light. On it is inscribed: "When you're ready, I'll find you again."
+                <br><br>
+                You walk home, knowing your life will never quite be the same.`,
+                chapter: "Ending - The Promise",
+                progress: 100,
+                ending: true,
+                endingTitle: "The Cautious Heart",
+                endingText: "You chose safety, but magic has touched you. Some doors, once seen, can never be forgotten."
+            },
+            knowledge: {
+                text: `The Keeper smiles and touches your forehead. Suddenly, you understand—languages you've never heard, mathematics that seemed impossible, the secrets of stars and the songs of whales.
+                <br><br>
+                "Use it wisely," the Keeper says. "Knowledge without purpose is just noise."
+                <br><br>
+                The door begins to close, but you now see a shimmering path leading deeper into this realm.`,
+                chapter: "Chapter 3 - The Gift of Knowing",
+                progress: 50,
+                choices: [
+                    { text: "📚 Return home with your gift", action: "return_knowledge" },
+                    { text: "🛤️ Explore the shimmering path", action: "shimmer_path" }
+                ]
+            },
+            courage: {
+                text: `The Keeper presses a warm stone into your palm. Heat spreads through your body, and all fear—past, present, and future—melts away.
+                <br><br>
+                "Now," the Keeper says with a mysterious smile, "you're ready for what lies ahead. But remember: courage without wisdom is merely recklessness."
+                <br><br>
+                Beyond the Keeper, you see a dark tunnel filled with whispers and a garden filled with impossible flowers.`,
+                chapter: "Chapter 3 - The Brave Heart",
+                progress: 50,
+                choices: [
+                    { text: "🌑 Enter the whispering tunnel", action: "tunnel" },
+                    { text: "🌸 Explore the impossible garden", action: "garden" }
+                ]
+            },
+            ask_beyond: {
+                text: `The Keeper's eyes grow distant. "Beyond this door lies everything you've ever dreamed and everything you've ever feared. It is a place where thought becomes reality and time flows like honey."
+                <br><br>
+                They step aside. "But I sense great potential in you. Will you enter knowing the risks?"`,
+                chapter: "Chapter 3 - The Truth",
+                progress: 50,
+                choices: [
+                    { text: "✨ Enter the realm of dreams", action: "dream_realm" },
+                    { text: "🙏 Thank the Keeper and leave", action: "polite_exit" }
+                ]
+            },
+            accept_fate: {
+                text: `You step through the door and find yourself in a grand hall of infinite mirrors. Each mirror shows a different version of you—one is a king, another an explorer, yet another a sage.
+                <br><br>
+                A voice echoes: "You are the Chosen One because you chose to come. Now choose who you will become."`,
+                chapter: "Chapter 3 - The Hall of Selves",
+                progress: 50,
+                choices: [
+                    { text: "👑 Touch the mirror of the ruler", action: "ruler" },
+                    { text: "📖 Touch the mirror of the sage", action: "sage" },
+                    { text: "🧭 Touch the mirror of the explorer", action: "explorer" }
+                ]
+            },
+            run_harder: {
+                text: `You run with all your might, but the world itself seems to fold around you. Every street leads back to the alley, every turn reveals the door.
+                <br><br>
+                Finally, exhausted, you sit down right in front of it. The door opens on its own, and instead of a mystical realm, you see... your own apartment, but filled with golden light and peace.
+                <br><br>
+                "Sometimes," a gentle voice says, "the magic you seek is finding your way home."`,
+                chapter: "Ending - Coming Home",
+                progress: 100,
+                ending: true,
+                endingTitle: "The Wanderer's Rest",
+                endingText: "You learned that running from magic only leads you back to yourself. You step through, and finally feel at peace."
+            },
+
+            // Third level - Endings
+            climb: {
+                text: `You climb the crystal stairs, each step playing a note in an ascending symphony. At the top, you find a small room with windows looking out at countless worlds.
+                <br><br>
+                In the center sits a book with your name on it—filled with blank pages. A quill appears in your hand.
+                <br><br>
+                You realize: this is where stories are written. YOUR stories. And now, you hold the pen.`,
+                chapter: "Ending - The Author",
+                progress: 100,
+                ending: true,
+                endingTitle: "The Storyteller",
+                endingText: "You became the author of worlds. Every dream you write becomes real somewhere in the infinite cosmos. Your stories bring joy to beings across dimensions."
+            },
+            pool: {
+                text: `You gaze into the pool and see your deepest fear: being alone, forgotten, meaningless. But as you watch, the vision transforms. Your loneliness becomes solitude—peaceful, creative. Being forgotten becomes freedom. Meaninglessness becomes possibility.
+                <br><br>
+                You emerge from the vision transformed, understanding that every fear holds a gift within it.`,
+                chapter: "Ending - The Transformed",
+                progress: 100,
+                ending: true,
+                endingTitle: "The Fearless One",
+                endingText: "By facing your fears, you transcended them. You return to your world as a healer, helping others transform their darkness into light."
+            },
+            dance: {
+                text: `You take the hand of light and begin to dance. Your body grows weightless, luminous. Time stretches into eternity as you become one with the cosmic dance.
+                <br><br>
+                You forget your name, your past, your world—but you remember joy. Pure, infinite joy. You dance among the stars, forever young, forever free.`,
+                chapter: "Ending - The Eternal Dance",
+                progress: 100,
+                ending: true,
+                endingTitle: "Being of Light",
+                endingText: "You chose transcendence and became part of something greater than yourself. Mortals sometimes glimpse you dancing in the northern lights."
+            },
+            melody_gift: {
+                text: `The being of light hums a melody and presses it into your heart. You feel it settle there—warm, alive, eternal.
+                <br><br>
+                You wake in the alley. The door is gone. But whenever you're sad or lost, you hum that melody, and the world seems a little more magical. You share it with others, and slowly, you change the world—one song at a time.`,
+                chapter: "Ending - The Melody",
+                progress: 100,
+                ending: true,
+                endingTitle: "The Music Carrier",
+                endingText: "You brought magic back to the mundane world. Your melody spreads, healing hearts and inspiring dreams wherever it goes."
+            },
+            return_knowledge: {
+                text: `Armed with universal knowledge, you return to your world. You become a great teacher, inventor, and philosopher. You solve problems that plagued humanity for centuries.
+                <br><br>
+                But your greatest discovery? That the most important knowledge is love—and that you already had that before the door.`,
+                chapter: "Ending - The Sage",
+                progress: 100,
+                ending: true,
+                endingTitle: "The Enlightened",
+                endingText: "Your knowledge changed the world, but your wisdom changed hearts. You're remembered as one of history's greatest minds—and kindest souls."
+            },
+            shimmer_path: {
+                text: `The shimmering path leads you through wonders beyond description—cities of cloud, oceans of stars, libraries containing every story ever imagined.
+                <br><br>
+                Years pass (or do they?) until you find the path's end: a simple cottage where an older version of yourself sits, smiling. "I've been waiting," they say. "Now you understand. The journey IS the destination."`,
+                chapter: "Ending - The Wanderer",
+                progress: 100,
+                ending: true,
+                endingTitle: "The Eternal Traveler",
+                endingText: "You chose wonder over certainty and explored the infinite. You found yourself at journey's end, complete and at peace."
+            },
+            tunnel: {
+                text: `The whispers try to frighten you, but courage burns in your chest. You walk through, and the darkness parts like curtains. At the end, you find prisoners—dreams that were never dreamed, hopes that were abandoned.
+                <br><br>
+                You free them all, sending them back into the world as sudden inspirations and midnight epiphanies. You become a liberator of lost dreams.`,
+                chapter: "Ending - The Liberator",
+                progress: 100,
+                ending: true,
+                endingTitle: "Dream Guardian",
+                endingText: "Your courage freed countless abandoned dreams. Every sudden inspiration, every middle-of-the-night idea—that's your legacy."
+            },
+            garden: {
+                text: `The impossible garden contains flowers that bloom with memories, trees that fruit with emotions. You tend it with care, learning that even impossible things need nurturing.
+                <br><br>
+                You become its guardian, and in return, it teaches you the secret of creation: everything starts as something impossible until someone believes in it enough.`,
+                chapter: "Ending - The Gardener",
+                progress: 100,
+                ending: true,
+                endingTitle: "Keeper of Wonder",
+                endingText: "You chose to nurture impossibility and became a creator. Your garden grows still, feeding the dreams of every child who believes."
+            },
+            dream_realm: {
+                text: `You enter the realm of dreams and find it both terrifying and beautiful. You master it, learning to shape reality with pure thought. Eventually, you become a Dream Architect, crafting peaceful dreams for troubled sleepers, and adventures for the dreamers.
+                <br><br>
+                Your body sleeps in the mortal world, but your spirit has never been more alive.`,
+                chapter: "Ending - The Dream Architect",
+                progress: 100,
+                ending: true,
+                endingTitle: "Lord of Dreams",
+                endingText: "You chose to live in imagination and became its master. Every beautiful dream someone has—you might have painted it."
+            },
+            polite_exit: {
+                text: `The Keeper nods with deep respect. "Wisdom greater than knowledge—you chose to think before acting. Take this."
+                <br><br>
+                They hand you a small key. "When you're truly ready, use this. The door will find you." You return home, the key warm in your pocket, knowing adventure awaits whenever you choose it.`,
+                chapter: "Ending - The Key",
+                progress: 100,
+                ending: true,
+                endingTitle: "The Patient One",
+                endingText: "You chose wisdom over impulse. The key remains yours—a promise that magic waits for those wise enough to prepare for it."
+            },
+            ruler: {
+                text: `You touch the mirror and feel power surge through you. But it's not power over others—it's the power to serve, to protect, to lead by example. You return to your world and slowly, through kindness and wisdom, you make it better.
+                <br><br>
+                You never wear a crown, but everyone knows who the true leader is.`,
+                chapter: "Ending - The True Ruler",
+                progress: 100,
+                ending: true,
+                endingTitle: "The Servant King",
+                endingText: "You learned that true leadership is service. Your legacy is a better world, built not through force but through compassion."
+            },
+            sage: {
+                text: `The mirror shows you all the wisdom of ages. You return to your world and open a small shop where people come for advice. You always know just what to say, and somehow, your words plant seeds that bloom into changed lives.
+                <br><br>
+                They call you the Oracle of the Corner Store, and you smile.`,
+                chapter: "Ending - The Corner Oracle",
+                progress: 100,
+                ending: true,
+                endingTitle: "The Humble Sage",
+                endingText: "You chose wisdom and shared it freely. Your small shop became a temple of transformation for all who entered."
+            },
+            explorer: {
+                text: `You touch the mirror and feel your feet itch with wanderlust. You return to your world but can never stay still. You explore every corner of Earth, then build a ship to explore the stars.
+                <br><br>
+                They find your journal floating in space centuries later: "Still exploring. Still wondering. Still alive. The universe is bigger than I ever dreamed."`,
+                chapter: "Ending - The Star Explorer",
+                progress: 100,
+                ending: true,
+                endingTitle: "The Infinite Explorer",
+                endingText: "You chose to explore and never stopped. Your journals inspire generations of explorers who follow your footsteps into the unknown."
+            }
+        };
+
+        function makeChoice(action) {
+            const scene = storyData[action];
+            if (!scene) return;
+
+            // Update story text with animation
+            const storyText = document.getElementById('story-text');
+            storyText.style.animation = 'none';
+            storyText.offsetHeight; // Trigger reflow
+            storyText.style.animation = 'fadeIn 0.5s ease-in';
+            storyText.innerHTML = scene.text;
+
+            // Update chapter indicator
+            document.getElementById('scene-indicator').textContent = scene.chapter;
+
+            // Update progress bar
+            document.getElementById('progress').style.width = scene.progress + '%';
+
+            // Update choices
+            const choicesDiv = document.getElementById('choices');
+            choicesDiv.innerHTML = '';
+
+            if (scene.ending) {
+                // Show ending
+                const endingDiv = document.createElement('div');
+                endingDiv.className = 'ending';
+                endingDiv.innerHTML = `<h2>🌟 ${scene.endingTitle}</h2><p>${scene.endingText}</p>`;
+                choicesDiv.appendChild(endingDiv);
+                document.getElementById('restart-btn').style.display = 'block';
+            } else {
+                // Show new choices
+                scene.choices.forEach(choice => {
+                    const btn = document.createElement('button');
+                    btn.className = 'choice-btn';
+                    btn.textContent = choice.text;
+                    btn.onclick = () => makeChoice(choice.action);
+                    choicesDiv.appendChild(btn);
+                });
+            }
+        }
+
+        function restartStory() {
+            // Reset to beginning
+            document.getElementById('story-text').innerHTML = `You're walking home late one evening when you notice something strange. In the alley between two old buildings, there's a door that wasn't there before—a magnificent oak door with intricate carvings and a softly glowing handle.
+            <br><br>
+            As you approach, you feel a strange warmth emanating from it. The carvings seem to move in the flickering streetlight, depicting scenes of distant lands and impossible creatures.
+            <br><br>
+            What do you do?`;
+            
+            document.getElementById('scene-indicator').textContent = 'Chapter 1';
+            document.getElementById('progress').style.width = '10%';
+            
+            const choicesDiv = document.getElementById('choices');
+            choicesDiv.innerHTML = `
+                <button class="choice-btn" onclick="makeChoice('open')">🔓 Open the door and step through</button>
+                <button class="choice-btn" onclick="makeChoice('knock')">🤚 Knock first to see if anyone answers</button>
+                <button class="choice-btn" onclick="makeChoice('ignore')">🚶 Walk away—this seems too strange</button>
+            `;
+            
+            document.getElementById('restart-btn').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Art Wall - Express Your Story</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            overflow: auto;
+            font-family: 'Georgia', serif;
+            cursor: crosshair;
+            transition: all 0.5s ease;
+            min-height: 100vh;
+        }
+
+        body.started {
+            background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #111111 100%);
+        }
+
+        #canvas {
+            display: block;
+            background: transparent;
+            cursor: crosshair;
+            transition: all 0.3s ease;
+            filter: contrast(1.1) saturate(1.2);
+        }
+
+        .welcome-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 1;
+            transition: all 1s ease;
+            pointer-events: none;
+        }
+
+        .welcome-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .welcome-text {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            animation: breathe 3s ease-in-out infinite;
+        }
+
+        .start-instruction {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 16px;
+            text-align: center;
+            font-style: italic;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.02); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+
+        .color-palette {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(-100px);
+            transition: all 0.8s ease;
+        }
+
+        .color-palette.visible {
+            opacity: 0.8;
+            transform: translateX(0);
+        }
+
+        .color-palette:hover {
+            opacity: 1;
+        }
+
+        .color-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .color-btn:hover {
+            transform: scale(1.2);
+            border-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .color-btn.active {
+            transform: scale(1.15);
+            border-color: rgba(255, 255, 255, 1);
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.6);
+        }
+
+        .brush-controls {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100px);
+            transition: all 0.8s ease;
+        }
+
+        .brush-controls.visible {
+            opacity: 0.8;
+            transform: translateX(0);
+        }
+
+        .brush-controls:hover {
+            opacity: 1;
+        }
+
+        .brush-size-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .size-slider {
+            width: 120px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .size-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .brush-label {
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            font-size: 12px;
+            margin-top: 8px;
+            font-weight: 300;
+        }
+
+        .prompt-container {
+            position: fixed;
+            bottom: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(145deg, rgba(0, 0, 0, 0.9), rgba(10, 10, 10, 0.95));
+            backdrop-filter: blur(25px);
+            border: none;
+            border-radius: 20px;
+            padding: 20px 25px;
+            z-index: 1500;
+            opacity: 0;
+            transform: translateX(-50%) translateY(100px);
+            transition: all 1s cubic-bezier(0.23, 1, 0.32, 1);
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 
+                0 15px 40px rgba(0, 0, 0, 0.8),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05),
+                0 0 0 1px rgba(255, 255, 255, 0.02);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .prompt-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
+            pointer-events: none;
+            border-radius: 30px;
+        }
+
+        .prompt-container::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, 
+                rgba(255, 255, 255, 0.1) 0%, 
+                transparent 20%, 
+                transparent 80%, 
+                rgba(255, 255, 255, 0.05) 100%);
+            border-radius: 32px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .prompt-container:hover::after {
+            opacity: 1;
+        }
+
+        .prompt-container.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .prompt-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+
+        .prompt-progress {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .next-btn {
+            background: linear-gradient(145deg, rgba(30, 30, 30, 0.9), rgba(50, 50, 50, 0.8));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 14px 32px;
+            border-radius: 25px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            box-shadow: 
+                0 8px 25px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .next-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .next-btn:hover::before {
+            left: 100%;
+        }
+
+        .next-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 12px 35px rgba(0, 0, 0, 0.8),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 1);
+        }
+
+        .next-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .story-complete {
+            background: linear-gradient(145deg, rgba(20, 40, 60, 0.9), rgba(30, 50, 70, 0.8));
+            border-color: rgba(100, 150, 200, 0.2);
+            box-shadow: 
+                0 8px 25px rgba(0, 0, 0, 0.7),
+                inset 0 1px 0 rgba(100, 150, 200, 0.1);
+        }
+
+        .story-complete:hover {
+            box-shadow: 
+                0 12px 35px rgba(0, 0, 0, 0.8),
+                inset 0 1px 0 rgba(100, 150, 200, 0.2);
+            border-color: rgba(100, 150, 200, 0.3);
+        }
+
+        .new-story-btn {
+            background: linear-gradient(145deg, rgba(40, 20, 60, 0.9), rgba(60, 30, 80, 0.8));
+            border-color: rgba(150, 100, 200, 0.2);
+            margin-left: 15px;
+            box-shadow: 
+                0 8px 25px rgba(0, 0, 0, 0.7),
+                inset 0 1px 0 rgba(150, 100, 200, 0.1);
+        }
+
+        .new-story-btn:hover {
+            box-shadow: 
+                0 12px 35px rgba(0, 0, 0, 0.8),
+                inset 0 1px 0 rgba(150, 100, 200, 0.2);
+            border-color: rgba(150, 100, 200, 0.3);
+        }
+
+        .drip {
+            position: absolute;
+            width: 2px;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        @keyframes drip-fall {
+            0% {
+                height: 0px;
+                opacity: 0.8;
+            }
+            100% {
+                height: 80px;
+                opacity: 0;
+            }
+        }
+
+        .drip-animation {
+            animation: drip-fall 2.5s ease-out forwards;
+        }
+
+        .inspiration-quote {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 20px;
+            text-align: center;
+            z-index: 999;
+            opacity: 0;
+            transition: all 1.5s ease;
+            pointer-events: none;
+            font-style: italic;
+            max-width: 500px;
+            line-height: 1.8;
+        }
+
+        .inspiration-quote.show {
+            opacity: 1;
+        }
+
+        .canvas-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
+                        rgba(255, 255, 255, 0.05) 0%, 
+                        rgba(255, 255, 255, 0.02) 30%,
+                        transparent 60%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 500;
+        }
+
+        .canvas-overlay.active {
+            opacity: 1;
+        }
+
+        .canvas-overlay.hover {
+            opacity: 0.9;
+            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
+                        rgba(120, 80, 160, 0.15) 0%, 
+                        rgba(80, 40, 120, 0.08) 20%,
+                        rgba(40, 20, 60, 0.04) 40%,
+                        transparent 70%);
+            animation: psychedelic-pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes psychedelic-pulse {
+            0%, 100% { 
+                filter: hue-rotate(0deg) saturate(1);
+                transform: scale(1);
+            }
+            50% { 
+                filter: hue-rotate(30deg) saturate(1.3);
+                transform: scale(1.01);
+            }
+        }
+
+        .canvas-overlay.click {
+            opacity: 1;
+            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
+                        rgba(160, 60, 200, 0.25) 0%, 
+                        rgba(100, 40, 140, 0.15) 15%,
+                        rgba(60, 20, 80, 0.08) 30%,
+                        rgba(30, 10, 40, 0.04) 50%,
+                        transparent 70%);
+            transform: scale(1.03);
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            animation: dark-pulse 0.6s ease-out;
+        }
+
+        @keyframes dark-pulse {
+            0% { 
+                filter: invert(0) hue-rotate(0deg);
+                transform: scale(1);
+            }
+            50% { 
+                filter: invert(0.1) hue-rotate(180deg);
+                transform: scale(1.05);
+            }
+            100% { 
+                filter: invert(0) hue-rotate(360deg);
+                transform: scale(1.03);
+            }
+        }
+
+        #canvas {
+            display: block;
+            background: transparent;
+            cursor: crosshair;
+            transition: all 0.3s ease;
+            filter: contrast(1.1) saturate(1.2);
+        }
+
+        #canvas:hover {
+            filter: contrast(1.15) saturate(1.3) brightness(1.05);
+            transform: scale(1.001);
+        }
+
+        #canvas.drawing {
+            filter: contrast(1.2) saturate(1.4) brightness(1.1);
+            transform: scale(1.002);
+        }
+
+        .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, 
+                rgba(140, 60, 180, 0.4) 0%, 
+                rgba(80, 40, 120, 0.2) 30%,
+                rgba(40, 20, 60, 0.1) 60%,
+                transparent 100%);
+            pointer-events: none;
+            z-index: 1000;
+            animation: psychedelic-ripple 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            box-shadow: 
+                0 0 20px rgba(140, 60, 180, 0.3),
+                inset 0 0 20px rgba(80, 40, 120, 0.2);
+        }
+
+        @keyframes psychedelic-ripple {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+                filter: hue-rotate(0deg) blur(0px);
+                transform: scale(1) rotate(0deg);
+            }
+            30% {
+                opacity: 0.8;
+                filter: hue-rotate(90deg) blur(1px);
+                transform: scale(1.2) rotate(45deg);
+            }
+            70% {
+                opacity: 0.4;
+                filter: hue-rotate(180deg) blur(2px);
+                transform: scale(1.5) rotate(180deg);
+            }
+            100% {
+                width: 150px;
+                height: 150px;
+                opacity: 0;
+                filter: hue-rotate(360deg) blur(3px);
+                transform: scale(2) rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .color-palette {
+                top: 20px;
+                left: 20px;
+                flex-direction: row;
+                gap: 8px;
+            }
+            
+            .color-btn {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .brush-controls {
+                top: 20px;
+                right: 20px;
+            }
+            
+            .prompt-container {
+                bottom: 30px;
+                left: 20px;
+                right: 20px;
+                transform: none;
+                max-width: none;
+            }
+            
+            .prompt-container.visible {
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="welcome-overlay" id="welcomeOverlay">
+        <div class="welcome-text">Express Your Story</div>
+        <div class="start-instruction">Touch the darkness to begin...</div>
+    </div>
+    
+    <div class="canvas-overlay" id="canvasOverlay"></div>
+    
+    <div class="color-palette" id="colorPalette">
+        <div class="color-btn active" style="background: #FFB3BA;" data-color="#FFB3BA" title="Soft Pink"></div>
+        <div class="color-btn" style="background: #FFDFBA;" data-color="#FFDFBA" title="Warm Peach"></div>
+        <div class="color-btn" style="background: #FFFFBA;" data-color="#FFFFBA" title="Gentle Yellow"></div>
+        <div class="color-btn" style="background: #BAFFC9;" data-color="#BAFFC9" title="Mint Green"></div>
+        <div class="color-btn" style="background: #BAE1FF;" data-color="#BAE1FF" title="Sky Blue"></div>
+        <div class="color-btn" style="background: #E1BAFF;" data-color="#E1BAFF" title="Lavender"></div>
+        <div class="color-btn" style="background: #FFBAED;" data-color="#FFBAED" title="Rose"></div>
+        <div class="color-btn" style="background: #C7CEEA;" data-color="#C7CEEA" title="Soft Purple"></div>
+        <div class="color-btn eraser-btn" style="background: rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center; font-size: 20px;" data-mode="eraser" title="Eraser">🧹</div>
+    </div>
+
+    <div class="brush-controls" id="brushControls">
+        <div class="brush-size-container">
+            <input type="range" class="size-slider" min="3" max="40" value="12" id="brushSize">
+            <div class="brush-label">Brush Size</div>
+        </div>
+    </div>
+
+    <div class="prompt-container" id="promptContainer">
+        <div class="prompt-progress" id="promptProgress">Step 1 of 3</div>
+        <div class="prompt-text" id="promptText">Draw the view from a window you used to look out of often</div>
+        <button class="next-btn" id="nextBtn">Continue Your Story</button>
+    </div>
+
+    <div class="inspiration-quote" id="inspirationQuote">
+        Let your emotions flow through color and form...
+    </div>
+
+    <script>
+        class DigitalArtWall {
+            constructor() {
+                this.canvas = document.getElementById('canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.isDrawing = false;
+                this.currentColor = '#FFB3BA';
+                this.brushSize = 12;
+                this.lastX = 0;
+                this.lastY = 0;
+                this.hasStarted = false;
+                this.drips = [];
+                this.isEraser = false;
+                
+                // Prompt system - randomize story on each visit
+                this.currentStoryIndex = Math.floor(Math.random() * 5); // Random story from 0-4
+                this.currentPromptIndex = 0;
+                this.promptShown = false;
+                
+                // Story sequences with reflections
+                this.stories = [
+                    {
+                        prompts: [
+                            "Draw a meal that always makes you feel better",
+                            "Add who taught you it was special or who you share it with",
+                            "Draw the comfort that meal brings to your heart"
+                        ],
+                        reflections: [
+                            "Food carries love across time and distance. What nourishes us often feeds more than our bodies.",
+                            "Every recipe holds a story of connection. The hands that taught us also shaped who we became."
+                        ]
+                    },
+                    {
+                        prompts: [
+                            "Draw a simple moment that made you smile this week",
+                            "Add the feeling that moment gave you - what color is it?",
+                            "Draw yourself sharing that feeling with someone else"
+                        ],
+                        reflections: [
+                            "Joy lives in the smallest moments. These simple gifts remind us what truly matters.",
+                            "Happiness shared becomes even brighter. When we give joy away, it multiplies."
+                        ]
+                    },
+                    {
+                        prompts: [
+                            "Draw someone helping you when you needed it",
+                            "Add how their kindness made you feel",
+                            "Draw yourself passing that kindness on to someone else"
+                        ],
+                        reflections: [
+                            "Kindness received creates ripples in our hearts. Someone's care for you became part of who you are.",
+                            "What we give away always comes back transformed. Your kindness becomes someone else's hope."
+                        ]
+                    },
+                    {
+                        prompts: [
+                            "Draw a place that feels like home to you",
+                            "Add what makes it feel safe and warm",
+                            "Draw yourself there on your best day"
+                        ],
+                        reflections: [
+                            "Home is where our true self feels safe to exist. This feeling lives inside you wherever you go.",
+                            "We carry our best days with us everywhere. This joy becomes part of your inner landscape."
+                        ]
+                    },
+                    {
+                        prompts: [
+                            "Draw something you're looking forward to",
+                            "Add the steps you're taking to get there",
+                            "Draw how it will feel when you arrive"
+                        ],
+                        reflections: [
+                            "Dreams become real one small step at a time. Your vision is already guiding you forward.",
+                            "The journey shapes us as much as the destination. Each step makes you who you're becoming."
+                        ]
+                    }
+                ];
+                
+                // Drawing enhancement variables
+                this.points = [];
+                this.strokeCount = 0;
+                
+                this.setupCanvas();
+                this.setupEventListeners();
+                this.startAnimationLoop();
+                this.showInspiration();
+            }
+
+            setupCanvas() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                
+                // Enhanced canvas settings for smooth drawing
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+                this.ctx.globalCompositeOperation = 'source-over';
+                this.ctx.imageSmoothingEnabled = true;
+                this.ctx.imageSmoothingQuality = 'high';
+            }
+
+            setupEventListeners() {
+                // Color palette
+                document.querySelectorAll('.color-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelector('.color-btn.active').classList.remove('active');
+                        btn.classList.add('active');
+                        
+                        // Check if eraser or color
+                        if (btn.dataset.mode === 'eraser') {
+                            this.isEraser = true;
+                            this.canvas.style.cursor = 'crosshair';
+                        } else {
+                            this.isEraser = false;
+                            this.currentColor = btn.dataset.color;
+                            this.canvas.style.cursor = 'crosshair';
+                        }
+                        
+                        this.createColorBurst();
+                    });
+                });
+
+                // Brush size
+                document.getElementById('brushSize').addEventListener('input', (e) => {
+                    this.brushSize = parseInt(e.target.value);
+                });
+
+                // Enhanced drawing events with passive listeners for better performance
+                this.canvas.addEventListener('mousedown', this.startDrawing.bind(this), { passive: false });
+                this.canvas.addEventListener('mousemove', this.draw.bind(this), { passive: false });
+                this.canvas.addEventListener('mouseup', this.stopDrawing.bind(this), { passive: false });
+                this.canvas.addEventListener('mouseleave', this.stopDrawing.bind(this), { passive: false });
+
+                // Enhanced touch events with better handling
+                this.canvas.addEventListener('touchstart', this.handleTouch.bind(this), { passive: false });
+                this.canvas.addEventListener('touchmove', this.handleTouch.bind(this), { passive: false });
+                this.canvas.addEventListener('touchend', this.stopDrawing.bind(this), { passive: false });
+                this.canvas.addEventListener('touchcancel', this.stopDrawing.bind(this), { passive: false });
+
+                // Enhanced mouse tracking for hover and click effects
+                this.canvas.addEventListener('mousemove', this.trackMouse.bind(this), { passive: true });
+                this.canvas.addEventListener('mouseenter', this.handleCanvasHover.bind(this), { passive: true });
+                this.canvas.addEventListener('mouseleave', this.handleCanvasLeave.bind(this), { passive: true });
+                this.canvas.addEventListener('click', this.handleCanvasClick.bind(this), { passive: false });
+
+                // Next button
+                document.getElementById('nextBtn').addEventListener('click', this.nextPrompt.bind(this));
+
+                // Window resize
+                window.addEventListener('resize', this.handleResize.bind(this));
+            }
+
+            startDrawing(e) {
+                this.isDrawing = true;
+                [this.lastX, this.lastY] = this.getMousePos(e);
+                this.points = [{x: this.lastX, y: this.lastY}];
+                
+                if (!this.hasStarted) {
+                    this.initializeInterface();
+                    // Show first prompt immediately when user starts
+                    if (!this.promptShown) {
+                        setTimeout(() => this.showPrompt(), 1000);
+                    }
+                }
+                
+                this.strokeCount++;
+                this.activateCanvasOverlay();
+            }
+
+            draw(e) {
+                if (!this.isDrawing) return;
+
+                const [currentX, currentY] = this.getMousePos(e);
+                this.points.push({x: currentX, y: currentY});
+                
+                // Draw continuous smooth line
+                this.drawSmoothLine();
+                
+                // Create drips more frequently
+                // if (Math.random() > 0.98) {
+                //     this.createDrip(currentX, currentY);
+                // }
+
+                [this.lastX, this.lastY] = [currentX, currentY];
+            }
+
+            drawSmoothLine() {
+                const len = this.points.length;
+                if (len < 2) return;
+                
+                this.ctx.save();
+                
+                // Set composite operation based on eraser mode
+                if (this.isEraser) {
+                    this.ctx.globalCompositeOperation = 'destination-out';
+                } else {
+                    this.ctx.globalCompositeOperation = 'source-over';
+                }
+                
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+                
+                // Simple, clean drawing with consistent brush size
+                this.ctx.strokeStyle = this.isEraser ? 'rgba(0,0,0,1)' : this.currentColor;
+                this.ctx.lineWidth = this.brushSize;
+                
+                if (len >= 3) {
+                    // Smooth Bezier curves
+                    const p0 = this.points[len - 3];
+                    const p1 = this.points[len - 2];
+                    const p2 = this.points[len - 1];
+                    
+                    // Calculate control points for smooth curves
+                    const cp1x = p1.x + (p2.x - p0.x) * 0.1;
+                    const cp1y = p1.y + (p2.y - p0.y) * 0.1;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(p1.x, p1.y);
+                    this.ctx.quadraticCurveTo(cp1x, cp1y, p2.x, p2.y);
+                    this.ctx.stroke();
+                } else if (len === 2) {
+                    // Simple line for initial stroke
+                    const prevPoint = this.points[len - 2];
+                    const currentPoint = this.points[len - 1];
+                    
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(prevPoint.x, prevPoint.y);
+                    this.ctx.lineTo(currentPoint.x, currentPoint.y);
+                    this.ctx.stroke();
+                }
+                
+                this.ctx.restore();
+                
+                // Keep optimal number of points for smooth curves
+                if (this.points.length > 6) {
+                    this.points.shift();
+                }
+            }
+
+            stopDrawing() {
+                if (this.isDrawing) {
+                    this.isDrawing = false;
+                    this.points = [];
+                }
+            }
+
+            handleTouch(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                if (!touch) return;
+                
+                const mouseEvent = new MouseEvent(
+                    e.type === 'touchstart' ? 'mousedown' : 
+                    e.type === 'touchmove' ? 'mousemove' : 'mouseup', 
+                    {
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    }
+                );
+                this.canvas.dispatchEvent(mouseEvent);
+            }
+
+            initializeInterface() {
+                this.hasStarted = true;
+                document.body.classList.add('started');
+                
+                // Hide welcome overlay
+                document.getElementById('welcomeOverlay').classList.add('hidden');
+                
+                // Show controls
+                setTimeout(() => {
+                    document.getElementById('colorPalette').classList.add('visible');
+                    document.getElementById('brushControls').classList.add('visible');
+                }, 500);
+            }
+
+            showPrompt() {
+                this.promptShown = true;
+                const container = document.getElementById('promptContainer');
+                const progressEl = document.getElementById('promptProgress');
+                const textEl = document.getElementById('promptText');
+                
+                const currentStory = this.stories[this.currentStoryIndex];
+                progressEl.textContent = `Step ${this.currentPromptIndex + 1} of ${currentStory.prompts.length}`;
+                textEl.textContent = currentStory.prompts[this.currentPromptIndex];
+                
+                container.classList.add('visible');
+            }
+
+            nextPrompt() {
+                const currentStory = this.stories[this.currentStoryIndex];
+                
+                // Check if there's a reflection to show before moving to next prompt
+                if (this.currentPromptIndex < currentStory.reflections.length) {
+                    this.showReflection();
+                } else {
+                    this.currentPromptIndex++;
+                    
+                    if (this.currentPromptIndex >= currentStory.prompts.length) {
+                        this.completeStory();
+                    } else {
+                        this.updatePrompt();
+                    }
+                }
+            }
+
+            showReflection() {
+                const container = document.getElementById('promptContainer');
+                const progressEl = document.getElementById('promptProgress');
+                const textEl = document.getElementById('promptText');
+                const btnEl = document.getElementById('nextBtn');
+                
+                const currentStory = this.stories[this.currentStoryIndex];
+                const reflection = currentStory.reflections[this.currentPromptIndex];
+                
+                // Animate out
+                container.style.transform = 'translateX(-50%) translateY(100px)';
+                container.style.opacity = '0';
+                
+                setTimeout(() => {
+                    // Show reflection
+                    progressEl.style.display = 'none';
+                    textEl.textContent = reflection;
+                    textEl.style.fontStyle = 'italic';
+                    textEl.style.fontSize = '16px';
+                    textEl.style.color = 'rgba(255, 255, 255, 0.7)';
+                    btnEl.textContent = 'Continue';
+                    btnEl.onclick = () => this.afterReflection();
+                    
+                    // Animate in
+                    container.style.transform = 'translateX(-50%) translateY(0)';
+                    container.style.opacity = '1';
+                }, 300);
+            }
+
+            afterReflection() {
+                const currentStory = this.stories[this.currentStoryIndex];
+                this.currentPromptIndex++;
+                
+                if (this.currentPromptIndex >= currentStory.prompts.length) {
+                    this.completeStory();
+                } else {
+                    this.updatePrompt();
+                }
+            }
+
+            updatePrompt() {
+                const container = document.getElementById('promptContainer');
+                const progressEl = document.getElementById('promptProgress');
+                const textEl = document.getElementById('promptText');
+                const btnEl = document.getElementById('nextBtn');
+                
+                const currentStory = this.stories[this.currentStoryIndex];
+                
+                // Animate out
+                container.style.transform = 'translateX(-50%) translateY(100px)';
+                container.style.opacity = '0';
+                
+                setTimeout(() => {
+                    // Reset text styling
+                    textEl.style.fontStyle = 'normal';
+                    textEl.style.fontSize = '18px';
+                    textEl.style.color = 'rgba(255, 255, 255, 0.9)';
+                    
+                    // Show progress again
+                    progressEl.style.display = 'block';
+                    progressEl.textContent = `Step ${this.currentPromptIndex + 1} of ${currentStory.prompts.length}`;
+                    textEl.textContent = currentStory.prompts[this.currentPromptIndex];
+                    
+                    // Reset button
+                    btnEl.onclick = null;
+                    if (this.currentPromptIndex === currentStory.prompts.length - 1) {
+                        btnEl.textContent = 'Complete This Story';
+                        btnEl.classList.add('story-complete');
+                    } else {
+                        btnEl.textContent = 'Continue Your Story';
+                        btnEl.classList.remove('story-complete');
+                    }
+                    
+                    // Animate in
+                    container.style.transform = 'translateX(-50%) translateY(0)';
+                    container.style.opacity = '1';
+                }, 300);
+            }
+
+            completeStory() {
+                const container = document.getElementById('promptContainer');
+                const progressEl = document.getElementById('promptProgress');
+                const textEl = document.getElementById('promptText');
+                const btnEl = document.getElementById('nextBtn');
+                
+                // Animate out
+                container.style.transform = 'translateX(-50%) translateY(100px)';
+                container.style.opacity = '0';
+                
+                setTimeout(() => {
+                    // Hide progress indicator for completion screen
+                    progressEl.style.display = 'none';
+                    
+                    // Reset text styling
+                    textEl.style.fontStyle = 'normal';
+                    textEl.style.fontSize = '18px';
+                    textEl.style.color = 'rgba(255, 255, 255, 0.9)';
+                    textEl.textContent = 'Your story is complete. Would you like to begin another?';
+                    
+                    // Create button structure with a wrapper div to handle clicks
+                    btnEl.innerHTML = `
+                        <div style="display: inline-block; cursor: pointer;" class="save-story-wrapper">
+                            <span class="story-complete">Save This Story</span>
+                        </div>
+                        <div style="display: inline-block; cursor: pointer;" class="new-story-wrapper">
+                            <span class="new-story-btn">New Story</span>
+                        </div>
+                    `;
+                    
+                    // Remove old click listener by cloning
+                    const oldBtn = btnEl;
+                    const newBtn = btnEl.cloneNode(true);
+                    oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+                    
+                    // Add new listener to the cloned button
+                    const finalBtn = document.getElementById('nextBtn');
+                    const newStoryWrapper = finalBtn.querySelector('.new-story-wrapper');
+                    
+                    if (newStoryWrapper) {
+                        newStoryWrapper.addEventListener('click', () => {
+                            this.startNewStory();
+                        });
+                    }
+                    
+                    // Animate in
+                    container.style.transform = 'translateX(-50%) translateY(0)';
+                    container.style.opacity = '1';
+                }, 300);
+            }
+
+            startNewStory() {
+                const container = document.getElementById('promptContainer');
+                const progressEl = document.getElementById('promptProgress');
+                const textEl = document.getElementById('promptText');
+                const btnEl = document.getElementById('nextBtn');
+                
+                // Animate out first
+                container.style.transform = 'translateX(-50%) translateY(100px)';
+                container.style.opacity = '0';
+                
+                setTimeout(() => {
+                    // Reset for new story - do this INSIDE the timeout
+                    this.currentStoryIndex = (this.currentStoryIndex + 1) % this.stories.length;
+                    this.currentPromptIndex = 0; // Explicitly reset to 0
+                    
+                    // Show progress indicator again FIRST
+                    progressEl.style.display = 'block';
+                    
+                    // Reset text styling
+                    textEl.style.fontStyle = 'normal';
+                    textEl.style.fontSize = '18px';
+                    textEl.style.color = 'rgba(255, 255, 255, 0.9)';
+                    
+                    // Show new story from step 1 - use index 0 explicitly
+                    const currentStory = this.stories[this.currentStoryIndex];
+                    progressEl.textContent = `Step 1 of ${currentStory.prompts.length}`;
+                    textEl.textContent = currentStory.prompts[0]; // Explicitly use first prompt - CLEAR completion message
+                    
+                    // Reset button completely AFTER setting new content
+                    btnEl.innerHTML = 'Continue Your Story';
+                    btnEl.className = 'next-btn';
+                    btnEl.classList.remove('story-complete');
+                    
+                    // Re-attach the nextPrompt listener
+                    const oldBtn = btnEl;
+                    const newBtn = btnEl.cloneNode(true);
+                    oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+                    
+                    const finalBtn = document.getElementById('nextBtn');
+                    finalBtn.addEventListener('click', this.nextPrompt.bind(this));
+                    
+                    // Animate back in
+                    container.style.transform = 'translateX(-50%) translateY(0)';
+                    container.style.opacity = '1';
+                }, 300);
+            }
+
+            createDrip(x, y) {
+                const drip = {
+                    x: x + (Math.random() - 0.5) * 20,
+                    y: y,
+                    length: 0,
+                    maxLength: Math.random() * 60 + 30,
+                    speed: Math.random() * 1.5 + 0.5,
+                    color: this.currentColor,
+                    width: Math.random() * 2 + 1,
+                    opacity: 0.8
+                };
+                this.drips.push(drip);
+            }
+
+
+            updateDrips() {
+                this.drips = this.drips.filter(drip => {
+                    drip.length += drip.speed;
+                    drip.opacity -= 0.008;
+                    
+                    if (drip.length < drip.maxLength && drip.opacity > 0) {
+                        // Draw drip with gradient
+                        this.ctx.save();
+                        const gradient = this.ctx.createLinearGradient(
+                            drip.x, drip.y,
+                            drip.x, drip.y + drip.length
+                        );
+                        gradient.addColorStop(0, this.addAlpha(drip.color, drip.opacity));
+                        gradient.addColorStop(1, this.addAlpha(drip.color, 0));
+                        
+                        this.ctx.fillStyle = gradient;
+                        this.ctx.fillRect(drip.x - drip.width/2, drip.y, drip.width, drip.length);
+                        this.ctx.restore();
+                        
+                        return true;
+                    }
+                    return false;
+                });
+            }
+
+            startAnimationLoop() {
+                const animate = () => {
+                    this.updateDrips();
+                    requestAnimationFrame(animate);
+                };
+                animate();
+            }
+
+            handleCanvasHover() {
+                if (this.hasStarted) {
+                    const overlay = document.getElementById('canvasOverlay');
+                    const canvas = document.getElementById('canvas');
+                    
+                    overlay.classList.add('hover');
+                    canvas.classList.add('hover');
+                }
+            }
+
+            handleCanvasLeave() {
+                const overlay = document.getElementById('canvasOverlay');
+                const canvas = document.getElementById('canvas');
+                
+                overlay.classList.remove('hover');
+                canvas.classList.remove('hover');
+            }
+
+            handleCanvasClick(e) {
+                if (this.hasStarted && !this.isDrawing) {
+                    const overlay = document.getElementById('canvasOverlay');
+                    const canvas = document.getElementById('canvas');
+                    
+                    // Add click effect
+                    overlay.classList.add('click');
+                    canvas.classList.add('drawing');
+                    
+                    // Create ripple effect
+                    this.createRippleEffect(e);
+                    
+                    // Remove click effect after animation
+                    setTimeout(() => {
+                        overlay.classList.remove('click');
+                        canvas.classList.remove('drawing');
+                    }, 200);
+                }
+            }
+
+            createRippleEffect(e) {
+                const [x, y] = this.getMousePos(e);
+                
+                const ripple = document.createElement('div');
+                ripple.className = 'ripple-effect';
+                ripple.style.left = (x - 50) + 'px';
+                ripple.style.top = (y - 50) + 'px';
+                
+                document.body.appendChild(ripple);
+                
+                // Remove ripple after animation
+                setTimeout(() => {
+                    if (document.body.contains(ripple)) {
+                        document.body.removeChild(ripple);
+                    }
+                }, 800);
+            }
+
+            trackMouse(e) {
+                const overlay = document.getElementById('canvasOverlay');
+                const x = (e.clientX / window.innerWidth) * 100;
+                const y = (e.clientY / window.innerHeight) * 100;
+                overlay.style.setProperty('--mouse-x', x + '%');
+                overlay.style.setProperty('--mouse-y', y + '%');
+            }
+
+            activateCanvasOverlay() {
+                const overlay = document.getElementById('canvasOverlay');
+                overlay.classList.add('active');
+                setTimeout(() => {
+                    overlay.classList.remove('active');
+                }, 2000);
+            }
+
+            createColorBurst() {
+                // Visual feedback for color changes
+                const burst = document.createElement('div');
+                burst.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    width: 80px;
+                    height: 80px;
+                    background: ${this.currentColor};
+                    border-radius: 50%;
+                    transform: translate(-50%, -50%) scale(0);
+                    opacity: 0.6;
+                    pointer-events: none;
+                    z-index: 999;
+                    transition: all 0.6s ease-out;
+                `;
+                
+                document.body.appendChild(burst);
+                
+                setTimeout(() => {
+                    burst.style.transform = 'translate(-50%, -50%) scale(2.5)';
+                    burst.style.opacity = '0';
+                }, 50);
+                
+                setTimeout(() => {
+                    document.body.removeChild(burst);
+                }, 650);
+            }
+
+            showInspiration() {
+                const quotes = [
+                    "Let your emotions flow through color and form...",
+                    "Every stroke tells a part of your story...",
+                    "Art is the language of the heart...",
+                    "Express what words cannot capture...",
+                    "Your canvas awaits your truth..."
+                ];
+                
+                const showQuote = () => {
+                    if (!this.hasStarted) {
+                        const quoteEl = document.getElementById('inspirationQuote');
+                        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+                        
+                        quoteEl.textContent = randomQuote;
+                        quoteEl.classList.add('show');
+                        
+                        setTimeout(() => {
+                            quoteEl.classList.remove('show');
+                        }, 4000);
+                    }
+                };
+                
+                // Show quotes periodically when not started
+                setInterval(showQuote, 8000);
+                showQuote();
+            }
+
+            getMousePos(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                return [
+                    e.clientX - rect.left,
+                    e.clientY - rect.top
+                ];
+            }
+
+            addAlpha(color, alpha) {
+                // Convert hex to rgba
+                const hex = color.replace('#', '');
+                const r = parseInt(hex.substr(0, 2), 16);
+                const g = parseInt(hex.substr(2, 2), 16);
+                const b = parseInt(hex.substr(4, 2), 16);
+                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            }
+
+            handleResize() {
+                const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                this.ctx.putImageData(imageData, 0, 0);
+                this.setupCanvas();
+            }
+        }
+
+        // Initialize the Digital Art Wall
+        let artWall;
+        window.addEventListener('load', () => {
+            artWall = new DigitalArtWall();
+        });
+    </script>
+</body>
+</html>

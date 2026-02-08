@@ -1,0 +1,28 @@
+{
+  "stage": 4,
+  "notificationCount": 103,
+  "tapCount": 55,
+  "notificationSpeed": 125,
+  "escapeAttempts": 1,
+  "rewardStreak": 0,
+  "totalRewards": 2,
+  "isHellMode": true,
+  "urgentTimers": [
+    68,
+    69,
+    84,
+    115,
+    116,
+    120,
+    161,
+    167,
+    168,
+    171,
+    180,
+    181,
+    189,
+    194
+  ],
+  "dom": "<div class=\"notification hell state-highlight\"><div class=\"notification-icon\">\u26a0\ufe0f</div><div class=\"notification-text\">NOTIFICATION OVERLOAD<div class=\"notification-time\">HELP</div></div></div><div class=\"notification hell pulsing-glow state-highlight\"><div class=\"notification-icon\">\ud83d\udd04</div><div class=\"notification-text\">Notifications are now FASTER<div class=\"notification-time\">ENJOY</div></div></div><div class=\"notification hell state-highlight\"><div class=\"notification-icon\">\ud83d\ude0f</div><div class=\"notification-text\">Did you really think that would work?<div class=\"notification-time\">NAIVE</div></div></div><div class=\"notification mystery\"><div class=\"notification-icon\">\ud83c\udfaa</div><div class=\"notification-text\">Surprise inside! Could be anything...<div class=\"notification-time\">UNKNOWN</div></div></div><div class=\"notification dark\"><div class=\"notification-icon\">\ud83d\udcf1</div><div class=\"notification-text\">Check your phone. Now.<div class=\"notification-time\">4m ago</div></div></div><div class=\"notification dark\"><div class=\"notification-icon\">\ud83d\udd25</div><div class=\"notification-text\">Your friends are all online now - 23 active<div class=\"notification-time\">now</div></div></div><div class=\"notification dark\"><div class=\"notification-icon\">\u2753</div><div class=\"notification-text\">Where are you? You haven't posted in 5 minutes...<div class=\"notification-time\">now</div></div></div><div class=\"notification dark\"><div class=\"notification-icon\">\ud83d\ude22</div><div class=\"notification-text\">Emma: 'Are you ignoring me?'<div class=\"notification-time\">3m ago</div></div></div><div class=\"notification dark\"><div class=\"notification-icon\">\u23f0</div><div class=\"notification-text\">Your followers are waiting...<div class=\"notification-time\">2m ago</div></div></div><div class=\"notification urgent\"><div class=\"notification-icon\">\ud83d\udd25</div><div class=\"notification-text\">Limited time offer ending NOW!<div class=\"notification-time\">LAST CHANCE</div></div><div class=\"countdown-timer\">5</div></div><div class=\"notification dark\"><div class=\"notification-icon\">\ud83d\udc7b</div><div class=\"notification-text\">You're missing out! 12 new conversations<div class=\"notification-time\">JOIN NOW</div></div></div><div class=\"notification dark\"><div class=\"notification-icon\">\ud83d\udcf1</div><div class=\"notification-text\">Mike is wondering why you're not responding<div class=\"notification-time\">URGENT</div></div></div>",
+  "timestamp": 46.81718921661377
+}

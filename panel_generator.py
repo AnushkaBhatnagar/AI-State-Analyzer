@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import re
 
 class StatePanelGenerator:
     def __init__(self, states_json):
@@ -12,7 +13,64 @@ class StatePanelGenerator:
         self.states = states_json
         self.metadata = states_json.get('metadata', {})
         self.state_list = states_json.get('states', [])
+        self.injection_hooks = states_json.get('injection_hooks', [])
     
+    def inject_code_hooks(self, html_content):
+        """
+        Inject reporting hooks into the user's JavaScript code.
+        
+        Args:
+            html_content (str): Original HTML content
+            
+        Returns:
+            str: HTML content with injected hooks
+        """
+        if not self.injection_hooks:
+            return html_content
+            
+        print(f"Injecting {len(self.injection_hooks)} code hooks...")
+        
+        modified_content = html_content
+        
+        for hook in self.injection_hooks:
+            variable = hook.get('variable')
+            pattern = hook.get('search_pattern')
+            injection_type = hook.get('injection_type', 'after')
+            
+            if not variable or not pattern:
+                continue
+                
+            # Create the reporting code
+            # We use window.__ai_state_monitor.report safely
+            report_code = f" try {{ window.__ai_state_monitor.report('{variable}', {variable}); }} catch(e) {{}} "
+            
+            # Escape regex special characters in the pattern
+            # But convert multiple spaces to \s+ to be more robust
+            safe_pattern = re.escape(pattern)
+            safe_pattern = safe_pattern.replace(r'\ ', r'\s+')
+            
+            try:
+                if injection_type == 'after':
+                    # Replace pattern with pattern + report_code
+                    # Use a function for replacement to avoid escaping issues
+                    modified_content = re.sub(
+                        safe_pattern, 
+                        lambda m: m.group(0) + report_code, 
+                        modified_content, 
+                        count=1
+                    )
+                elif injection_type == 'before':
+                    modified_content = re.sub(
+                        safe_pattern, 
+                        lambda m: report_code + m.group(0), 
+                        modified_content, 
+                        count=1
+                    )
+            except Exception as e:
+                print(f"Warning: Failed to inject hook for {variable}: {e}")
+                
+        return modified_content
+
     def generate_panel_css(self):
         """
         Generate CSS for the state panel with dynamic colors for each state.
@@ -386,9 +444,85 @@ class StatePanelGenerator:
         html += '</div>\n'
         return html
     
+    def generate_helper_functions(self):
+        """
+        Generate comprehensive, parameterized helper functions for state detection.
+        These are reusable across ANY experience without modification.
+        
+        Returns:
+            str: JavaScript code for helper functions
+        """
+        js = """
+    // ===== COMPREHENSIVE HELPER FUNCTION LIBRARY =====
+    // These helpers work with ANY experience - no modifications needed
+    
+    function checkVisible(selector) {
+        const el = document.querySelector(selector);
+        if (!el) return false;
+        const style = window.getComputedStyle(el);
+        return style.display !== 'none' && 
+               style.visibility !== 'hidden' && 
+               el.offsetParent !== null &&
+               !el.classList.contains('hidden');
+    }
+    
+    function checkHidden(selector) {
+        const el = document.querySelector(selector);
+        if (!el) return true;
+        const style = window.getComputedStyle(el);
+        return style.display === 'none' || 
+               style.visibility === 'hidden' || 
+               el.offsetParent === null ||
+               el.classList.contains('hidden');
+    }
+    
+    function checkStyleProperty(selector, property, value) {
+        const el = document.querySelector(selector);
+        if (!el) return false;
+        // Try direct style first, then computed
+        const directValue = el.style[property];
+        const computedValue = window.getComputedStyle(el)[property];
+        return directValue === value || 
+               directValue.includes(value) ||
+               computedValue === value || 
+               computedValue.includes(value);
+    }
+    
+    function checkTextContent(selector, text, exact = false) {
+        const el = document.querySelector(selector);
+        if (!el) return false;
+        const content = el.textContent.trim();
+        return exact ? content === text : content.includes(text);
+    }
+    
+    function checkClass(selector, className) {
+        const el = document.querySelector(selector);
+        return el ? el.classList.contains(className) : false;
+    }
+    
+    function checkAttribute(selector, attribute, value = null) {
+        const el = document.querySelector(selector);
+        if (!el) return false;
+        if (value === null) return el.hasAttribute(attribute);
+        return el.getAttribute(attribute) === value;
+    }
+    
+    function checkComputedStyle(selector, property, value) {
+        const el = document.querySelector(selector);
+        if (!el) return false;
+        const computedValue = window.getComputedStyle(el)[property];
+        return computedValue === value || computedValue.includes(value);
+    }
+    
+    function checkElementExists(selector) {
+        return document.querySelector(selector) !== null;
+    }
+"""
+        return js
+    
     def generate_tracking_js(self):
         """
-        Generate JavaScript for state tracking and UI updates.
+        Generate JavaScript for state tracking and UI updates using adaptive detection strategies.
         
         Returns:
             str: JavaScript code for tracking
@@ -404,6 +538,19 @@ class StatePanelGenerator:
     var stateSegments = {{}};
     var stateNames = {json.dumps(state_names_map)};
     
+    // AI State Monitor - Receives reports from injected code
+    window.__ai_state_monitor = {{
+        capturedVariables: {{}},
+        report: function(varName, value) {{
+            this.capturedVariables[varName] = value;
+            // Force state re-evaluation when a variable changes
+            debouncedUpdate();
+        }},
+        get: function(varName) {{
+            return this.capturedVariables[varName];
+        }}
+    }};
+    
     function initStatePanel() {{
         stateSegments = {{
 """
@@ -415,16 +562,22 @@ class StatePanelGenerator:
         js += """        };
     }
     
-    // Variable finder - searches window object for variables in any scope
+    // Variable finder - searches window object and injected captures
     function findVariable(varName) {
-        // Try direct global access first
+        // 1. Check AI Monitor (Injected variables)
+        if (typeof window.__ai_state_monitor !== 'undefined') {
+            const captured = window.__ai_state_monitor.get(varName);
+            if (typeof captured !== 'undefined') return captured;
+        }
+
+        // 2. Try direct global access
         try {
             if (typeof window[varName] !== 'undefined') {
                 return window[varName];
             }
         } catch(e) {}
         
-        // Search through window properties for objects containing the variable
+        // 3. Search through window properties
         try {
             for (let key in window) {
                 if (window[key] && typeof window[key] === 'object') {
@@ -441,84 +594,104 @@ class StatePanelGenerator:
     }
     
     function getCurrentState() {
-        // Hybrid detection: Try variable-based first, fall back to DOM-based
+        // Winner-Takes-All Detection Logic
+        // We evaluate ALL states and pick the one with the highest confidence score.
+        
+        let bestStateId = currentTrackedState; // Default to keeping current state
+        let maxScore = -1;
 """
         
-        # Generate hybrid detection for each state
+        # Generate adaptive detection for each state
         for i, state in enumerate(self.state_list):
             state_id = state['id']
-            condition = state.get('detection_condition', '')
-            dom_detection = state.get('dom_detection', {})
+            detection_strategy = state.get('detection_strategy', {})
+            primary_method = detection_strategy.get('primary_method', 'DOM').lower()
+            weighted_signals = state.get('weighted_dom_signals', [])
             
             js += f"""        
-        // State {state_id}: {state['name']}
-        try {{
-            // Try variable-based detection
+        // --- State {state_id}: {state['name']} ---
+        let score_{state_id} = 0;
 """
             
+            # --- 1. Weighted DOM Detection (New & Robust) ---
+            if weighted_signals:
+                js += f"        // Weighted Signals\n"
+                
+                for signal in weighted_signals:
+                    check = signal.get('check', 'false')
+                    weight = signal.get('weight', 1)
+                    # Convert querySelector to boolean if needed
+                    if 'querySelector' in check and '!!' not in check:
+                        check = f"!!{check}"
+                    
+                    js += f"        if ({check}) score_{state_id} += {weight};\n"
+            
+            # --- 2. Variable Detection (High Confidence Override) ---
+            # If variable matches, add a huge score (e.g., 10)
+            condition = state.get('detection_condition', '')
             if condition:
-                # Extract variable names from the condition
                 import re
                 variables = re.findall(r'\b([a-zA-Z_][a-zA-Z0-9_]*)\b', condition)
                 
-                # Generate variable lookups
+                # Generate variable checking code block
+                var_check_block = ""
                 for var in set(variables):
                     if var not in ['true', 'false', 'null', 'undefined', 'Array', 'Math']:
-                        js += f"            const {var} = findVariable('{var}');\n"
+                        var_check_block += f"            const {var} = findVariable('{var}');\n"
                 
-                js += f"            if ({condition}) return {state_id};\n"
-            
-            js += """        } catch(e) {
-            // Variables not accessible, try DOM-based detection
-        }
-        
-        try {
-            // DOM-based fallback detection
+                js += f"""        // Variable Check
+        try {{
+{var_check_block}
+            if ({condition}) score_{state_id} += 10.0;
+        }} catch(e) {{}}
+"""
+
+            # --- 3. Primary Method Fallback (Legacy) ---
+            primary_checks = detection_strategy.get('primary_checks', [])
+            if primary_method == 'dom' or primary_method == 'dom-based':
+                if primary_checks:
+                    boolean_checks = []
+                    for check in primary_checks:
+                        if 'querySelector' in check:
+                            boolean_checks.append(f"!!{check}")
+                        else:
+                            boolean_checks.append(check)
+                    conditions = " && ".join(boolean_checks)
+                    js += f"""        // Legacy DOM Check
+        if ({conditions}) score_{state_id} += 0.8;
+"""
+
+            # --- Compare Score ---
+            # Require minimum score of 0.5 to be considered
+            js += f"""
+        if (score_{state_id} > maxScore && score_{state_id} > 0.5) {{
+            maxScore = score_{state_id};
+            bestStateId = {state_id};
+        }}
 """
             
-            # Generate DOM detection logic
-            if dom_detection:
-                checks = []
-                
-                # Check visible elements
-                visible_elements = dom_detection.get('visible_elements', [])
-                for selector in visible_elements:
-                    checks.append(f"checkVisible('{selector}')")
-                
-                # Check hidden elements
-                hidden_elements = dom_detection.get('hidden_elements', [])
-                for selector in hidden_elements:
-                    checks.append(f"checkHidden('{selector}')")
-                
-                # Check classes
-                has_class = dom_detection.get('has_class', [])
-                for item in has_class:
-                    if isinstance(item, dict):
-                        selector = item.get('selector', '')
-                        class_name = item.get('class', '')
-                        checks.append(f"checkClass('{selector}', '{class_name}')")
-                
-                # Check text content
-                text_content = dom_detection.get('text_content', [])
-                for item in text_content:
-                    if isinstance(item, dict):
-                        selector = item.get('selector', '')
-                        contains = item.get('contains', '')
-                        # Escape single quotes in the text content
-                        contains_escaped = contains.replace("'", "\\'")
-                        checks.append(f"checkText('{selector}', '{contains_escaped}')")
-                
-                if checks:
-                    js += f"            if ({' && '.join(checks)}) return {state_id};\n"
-            
-            js += """        } catch(e) {
-            // DOM detection also failed
-        }
-"""
-        
         js += f"""        
-        // If all detection fails, stay in current state
-        return currentTrackedState;
+        return bestStateId;
+    }}
+    
+    // Debounce function to prevent rapid-fire updates
+    function debounce(func, wait) {{
+        let timeout;
+        return function(...args) {{
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        }};
+    }}
+
+    // Debounced update function
+    const debouncedUpdate = debounce(updateStateHighlight, 50);
+
+    // Setup SAFE global listeners (no monkey patching)
+    function setupGlobalListeners() {{
+        document.addEventListener('click', () => debouncedUpdate());
+        document.addEventListener('keydown', () => debouncedUpdate());
+        document.addEventListener('input', () => debouncedUpdate());
+        document.addEventListener('change', () => debouncedUpdate());
     }}
     
     // Helper function to get formatted timestamp
@@ -762,14 +935,32 @@ class StatePanelGenerator:
     // Initialize on page load
     window.addEventListener('DOMContentLoaded', function() {
         initStatePanel();
+        setupGlobalListeners(); // <--- SAFE Global Listeners
         updateStateHighlight();
         // Highlight initial state elements
         highlightUIElements(currentTrackedState);
         
         // Set up MutationObserver to watch for dynamically created elements
         var observer = new MutationObserver(function(mutations) {
-            // Re-highlight when new elements are added to DOM
-            highlightUIElements(currentTrackedState);
+            let shouldUpdate = false;
+            for (let mutation of mutations) {
+                // Ignore changes to the panel itself
+                if (mutation.target.closest && mutation.target.closest('#statePanel')) continue;
+                // Ignore changes to highlight classes to PREVENT LOOPS
+                if (mutation.attributeName === 'class' && 
+                    (mutation.target.classList.contains('state-highlight') || 
+                     mutation.target.classList.contains('active') ||
+                     mutation.target.classList.contains('highlighted'))) continue;
+                     
+                shouldUpdate = true;
+                break; 
+            }
+            
+            if (shouldUpdate) {
+                // Re-highlight when new elements are added to DOM
+                highlightUIElements(currentTrackedState);
+                debouncedUpdate(); // <--- Check state on DOM change (Debounced)
+            }
         });
         
         // Observe the main content area (exclude the state panel itself)
@@ -777,13 +968,14 @@ class StatePanelGenerator:
         if (mainContent) {
             observer.observe(mainContent, {
                 childList: true,  // Watch for added/removed children
-                subtree: true      // Watch entire tree
+                subtree: true,     // Watch entire tree
+                attributes: true   // Watch for class changes etc
             });
         }
     });
     
     // Periodically check for state changes (lighter polling for state detection only)
-    setInterval(updateStateHighlight, 500);
+    setInterval(updateStateHighlight, 1000); // Slower polling since we have events
 """
         
         return js
@@ -801,6 +993,9 @@ class StatePanelGenerator:
         # Read original HTML
         with open(original_html_path, 'r', encoding='utf-8') as f:
             original_html = f.read()
+        
+        # --- NEW: Inject Code Hooks into User Script ---
+        original_html = self.inject_code_hooks(original_html)
         
         # Generate components
         css = self.generate_panel_css()
@@ -821,16 +1016,19 @@ class StatePanelGenerator:
         else:
             original_html += panel_html
         
-        # Inject tracking JavaScript
+        # Inject helper functions and tracking JavaScript
+        helper_js = self.generate_helper_functions()
+        combined_js = helper_js + tracking_js
+        
         if '</script>' in original_html:
             # Find the last script tag
             last_script_pos = original_html.rfind('</script>')
             original_html = (original_html[:last_script_pos + 9] + 
-                           f'\n<script>\n{tracking_js}\n</script>' + 
+                           f'\n<script>\n{combined_js}\n</script>' + 
                            original_html[last_script_pos + 9:])
         else:
             # Add before closing body tag
-            original_html = original_html.replace('</body>', f'<script>\n{tracking_js}\n</script>\n</body>')
+            original_html = original_html.replace('</body>', f'<script>\n{combined_js}\n</script>\n</body>')
         
         return original_html
     
