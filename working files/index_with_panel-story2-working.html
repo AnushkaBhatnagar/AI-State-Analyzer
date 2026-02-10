@@ -315,18 +315,18 @@
         }
 
         .stage-segment.stage-4 {
-            background: linear-gradient(135deg, rgba(26, 10, 10, 0.15) 0%, rgba(26, 10, 10, 0.15) 100%);
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.15) 0%, rgba(26, 26, 46, 0.15) 100%);
         }
 
         .stage-segment.stage-4.active {
-            background: linear-gradient(135deg, rgba(26, 10, 10, 0.3) 0%, rgba(26, 10, 10, 0.3) 100%);
-            border-color: rgba(233, 69, 96, 0.6);
-            box-shadow: inset 0 0 30px rgba(26, 10, 10, 0.3);
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.3) 0%, rgba(26, 26, 46, 0.3) 100%);
+            border-color: rgba(26, 26, 46, 0.6);
+            box-shadow: inset 0 0 30px rgba(26, 26, 46, 0.3);
         }
 
         .stage-4 .dot {
-            background: rgba(233, 69, 96, 0.6);
-            box-shadow: 0 0 5px rgba(233, 69, 96, 0.6);
+            background: rgba(26, 26, 46, 0.6);
+            box-shadow: 0 0 5px rgba(26, 26, 46, 0.6);
         }
 
         .stage-segment.stage-5 {
@@ -355,6 +355,21 @@
         }
 
         .stage-6 .dot {
+            background: rgba(244, 208, 63, 0.6);
+            box-shadow: 0 0 5px rgba(244, 208, 63, 0.6);
+        }
+
+        .stage-segment.stage-7 {
+            background: linear-gradient(135deg, rgba(244, 208, 63, 0.15) 0%, rgba(244, 208, 63, 0.15) 100%);
+        }
+
+        .stage-segment.stage-7.active {
+            background: linear-gradient(135deg, rgba(244, 208, 63, 0.3) 0%, rgba(244, 208, 63, 0.3) 100%);
+            border-color: rgba(244, 208, 63, 0.6);
+            box-shadow: inset 0 0 30px rgba(244, 208, 63, 0.3);
+        }
+
+        .stage-7 .dot {
             background: rgba(244, 208, 63, 0.6);
             box-shadow: 0 0 5px rgba(244, 208, 63, 0.6);
         }
@@ -1293,10 +1308,10 @@
 
     <script>
         // State
-        let soundEnabled = false;
-        let stormIntensity = 0;
-        let currentSection = 0;
-        let storyStarted = false;
+        let soundEnabled = false;; try { window.__ai_state_monitor.report('soundEnabled', soundEnabled); } catch(e) {} 
+        let stormIntensity = 0;; try { window.__ai_state_monitor.report('stormIntensity', stormIntensity); } catch(e) {} 
+        let currentSection = 0;; try { window.__ai_state_monitor.report('currentSection', currentSection); } catch(e) {} 
+        let storyStarted = false;; try { window.__ai_state_monitor.report('storyStarted', storyStarted); } catch(e) {} 
 
         // Audio context for sounds
         let audioContext = null;
@@ -1340,7 +1355,7 @@
         // Start story
         function startStory() {
             document.getElementById('instructionsOverlay').classList.add('hidden');
-            storyStarted = true; try { window.__ai_state_monitor.report('storyStarted', storyStarted); } catch(e) {} 
+            storyStarted = true;; try { window.__ai_state_monitor.report('storyStarted', storyStarted); } catch(e) {}  try { window.__ai_state_monitor.report('storyStarted', storyStarted); } catch(e) {} 
             initAudio();
         }
 
@@ -1362,7 +1377,7 @@
 
         // Sound toggle
         function toggleSound() {
-            soundEnabled = !soundEnabled;
+            soundEnabled = !soundEnabled;; try { window.__ai_state_monitor.report('soundEnabled', soundEnabled); } catch(e) {}  try { window.__ai_state_monitor.report('soundEnabled', soundEnabled); } catch(e) {} 
             initAudio();
             document.getElementById('soundIcon').textContent = soundEnabled ? '🔊' : '🔇';
             document.getElementById('soundText').textContent = soundEnabled ? 'Sound On' : 'Sound Off';
@@ -1487,7 +1502,7 @@
         }
 
         // Nav dot click handling
-        navDots.forEach(dot => {
+        navDots.forEach(dot => {; try { window.__ai_state_monitor.report('currentSection', currentSection); } catch(e) {} 
             dot.addEventListener('click', () => {
                 const sectionIndex = parseInt(dot.dataset.section);
                 chapters[sectionIndex].scrollIntoView({ behavior: 'smooth' });
@@ -1589,7 +1604,7 @@
             updateOnScroll();
             chapters[0].querySelector('.chapter-content').classList.add('visible');
         });
-    </script>
+    ; try { window.__ai_state_monitor.report('currentSection', currentSection); } catch(e) {} </script>
 <script>
 
     // ===== COMPREHENSIVE HELPER FUNCTION LIBRARY =====
@@ -1659,7 +1674,7 @@
 
     var currentTrackedState = 0;
     var stateSegments = {};
-    var stateNames = {"0": "Instructions", "1": "Title", "2": "Exposition", "3": "Rising Action", "4": "Climax", "5": "Falling Action", "6": "Resolution"};
+    var stateNames = {"0": "Instructions", "1": "Title", "2": "Exposition", "3": "Rising Action", "4": "Climax", "5": "Falling Action", "6": "Resolution", "7": "Sound Enabled"};
     
     // AI State Monitor - Receives reports from injected code
     window.__ai_state_monitor = {
@@ -1683,6 +1698,7 @@
             4: document.getElementById('state4Dots'),
             5: document.getElementById('state5Dots'),
             6: document.getElementById('state6Dots'),
+            7: document.getElementById('state7Dots'),
         };
     }
     
@@ -1718,171 +1734,205 @@
     }
     
     function getCurrentState() {
-        // Winner-Takes-All Detection Logic
-        // We evaluate ALL states and pick the one with the highest confidence score.
+        // HYBRID PRIORITY SCORE LOGIC
+        // Combines Specificity Rank (New) with weighted signals (Legacy)
+        // Score = (Rank * 100) + (LogicMatch ? 1000 : 0) + (DOMSignals)
         
-        let bestStateId = currentTrackedState; // Default to keeping current state
-        let maxScore = -1;
+        let bestStateId = currentTrackedState;
+        let maxScore = -10000;
         
-        // --- State 0: Instructions ---
-        let score_0 = 0;
-        // Weighted Signals
-        if (checkVisible('#instructionsOverlay')) score_0 += 3;
-        if (checkVisible('.start-btn')) score_0 += 2;
-        if (checkHidden('.chapter-content')) score_0 += 1;
-        // Variable Check
         try {
-            const instructionsOverlay = findVariable('instructionsOverlay');
-            const document = findVariable('document');
-            const getElementById = findVariable('getElementById');
-            const contains = findVariable('contains');
-            const classList = findVariable('classList');
-            const hidden = findVariable('hidden');
-            const storyStarted = findVariable('storyStarted');
 
-            if (!storyStarted && !document.getElementById('instructionsOverlay').classList.contains('hidden')) score_0 += 10.0;
-        } catch(e) {}
-        // Legacy DOM Check
-        if (checkVisible('#instructionsOverlay') && checkVisible('.start-btn')) score_0 += 0.8;
-
-        if (score_0 > maxScore && score_0 > 0.5) {
-            maxScore = score_0;
-            bestStateId = 0;
+        // --- State 0 (Instructions) ---
+        {
+            let score = 0;
+            
+            try {
+                if (!findVariable('storyStarted')) {
+                    score += 1000;
+                    score += 100 * 100;
+                }
+            } catch(e) {}
+            
+            // DOM Signals
+            if (checkVisible('#instructionsOverlay')) score += 3;
+            if (checkTextContent('.start-btn', 'Begin the Journey')) score += 2;
+            
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestStateId = 0;
+            }
         }
-        
-        // --- State 1: Title ---
-        let score_1 = 0;
-        // Weighted Signals
-        if (checkVisible('.chapter-opening')) score_1 += 3;
-        if (checkClass('.nav-dot[data-section="0"]', 'active')) score_1 += 2;
-        if (checkHidden('#instructionsOverlay')) score_1 += 1;
-        // Variable Check
-        try {
-            const currentSection = findVariable('currentSection');
-            const storyStarted = findVariable('storyStarted');
 
-            if (storyStarted && currentSection === 0) score_1 += 10.0;
-        } catch(e) {}
-        // Legacy DOM Check
-        if (checkClass('.nav-dot[data-section="0"]', 'active') && checkVisible('.chapter-opening')) score_1 += 0.8;
-
-        if (score_1 > maxScore && score_1 > 0.5) {
-            maxScore = score_1;
-            bestStateId = 1;
+        // --- State 1 (Title) ---
+        {
+            let score = 0;
+            
+            try {
+                if (findVariable('storyStarted') && findVariable('currentSection') === 0) {
+                    score += 1000;
+                    score += 50 * 100;
+                }
+            } catch(e) {}
+            
+            // DOM Signals
+            if (checkVisible('.chapter-opening')) score += 3;
+            if (checkTextContent('h1', 'The Last Light of Morrow Point')) score += 2;
+            if (checkClass('.nav-dot[data-section="0"]', 'active')) score += 2;
+            
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestStateId = 1;
+            }
         }
-        
-        // --- State 2: Exposition ---
-        let score_2 = 0;
-        // Weighted Signals
-        if (checkVisible('.chapter-exposition')) score_2 += 3;
-        if (checkClass('.nav-dot[data-section="1"]', 'active')) score_2 += 2;
-        if (checkTextContent('.arc-label', 'I. Exposition')) score_2 += 2;
-        // Variable Check
-        try {
-            const currentSection = findVariable('currentSection');
-            const storyStarted = findVariable('storyStarted');
 
-            if (storyStarted && currentSection === 1) score_2 += 10.0;
-        } catch(e) {}
-        // Legacy DOM Check
-        if (checkClass('.nav-dot[data-section="1"]', 'active') && checkVisible('.chapter-exposition')) score_2 += 0.8;
-
-        if (score_2 > maxScore && score_2 > 0.5) {
-            maxScore = score_2;
-            bestStateId = 2;
+        // --- State 2 (Exposition) ---
+        {
+            let score = 0;
+            
+            try {
+                if (findVariable('currentSection') === 1) {
+                    score += 1000;
+                    score += 50 * 100;
+                }
+            } catch(e) {}
+            
+            // DOM Signals
+            if (checkClass('.nav-dot[data-section="1"]', 'active')) score += 3;
+            if (checkTextContent('.arc-label', 'I. Exposition')) score += 2;
+            
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestStateId = 2;
+            }
         }
-        
-        // --- State 3: Rising Action ---
-        let score_3 = 0;
-        // Weighted Signals
-        if (checkVisible('.chapter-rising')) score_3 += 3;
-        if (checkClass('.nav-dot[data-section="2"]', 'active')) score_3 += 2;
-        if (checkVisible('#stormMeter')) score_3 += 2;
-        if (checkClass('#stormOverlay', 'active')) score_3 += 1;
-        // Variable Check
-        try {
-            const currentSection = findVariable('currentSection');
-            const storyStarted = findVariable('storyStarted');
 
-            if (storyStarted && currentSection === 2) score_3 += 10.0;
-        } catch(e) {}
-        // Legacy DOM Check
-        if (checkClass('.nav-dot[data-section="2"]', 'active') && checkVisible('.chapter-rising') && checkVisible('#stormMeter')) score_3 += 0.8;
-
-        if (score_3 > maxScore && score_3 > 0.5) {
-            maxScore = score_3;
-            bestStateId = 3;
+        // --- State 3 (Rising Action) ---
+        {
+            let score = 0;
+            
+            try {
+                if (findVariable('currentSection') === 2) {
+                    score += 1000;
+                    score += 50 * 100;
+                }
+            } catch(e) {}
+            
+            // DOM Signals
+            if (checkClass('.nav-dot[data-section="2"]', 'active')) score += 3;
+            if (checkTextContent('.arc-label', 'II. Rising Action')) score += 2;
+            if (checkVisible('.choice-section')) score += 2;
+            
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestStateId = 3;
+            }
         }
-        
-        // --- State 4: Climax ---
-        let score_4 = 0;
-        // Weighted Signals
-        if (checkVisible('.chapter-climax')) score_4 += 3;
-        if (checkClass('.nav-dot[data-section="3"]', 'active')) score_4 += 2;
-        if (checkVisible('#interactiveLighthouse')) score_4 += 3;
-        if (checkStyleProperty('#stormMeterFill', 'width', '100%')) score_4 += 2;
-        // Variable Check
-        try {
-            const currentSection = findVariable('currentSection');
-            const storyStarted = findVariable('storyStarted');
 
-            if (storyStarted && currentSection === 3) score_4 += 10.0;
-        } catch(e) {}
-        // Legacy DOM Check
-        if (checkClass('.nav-dot[data-section="3"]', 'active') && checkVisible('.chapter-climax') && checkVisible('#interactiveLighthouse')) score_4 += 0.8;
-
-        if (score_4 > maxScore && score_4 > 0.5) {
-            maxScore = score_4;
-            bestStateId = 4;
+        // --- State 4 (Climax) ---
+        {
+            let score = 0;
+            
+            try {
+                if (findVariable('currentSection') === 3) {
+                    score += 1000;
+                    score += 50 * 100;
+                }
+            } catch(e) {}
+            
+            // DOM Signals
+            if (checkClass('.nav-dot[data-section="3"]', 'active')) score += 3;
+            if (checkTextContent('.arc-label', 'III. Climax')) score += 2;
+            if (checkVisible('.interactive-lighthouse')) score += 2;
+            if (checkVisible('.storm-meter')) score += 2;
+            
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestStateId = 4;
+            }
         }
-        
-        // --- State 5: Falling Action ---
-        let score_5 = 0;
-        // Weighted Signals
-        if (checkVisible('.chapter-falling')) score_5 += 3;
-        if (checkClass('.nav-dot[data-section="4"]', 'active')) score_5 += 2;
-        if (checkHidden('#interactiveLighthouse')) score_5 += 2;
-        if (checkHidden('#stormMeter')) score_5 += 1;
-        // Variable Check
-        try {
-            const currentSection = findVariable('currentSection');
-            const storyStarted = findVariable('storyStarted');
 
-            if (storyStarted && currentSection === 4) score_5 += 10.0;
-        } catch(e) {}
-        // Legacy DOM Check
-        if (checkClass('.nav-dot[data-section="4"]', 'active') && checkVisible('.chapter-falling') && checkHidden('#interactiveLighthouse')) score_5 += 0.8;
-
-        if (score_5 > maxScore && score_5 > 0.5) {
-            maxScore = score_5;
-            bestStateId = 5;
+        // --- State 5 (Falling Action) ---
+        {
+            let score = 0;
+            
+            try {
+                if (findVariable('currentSection') === 4) {
+                    score += 1000;
+                    score += 50 * 100;
+                }
+            } catch(e) {}
+            
+            // DOM Signals
+            if (checkClass('.nav-dot[data-section="4"]', 'active')) score += 3;
+            if (checkTextContent('.arc-label', 'IV. Falling Action')) score += 2;
+            if (checkHidden('.interactive-lighthouse')) score += 1;
+            
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestStateId = 5;
+            }
         }
-        
-        // --- State 6: Resolution ---
-        let score_6 = 0;
-        // Weighted Signals
-        if (checkVisible('.chapter-resolution')) score_6 += 3;
-        if (checkClass('.nav-dot[data-section="5"]', 'active')) score_6 += 2;
-        if (checkVisible('.the-end')) score_6 += 3;
-        if (checkVisible('.restart-btn')) score_6 += 2;
-        // Variable Check
-        try {
-            const currentSection = findVariable('currentSection');
-            const storyStarted = findVariable('storyStarted');
 
-            if (storyStarted && currentSection === 5) score_6 += 10.0;
-        } catch(e) {}
-        // Legacy DOM Check
-        if (checkClass('.nav-dot[data-section="5"]', 'active') && checkVisible('.chapter-resolution') && checkVisible('.the-end')) score_6 += 0.8;
+        // --- State 6 (Resolution) ---
+        {
+            let score = 0;
+            
+            try {
+                if (findVariable('currentSection') === 5) {
+                    score += 1000;
+                    score += 50 * 100;
+                }
+            } catch(e) {}
+            
+            // DOM Signals
+            if (checkClass('.nav-dot[data-section="5"]', 'active')) score += 3;
+            if (checkTextContent('.arc-label', 'V. Resolution')) score += 2;
+            if (checkVisible('.restart-btn')) score += 2;
+            if (checkTextContent('.the-end', 'The End')) score += 2;
+            
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestStateId = 6;
+            }
+        }
 
-        if (score_6 > maxScore && score_6 > 0.5) {
-            maxScore = score_6;
-            bestStateId = 6;
+        // --- State 7 (Sound Enabled) ---
+        {
+            let score = 0;
+            
+            try {
+                if (findVariable('soundEnabled') === true) {
+                    score += 1000;
+                    score += 20 * 100;
+                }
+            } catch(e) {}
+            
+            // DOM Signals
+            if (checkTextContent('#soundText', 'Sound On')) score += 3;
+            if (checkTextContent('#soundIcon', '🔊')) score += 2;
+            
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestStateId = 7;
+            }
+        }
+
+        } catch(e) {
+            console.error("State detection error:", e);
         }
         
         return bestStateId;
     }
-    
+
     // Debounce function to prevent rapid-fire updates
     function debounce(func, wait) {
         let timeout;
@@ -1901,6 +1951,9 @@
         document.addEventListener('keydown', () => debouncedUpdate());
         document.addEventListener('input', () => debouncedUpdate());
         document.addEventListener('change', () => debouncedUpdate());
+        document.addEventListener('scroll', () => debouncedUpdate()); 
+        window.addEventListener('hashchange', () => debouncedUpdate());
+        window.addEventListener('popstate', () => debouncedUpdate());
     }
     
     // Helper function to get formatted timestamp
@@ -1962,7 +2015,7 @@
             );
             
             // Update state panel highlighting
-            for (var i = 0; i < 7; i++) {
+            for (var i = 0; i < 8; i++) {
                 var segment = document.getElementById('state' + i);
                 if (segment) {
                     if (i === currentTrackedState) {
@@ -2021,12 +2074,13 @@
     function getStateConfig(stateId) {
         var configs = {
             0: { elements: [{"selector": ".start-btn", "state": "enabled"}] },
-            1: { elements: [{"selector": "#lighthouseIcon", "state": "enabled"}, {"selector": "#soundToggle", "state": "enabled"}] },
+            1: { elements: [{"selector": "#lighthouseIcon", "state": "enabled"}] },
             2: { elements: [{"selector": ".reveal-text", "state": "enabled"}] },
-            3: { elements: [{"selector": ".choice-btn", "state": "enabled"}, {"selector": ".reveal-text", "state": "enabled"}] },
-            4: { elements: [{"selector": "#beamControl", "state": "enabled"}, {"selector": "#interactiveLighthouse", "state": "enabled"}, {"selector": ".reveal-text", "state": "enabled"}] },
+            3: { elements: [{"selector": ".choice-btn", "state": "enabled"}] },
+            4: { elements: [{"selector": "#beamControl", "state": "enabled"}] },
             5: { elements: [{"selector": ".reveal-text", "state": "enabled"}] },
-            6: { elements: [{"selector": ".restart-btn", "state": "enabled"}, {"selector": ".reveal-text", "state": "enabled"}] },
+            6: { elements: [{"selector": ".restart-btn", "state": "enabled"}] },
+            7: { elements: [{"selector": "#soundToggle", "state": "enabled"}] },
         };
         return configs[stateId];
     }
@@ -2199,14 +2253,13 @@
     <iframe class="original-view-iframe" id="originalViewIframe" src="index.html"></iframe>
 </div>
 
-<div class="state-panel" id="statePanel">
-
+<div class="state-panel" id="statePanel">\n
     <div class="stage-segment stage-0 active" id="state0">
         <div class="stage-header">
             State 0: Instructions
             <button class="jump-button" onclick="jumpToState(0)">Jump</button>
         </div>
-        <div class="stage-range">Before story begins, overlay visible</div>
+        <div class="stage-range">Story not started, instructions visible</div>
         <div class="segment-content">
             <div class="logging-column">
                 <div class="dots-container" id="state0Dots"></div>
@@ -2225,16 +2278,8 @@
                     <span class="copy-icon" onclick="copyElementHTML('storyStarted')" title="Copy value">⎘</span>
                     <div class="param-name">storyStarted</div>
                     <div class="param-id">Variable</div>
-                    <div class="param-state">Value: False</div>
-                    <div class="param-mod">Purpose: Controls whether story has begun</div>
-                </div>
-
-                <div class="param-item">
-                    <span class="copy-icon" onclick="copyElementHTML('currentSection')" title="Copy value">⎘</span>
-                    <div class="param-name">currentSection</div>
-                    <div class="param-id">Variable</div>
-                    <div class="param-state">Value: 0</div>
-                    <div class="param-mod">Purpose: Tracks current story section</div>
+                    <div class="param-state">Value: false</div>
+                    <div class="param-mod">Purpose: Controls story initialization</div>
                 </div>
 
             </div>
@@ -2246,7 +2291,7 @@
             State 1: Title
             <button class="jump-button" onclick="jumpToState(1)">Jump</button>
         </div>
-        <div class="stage-range">Section 0, story started, title visible</div>
+        <div class="stage-range">Story started, viewing title section</div>
         <div class="segment-content">
             <div class="logging-column">
                 <div class="dots-container" id="state1Dots"></div>
@@ -2262,27 +2307,11 @@
                 </div>
 
                 <div class="param-item">
-                    <span class="copy-icon" onclick="copyElementHTML('#soundToggle')" title="Copy HTML">⎘</span>
-                    <div class="param-name">Sound Toggle</div>
-                    <div class="param-id">Selector: #soundToggle</div>
-                    <div class="param-state">State: enabled</div>
-                    <div class="param-mod">Action: toggleSound()</div>
-                </div>
-
-                <div class="param-item">
                     <span class="copy-icon" onclick="copyElementHTML('currentSection')" title="Copy value">⎘</span>
                     <div class="param-name">currentSection</div>
                     <div class="param-id">Variable</div>
                     <div class="param-state">Value: 0</div>
-                    <div class="param-mod">Purpose: Current story section</div>
-                </div>
-
-                <div class="param-item">
-                    <span class="copy-icon" onclick="copyElementHTML('soundEnabled')" title="Copy value">⎘</span>
-                    <div class="param-name">soundEnabled</div>
-                    <div class="param-id">Variable</div>
-                    <div class="param-state">Value: False</div>
-                    <div class="param-mod">Purpose: Audio state control</div>
+                    <div class="param-mod">Purpose: Tracks current story section</div>
                 </div>
 
             </div>
@@ -2294,7 +2323,7 @@
             State 2: Exposition
             <button class="jump-button" onclick="jumpToState(2)">Jump</button>
         </div>
-        <div class="stage-range">Section 1, character introduction</div>
+        <div class="stage-range">Reading exposition chapter</div>
         <div class="segment-content">
             <div class="logging-column">
                 <div class="dots-container" id="state2Dots"></div>
@@ -2314,7 +2343,7 @@
                     <div class="param-name">currentSection</div>
                     <div class="param-id">Variable</div>
                     <div class="param-state">Value: 1</div>
-                    <div class="param-mod">Purpose: Current story section</div>
+                    <div class="param-mod">Purpose: Tracks current story section</div>
                 </div>
 
             </div>
@@ -2326,7 +2355,7 @@
             State 3: Rising Action
             <button class="jump-button" onclick="jumpToState(3)">Jump</button>
         </div>
-        <div class="stage-range">Section 2, storm building, choice presented</div>
+        <div class="stage-range">Reading rising action with choice system</div>
         <div class="segment-content">
             <div class="logging-column">
                 <div class="dots-container" id="state3Dots"></div>
@@ -2338,23 +2367,7 @@
                     <div class="param-name">Choice Buttons</div>
                     <div class="param-id">Selector: .choice-btn</div>
                     <div class="param-state">State: enabled</div>
-                    <div class="param-mod">Action: makeChoice(choice)</div>
-                </div>
-
-                <div class="param-item">
-                    <span class="copy-icon" onclick="copyElementHTML('.reveal-text')" title="Copy HTML">⎘</span>
-                    <div class="param-name">Reveal Text</div>
-                    <div class="param-id">Selector: .reveal-text</div>
-                    <div class="param-state">State: enabled</div>
-                    <div class="param-mod">Action: revealText(this)</div>
-                </div>
-
-                <div class="param-item">
-                    <span class="copy-icon" onclick="copyElementHTML('currentSection')" title="Copy value">⎘</span>
-                    <div class="param-name">currentSection</div>
-                    <div class="param-id">Variable</div>
-                    <div class="param-state">Value: 2</div>
-                    <div class="param-mod">Purpose: Current story section</div>
+                    <div class="param-mod">Action: makeChoice()</div>
                 </div>
 
                 <div class="param-item">
@@ -2362,7 +2375,7 @@
                     <div class="param-name">stormIntensity</div>
                     <div class="param-id">Variable</div>
                     <div class="param-state">Value: 50</div>
-                    <div class="param-mod">Purpose: Storm effect intensity</div>
+                    <div class="param-mod">Purpose: Controls storm visual effects</div>
                 </div>
 
             </div>
@@ -2374,7 +2387,7 @@
             State 4: Climax
             <button class="jump-button" onclick="jumpToState(4)">Jump</button>
         </div>
-        <div class="stage-range">Section 3, maximum storm, interactive lighthouse</div>
+        <div class="stage-range">Intense storm section with interactive elements</div>
         <div class="segment-content">
             <div class="logging-column">
                 <div class="dots-container" id="state4Dots"></div>
@@ -2386,31 +2399,7 @@
                     <div class="param-name">Beam Control</div>
                     <div class="param-id">Selector: #beamControl</div>
                     <div class="param-state">State: enabled</div>
-                    <div class="param-mod">Action: None</div>
-                </div>
-
-                <div class="param-item">
-                    <span class="copy-icon" onclick="copyElementHTML('#interactiveLighthouse')" title="Copy HTML">⎘</span>
-                    <div class="param-name">Interactive Lighthouse</div>
-                    <div class="param-id">Selector: #interactiveLighthouse</div>
-                    <div class="param-state">State: enabled</div>
-                    <div class="param-mod">Action: None</div>
-                </div>
-
-                <div class="param-item">
-                    <span class="copy-icon" onclick="copyElementHTML('.reveal-text')" title="Copy HTML">⎘</span>
-                    <div class="param-name">Reveal Text</div>
-                    <div class="param-id">Selector: .reveal-text</div>
-                    <div class="param-state">State: enabled</div>
-                    <div class="param-mod">Action: revealText(this)</div>
-                </div>
-
-                <div class="param-item">
-                    <span class="copy-icon" onclick="copyElementHTML('currentSection')" title="Copy value">⎘</span>
-                    <div class="param-name">currentSection</div>
-                    <div class="param-id">Variable</div>
-                    <div class="param-state">Value: 3</div>
-                    <div class="param-mod">Purpose: Current story section</div>
+                    <div class="param-mod">Action: beamControl.addEventListener</div>
                 </div>
 
                 <div class="param-item">
@@ -2430,7 +2419,7 @@
             State 5: Falling Action
             <button class="jump-button" onclick="jumpToState(5)">Jump</button>
         </div>
-        <div class="stage-range">Section 4, storm ending, resolution beginning</div>
+        <div class="stage-range">Storm aftermath and rescue completion</div>
         <div class="segment-content">
             <div class="logging-column">
                 <div class="dots-container" id="state5Dots"></div>
@@ -2443,14 +2432,6 @@
                     <div class="param-id">Selector: .reveal-text</div>
                     <div class="param-state">State: enabled</div>
                     <div class="param-mod">Action: revealText(this)</div>
-                </div>
-
-                <div class="param-item">
-                    <span class="copy-icon" onclick="copyElementHTML('currentSection')" title="Copy value">⎘</span>
-                    <div class="param-name">currentSection</div>
-                    <div class="param-id">Variable</div>
-                    <div class="param-state">Value: 4</div>
-                    <div class="param-mod">Purpose: Current story section</div>
                 </div>
 
                 <div class="param-item">
@@ -2470,7 +2451,7 @@
             State 6: Resolution
             <button class="jump-button" onclick="jumpToState(6)">Jump</button>
         </div>
-        <div class="stage-range">Section 5, final section, story complete</div>
+        <div class="stage-range">Final chapter with story resolution</div>
         <div class="segment-content">
             <div class="logging-column">
                 <div class="dots-container" id="state6Dots"></div>
@@ -2486,14 +2467,6 @@
                 </div>
 
                 <div class="param-item">
-                    <span class="copy-icon" onclick="copyElementHTML('.reveal-text')" title="Copy HTML">⎘</span>
-                    <div class="param-name">Reveal Text</div>
-                    <div class="param-id">Selector: .reveal-text</div>
-                    <div class="param-state">State: enabled</div>
-                    <div class="param-mod">Action: revealText(this)</div>
-                </div>
-
-                <div class="param-item">
                     <span class="copy-icon" onclick="copyElementHTML('currentSection')" title="Copy value">⎘</span>
                     <div class="param-name">currentSection</div>
                     <div class="param-id">Variable</div>
@@ -2501,18 +2474,41 @@
                     <div class="param-mod">Purpose: Final story section</div>
                 </div>
 
+            </div>
+        </div>
+    </div>
+
+    <div class="stage-segment stage-7" id="state7">
+        <div class="stage-header">
+            State 7: Sound Enabled
+            <button class="jump-button" onclick="jumpToState(7)">Jump</button>
+        </div>
+        <div class="stage-range">Sound system enabled across all sections</div>
+        <div class="segment-content">
+            <div class="logging-column">
+                <div class="dots-container" id="state7Dots"></div>
+            </div>
+            <div class="params-column">
+
                 <div class="param-item">
-                    <span class="copy-icon" onclick="copyElementHTML('stormIntensity')" title="Copy value">⎘</span>
-                    <div class="param-name">stormIntensity</div>
+                    <span class="copy-icon" onclick="copyElementHTML('#soundToggle')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Sound Toggle</div>
+                    <div class="param-id">Selector: #soundToggle</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: toggleSound()</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('soundEnabled')" title="Copy value">⎘</span>
+                    <div class="param-name">soundEnabled</div>
                     <div class="param-id">Variable</div>
-                    <div class="param-state">Value: 0</div>
-                    <div class="param-mod">Purpose: No storm effects</div>
+                    <div class="param-state">Value: true</div>
+                    <div class="param-mod">Purpose: Controls audio system state</div>
                 </div>
 
             </div>
         </div>
     </div>
-</div>
-
+</div>\n
 </body>
 </html>

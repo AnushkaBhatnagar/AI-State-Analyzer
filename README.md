@@ -1,133 +1,82 @@
-# AI State Analyzer / Experience Editing
+# AI State Analyzer & Panel Generator
 
-A system for analyzing, recording, and debugging state machines in web applications. This project combines state machine analysis with automated interaction recording using Playwright.
+Turn any experience into a fully instrumented, state-aware experience with a visual debugging panel.
 
-## Features
+## 🚀 Quick Start
 
-### State Machine Analysis
-- Automatically analyze HTML/JavaScript for state machine patterns
-- Generate state schemas and visualizations
-- Create debug panels for real-time state inspection
-
-### Playwright Session Recorder
-- Record user interactions automatically
-- Replay sessions with precise timing
-- Convert recordings to reusable test scripts
-- Test code changes with recorded interactions
-
-### Debug Tools
-- Visual state panel overlay
-- Live event tracking
-- Session management and analysis
-
-## Quick Start
-
-### Installation
-
+### 1. Install Dependencies
 ```bash
-# Install Python dependencies
-pip install playwright flask python-dotenv
-
-# Install Playwright browsers (one-time setup)
-python -m playwright install chromium
+pip install anthropic python-dotenv
 ```
+*(Ensure you have an `ANTHROPIC_API_KEY` set in your environment or `.env` file)*
 
-### Environment Setup
-
-Create a `.env` file in the project root to store your Anthropic API key:
-
+### 2. Generate the Panel
+Run the main script on your HTML file:
 ```bash
-# Copy the example file
-cp .env.example .env
-
-# Edit .env and add your API key
-# ANTHROPIC_API_KEY=your-api-key-here
-```
-
-### Running the Application
-
-```bash
-# Start the local web server
-python server.py
-
-# Server runs at http://localhost:8000
-```
-
-### Recording a Session
-
-```bash
-cd playwright_recorder
-python record_session.py --html ../index.html
-```
-
-Browser opens → Interact with app → Press Ctrl+S to save → Recording saved to `recordings/` folder
-
-### Replaying a Session
-
-```bash
-python replay_session.py --recording recordings/session_001.json
-```
-
-## Project Structure
-
-```
-ai-state-analyzer/
-├── server.py                 # Local web server
-├── state_analyzer.py         # State machine analyzer
-├── panel_generator.py        # Debug panel generator
-├── generate_state_panel.py   # Panel HTML generator
-├── index.html                # Main application
-├── art-index.html            # Alternative version
-├── COMMANDS.txt              # Complete command reference
-├── playwright_recorder/      # Session recorder toolkit
-│   ├── record_session.py     # Record interactions
-│   ├── replay_session.py     # Replay sessions
-│   ├── convert_to_script.py  # Convert to scripts
-│   ├── README.md             # Detailed recorder docs
-│   └── requirements.txt      # Recorder dependencies
-└── README.md                 # This file
-```
-
-## Documentation
-
-- **[COMMANDS.txt](COMMANDS.txt)** - Complete command reference with examples
-- **[Playwright Recorder README](playwright_recorder/README.md)** - Detailed recorder documentation
-
-## Use Cases
-
-- **Bug Reproduction** - Record exact steps to reproduce issues
-- **Regression Testing** - Test code changes against recorded interactions
-- **User Studies** - Analyze user interaction patterns
-- **State Machine Debugging** - Visualize and debug application states
-- **Automated Testing** - Create reusable test scripts
-
-## Common Commands
-
-### State Analysis
-```bash
-# Analyze state machine
-python state_analyzer.py index.html
-
-# Generate debug panel
 python generate_state_panel.py index.html
 ```
 
-### Recording & Replay
+### 3. View the Result
+Open the generated file in your browser:
 ```bash
-# Record session
-cd playwright_recorder
-python record_session.py --html ../index.html
-
-# Replay at 2x speed
-python replay_session.py --recording recordings/session_001.json --speed 2.0
-
-# Convert to reusable script
-python convert_to_script.py --recording recordings/session_001.json --output actions.json
+# On Windows
+start index_with_panel.html
+# On Mac
+open index_with_panel.html
 ```
+You will see your original application with a new **State Progression Panel** on the right side.
 
-## Requirements
+---
 
-- Python 3.7+
-- Playwright
-- Flask (optional, for advanced features)
-- python-dotenv (for environment variable management)
+## 🧠 System Architecture: How It Works
+
+The system consists of three main components that work together to "understand" and instrument your code.
+
+### 1. The Orchestrator: `generate_state_panel.py`
+This is the main entry point. It coordinates the entire process:
+1.  Calls **The Brain** (`state_analyzer.py`) to analyze your code.
+2.  Takes the resulting blueprint (`states_schema.json`).
+3.  Calls **The Builder** (`panel_generator.py`) to generate the final HTML.
+
+### 2. The Brain: `state_analyzer.py` (AI Agent)
+This script uses an AI agent (Claude via Anthropic API) to act as an expert code analyst.
+*   **Role**: It reads your raw source code to understand its logic.
+*   **Process**:
+    *   **State Detection**: Identifies distinct "behavioral states" (e.g., "Intro", "Game Over", "Loading").
+    *   **Logic Extraction**: Figures out the exact JavaScript conditions that trigger each state (e.g., `score > 100`).
+    *   **Asset Identification**: Finds interactive elements (buttons) and key variables (scores, counters) relevant to each state.
+    *   **Hook Discovery**: Identifies where in your code variables change, so we can "spy" on them.
+*   **Output**: Generates **`states_schema.json`**, a structured blueprint of your application's logic.
+
+### 3. The Builder: `panel_generator.py` (Code Generator)
+This script takes the AI's blueprint and programmatically constructs the debugging tools.
+*   **Role**: It injects monitoring code and builds the visual interface.
+*   **Process**:
+    *   **Code Injection**: It inserts a "Runtime Monitor" (`window.__ai_state_monitor`) into your HTML. It uses the **Hooks** found by the AI to inject reporting lines (e.g., `report('score', score)`) right after variables change in your original code.
+    *   **Panel Construction**: It builds the HTML/CSS for the side panel, creating a section for each state defined in the schema.
+    *   **Logic Embedding**: It embeds the JavaScript logic to constantly evaluate the "Trigger Logic" and update the panel in real-time.
+*   **Output**: Generates **`index_with_panel.html`**.
+
+---
+
+## 📂 The Files
+
+*   **`index.html`**: Your original source file.
+*   **`index_with_panel.html`**: The **Generated Output**. This is a self-contained file containing your full application PLUS the state panel and monitoring logic. You can open this anywhere; it doesn't need a server.
+*   **`states_schema.json`**: The **Blueprint**. A JSON file containing the AI's understanding of your app. You can manually edit this file to tweak descriptions or logic, then re-run `panel_generator.py` to update the HTML without re-running the AI.
+
+---
+
+## 🛠 Advanced Usage
+
+### Re-generating ONLY the Panel (Skip AI)
+If you have manually edited `states_schema.json` and want to update the HTML without paying for AI tokens:
+```bash
+python panel_generator.py
+```
+This will read the existing schema and regenerate `index_with_panel.html`.
+
+### Custom Output Filename
+```bash
+python generate_state_panel.py input.html my_debug_version.html
+```

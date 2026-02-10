@@ -1,0 +1,2227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Chronos Paradox</title>
+    <style>
+
+        body {
+            zoom: 0.7;
+        }
+        
+        .view-toggle-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10000;
+            background: rgba(20, 20, 20, 0.95);
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            display: flex;
+            gap: 8px;
+        }
+        
+        .view-toggle-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .view-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .view-toggle-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .original-view-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            background: white;
+            display: none;
+        }
+        
+        .original-view-container.active {
+            display: block;
+        }
+        
+        .original-view-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .state-panel {
+            position: fixed;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 450px;
+            background: rgba(20, 20, 20, 0.95);
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .stage-segment {
+            flex: 1;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            opacity: 0.5;
+        }
+        
+        .segment-content {
+            display: flex;
+            gap: 12px;
+            flex: 1;
+        }
+        
+        .logging-column {
+            display: none;
+        }
+        
+        .params-column {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .param-item {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 8px;
+            font-size: 11px;
+            line-height: 1.4;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .param-item.full-width {
+            width: 100%;
+            margin-bottom: 12px;
+        }
+        
+        .param-item.highlighted {
+            border: 2px solid #2ecc71;
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+            background: rgba(46, 204, 113, 0.15);
+        }
+        
+        .param-name {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: bold;
+            margin-bottom: 3px;
+            font-size: 12px;
+        }
+        
+        .param-id, .param-state, .param-mod {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 10px;
+        }
+        
+        .param-id {
+            color: rgba(100, 200, 255, 0.8);
+            position: relative;
+        }
+        
+        .copy-icon {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: all 0.2s;
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.9);
+            z-index: 10;
+        }
+        
+        .copy-icon:hover {
+            opacity: 1;
+            color: rgba(100, 200, 255, 1);
+            transform: scale(1.15);
+        }
+        
+        .copy-icon.copied {
+            color: #2ecc71;
+        }
+
+        .stage-segment:last-child {
+            border-bottom: none;
+        }
+
+        .stage-segment.active {
+            opacity: 1;
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .stage-header {
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .jump-button {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .jump-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
+        
+        .jump-button:active {
+            transform: scale(0.95);
+        }
+
+        .stage-range {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 10px;
+            margin-bottom: 8px;
+        }
+
+        .dots-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-content: flex-start;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.6);
+            animation: dotAppear 0.3s ease-out;
+        }
+
+        @keyframes dotAppear {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .state-highlight {
+            border: 2px solid #2ecc71 !important;
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.6) !important;
+            animation: highlightPulse 2s infinite;
+        }
+
+        @keyframes highlightPulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(46, 204, 113, 0.6); }
+            50% { box-shadow: 0 0 25px rgba(46, 204, 113, 0.9); }
+        }
+
+        .stage-segment.stage-0 {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.15) 0%, rgba(0, 255, 0, 0.15) 100%);
+        }
+
+        .stage-segment.stage-0.active {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.3) 0%, rgba(0, 255, 0, 0.3) 100%);
+            border-color: rgba(0, 255, 0, 0.6);
+            box-shadow: inset 0 0 30px rgba(0, 255, 0, 0.3);
+        }
+
+        .stage-0 .dot {
+            background: rgba(0, 255, 0, 0.6);
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.6);
+        }
+
+        .stage-segment.stage-1 {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.15) 0%, rgba(0, 255, 0, 0.15) 100%);
+        }
+
+        .stage-segment.stage-1.active {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.3) 0%, rgba(0, 255, 0, 0.3) 100%);
+            border-color: rgba(0, 255, 0, 0.6);
+            box-shadow: inset 0 0 30px rgba(0, 255, 0, 0.3);
+        }
+
+        .stage-1 .dot {
+            background: rgba(0, 255, 0, 0.6);
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.6);
+        }
+
+        .stage-segment.stage-2 {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.15) 0%, rgba(0, 255, 0, 0.15) 100%);
+        }
+
+        .stage-segment.stage-2.active {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.3) 0%, rgba(0, 255, 0, 0.3) 100%);
+            border-color: rgba(0, 255, 0, 0.6);
+            box-shadow: inset 0 0 30px rgba(0, 255, 0, 0.3);
+        }
+
+        .stage-2 .dot {
+            background: rgba(0, 255, 0, 0.6);
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.6);
+        }
+
+        .stage-segment.stage-3 {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.15) 0%, rgba(0, 255, 0, 0.15) 100%);
+        }
+
+        .stage-segment.stage-3.active {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.3) 0%, rgba(0, 255, 0, 0.3) 100%);
+            border-color: rgba(0, 255, 0, 0.6);
+            box-shadow: inset 0 0 30px rgba(0, 255, 0, 0.3);
+        }
+
+        .stage-3 .dot {
+            background: rgba(0, 255, 0, 0.6);
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.6);
+        }
+
+        .stage-segment.stage-4 {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.15) 0%, rgba(0, 255, 0, 0.15) 100%);
+        }
+
+        .stage-segment.stage-4.active {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.3) 0%, rgba(0, 255, 0, 0.3) 100%);
+            border-color: rgba(0, 255, 0, 0.6);
+            box-shadow: inset 0 0 30px rgba(0, 255, 0, 0.3);
+        }
+
+        .stage-4 .dot {
+            background: rgba(0, 255, 0, 0.6);
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.6);
+        }
+
+        .stage-segment.stage-5 {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.25) 0%, rgba(0, 255, 0, 0.25) 100%);
+        }
+
+        .stage-segment.stage-5.active {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.4) 0%, rgba(0, 255, 0, 0.4) 100%);
+            border-color: rgba(0, 255, 0, 0.8);
+            box-shadow: inset 0 0 30px rgba(0, 255, 0, 0.4);
+        }
+
+        .stage-5 .dot {
+            background: rgba(0, 255, 0, 0.8);
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.8);
+        }
+
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
+            line-height: 1.8;
+            overflow-x: hidden;
+            cursor: default;
+        }
+
+        /* Terminal styling */
+        .terminal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, #1a1a1a 0%, #0a0a0a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .terminal.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .terminal-content {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 40px;
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 0 50px rgba(0, 255, 0, 0.3);
+            position: relative;
+        }
+
+        .terminal-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #00ff00;
+            padding-bottom: 10px;
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot.red { background: #ff0000; }
+        .terminal-dot.yellow { background: #ffff00; }
+        .terminal-dot.green { background: #00ff00; }
+
+        .terminal-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            white-space: pre-line;
+        }
+
+        .blink {
+            animation: blink 0.7s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .prompt {
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        /* Mission control panel */
+        .mission-panel {
+            position: fixed;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            min-width: 250px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.2);
+            z-index: 500;
+            display: none;
+        }
+
+        .mission-panel.show {
+            display: block;
+        }
+
+        .mission-panel h3 {
+            color: #00ff00;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #00ff00;
+        }
+
+        .panel-item {
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .panel-item label {
+            display: block;
+            margin-bottom: 5px;
+            color: #00ff00;
+        }
+
+        .panel-item input, .panel-item select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 8px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .time-button {
+            width: 100%;
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+
+        .time-button:hover {
+            background: rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+
+        /* Main content */
+        .story-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 80px 20px;
+            position: relative;
+            z-index: 100;
+        }
+
+        .scene {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #00ff00;
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .scene.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .scene-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #00ff00;
+        }
+
+        .scene-title {
+            font-size: 1.5rem;
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .time-stamp {
+            font-size: 0.85rem;
+            color: #00aa00;
+            background: rgba(0, 255, 0, 0.1);
+            padding: 5px 12px;
+            border-radius: 5px;
+        }
+
+        .story-text {
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            color: #aaffaa;
+        }
+
+        .story-text code {
+            background: rgba(0, 255, 0, 0.1);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #00ff00;
+        }
+
+        /* Puzzle elements */
+        .puzzle-section {
+            background: rgba(0, 255, 0, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 30px 0;
+            border: 1px dashed #00ff00;
+        }
+
+        .puzzle-section h4 {
+            color: #00ff00;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .puzzle-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .puzzle-piece {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff00;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+
+        .puzzle-piece:hover {
+            background: rgba(0, 255, 0, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+        }
+
+        .puzzle-piece.selected {
+            background: rgba(0, 255, 0, 0.3);
+            border-color: #ffff00;
+            color: #ffff00;
+        }
+
+        .confirm-puzzle {
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 10px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            display: none;
+        }
+
+        .confirm-puzzle:hover {
+            background: rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+
+        /* Chronos events */
+        .event-card {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .event-card:hover {
+            background: rgba(0, 255, 0, 0.1);
+            transform: translateX(5px);
+        }
+
+        .event-card.selected::before {
+            content: '▸';
+            position: absolute;
+            left: 10px;
+            color: #00ff00;
+        }
+
+        .event-time {
+            color: #00ff00;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .event-title {
+            color: #aaffaa;
+            font-size: 0.95rem;
+        }
+
+        /* Map */
+        .time-map {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 30px 0;
+        }
+
+        .time-map h4 {
+            color: #00ff00;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .time-line {
+            position: relative;
+            padding: 10px 0;
+            border-left: 2px solid #00ff00;
+        }
+
+        .time-node {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .time-node:hover {
+            padding-left: 35px;
+        }
+
+        .time-node::before {
+            content: '◆';
+            position: absolute;
+            left: -6px;
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .time-node.selected::before {
+            content: '◆';
+            left: -6px;
+            color: #ffff00;
+            text-shadow: 0 0 10px #ffff00;
+        }
+
+        /* Resolution section */
+        .resolution {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(0, 255, 0, 0.05);
+            border: 2px solid #00ff00;
+            border-radius: 20px;
+            margin: 60px 0;
+        }
+
+        .resolution h3 {
+            color: #00ff00;
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+
+        .resolution-text {
+            color: #aaffaa;
+            font-size: 1.2rem;
+            line-height: 2;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .resolution-button {
+            background: linear-gradient(135deg, #00ff00 0%, #008800 100%);
+            border: none;
+            color: #000;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+
+        .resolution-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+        }
+
+        /* Background elements */
+        .glitch-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .glitch-overlay.active {
+            opacity: 1;
+        }
+
+        .glitch {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 0, 0.1) 2px,
+                rgba(0, 255, 0, 0.1) 4px
+            );
+            animation: glitch 0.3s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(2px); }
+            75% { transform: translateX(-2px); }
+        }
+
+        /* Stars/particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #00ff00;
+            border-radius: 50%;
+            animation: float 3s infinite ease-in-out;
+            opacity: 0.6;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0.6; }
+            50% { transform: translateY(-10px) translateX(5px); opacity: 0.9; }
+        }
+
+        /* Accessibility */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #00ff00;
+            color: #000;
+            padding: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: top 0.3s;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .mission-panel {
+                left: 50%;
+                top: 20px;
+                transform: translateX(-50%);
+                min-width: 200px;
+                padding: 15px;
+            }
+
+            .terminal-content {
+                padding: 25px;
+            }
+
+            .scene {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <div class="glitch-overlay" id="glitchOverlay"></div>
+    <div class="particles" id="particles"></div>
+
+    <!-- Terminal interface -->
+    <div class="terminal" id="terminal">
+        <div class="terminal-content">
+            <div class="terminal-header">
+                <div class="terminal-dot red"></div>
+                <div class="terminal-dot yellow"></div>
+                <div class="terminal-dot green"></div>
+            </div>
+            <div class="terminal-text" id="terminalText">
+[SYSTEM BOOTING...]
+Initializing chrono-transference protocol...
+Loading neural interface...
+System status: <span style="color: #00ff00;">✓</span>
+Safety protocols: <span style="color: #ffff00;">⚠ PARTIAL</span>
+            </div>
+            <div style="color: #00ff00;">
+<span class="prompt">$</span> <span id="terminalPrompt">Waiting for authorization...</span><span class="blink">▊</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mission control panel -->
+    <div class="mission-panel" id="missionPanel">
+        <h3>🎛️ MISSION CONTROL</h3>
+        <div class="panel-item">
+            <label>Target Timeline:</label>
+            <select id="timelineSelect">
+                <option value="original">Original Timeline</option>
+                <option value="alpha">Alpha Timeline</option>
+                <option value="beta">Beta Timeline</option>
+                <option value="delta">Delta Timeline</option>
+            </select>
+        </div>
+        <div class="panel-item">
+            <label>Chronos Coordinates:</label>
+            <input type="text" id="timeInput" placeholder="YYYY-MM-DD HH:MM:SS">
+        </div>
+        <div class="panel-item">
+            <label>Stability Index:</label>
+            <div id="stabilityIndex">0%</div>
+        </div>
+        <button class="time-button" id="timeJumpBtn" onclick="timeJump()">⚡ JUMP</button>
+    </div>
+
+    <!-- Main story -->
+    <main class="story-container" id="main-content">
+        <!-- Intro -->
+        <section class="scene intro" data-scene="0">
+            <div class="scene-header">
+                <div class="scene-title">INTRO: FIRST CONTACT</div>
+                <div class="time-stamp">2089-04-17 14:32:01</div>
+            </div>
+            <div class="story-text">
+                You sit at the console of the <code>Chronos-1</code>, the world's first operational time travel device. Years of research. Billions of dollars. The weight of human potential resting on your shoulders.
+
+                "System ready for initialization," the AI voice announces. "This is your mission: identify and neutralize the Chronos Paradox before it unravels reality."
+            </div>
+            <div class="puzzle-section">
+                <h4>🧩 First Puzzle: The System Key</h4>
+                <p style="color: #aaffaa; margin-bottom: 15px;">You need to override the safety protocols. Select the correct sequence:</p>
+                <div class="puzzle-grid" id="puzzle1Grid">
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, '1', 'puzzle1')">R</div>
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, '2', 'puzzle1')">E</div>
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, '3', 'puzzle1')">A</div>
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, '4', 'puzzle1')">L</div>
+                </div>
+                <button class="confirm-puzzle" id="puzzle1Confirm" onclick="confirmPuzzle('puzzle1')">Confirm Sequence</button>
+            </div>
+        </section>
+
+        <!-- Scene 1 -->
+        <section class="scene" data-scene="1">
+            <div class="scene-header">
+                <div class="scene-title">STAGE 1: PARADOX DETECTION</div>
+                <div class="time-stamp">2047-09-03 08:15:00</div>
+            </div>
+            <div class="story-text">
+                You arrive in the year 2047. The device scans nearby time signatures and detects anomalies. "Multiple paradox events detected," the AI reports. "Select one to investigate:"
+            </div>
+            <div class="time-map">
+                <h4>📊 Paradox Events</h4>
+                <div class="time-line">
+                    <div class="time-node" onclick="selectEvent('quantum')" data-event="quantum">
+                        <div class="event-time">2047-09-03 08:15</div>
+                        <div class="event-title">Quantum Resonance Spike</div>
+                    </div>
+                    <div class="time-node" onclick="selectEvent('temporal')" data-event="temporal">
+                        <div class="event-time">2047-09-03 08:18</div>
+                        <div class="event-title">Temporal Wavefront Anomaly</div>
+                    </div>
+                    <div class="time-node" onclick="selectEvent('chronos')" data-event="chronos">
+                        <div class="event-time">2047-09-03 08:21</div>
+                        <div class="event-title">Chronos Signature Mismatch</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Scene 2 -->
+        <section class="scene" data-scene="2">
+            <div class="scene-header">
+                <div class="scene-title">STAGE 2: THE CHRONOS PARADOX</div>
+                <div class="time-stamp">2023-11-12 23:47:00</div>
+            </div>
+            <div class="story-text">
+                You trace the anomaly back to a research lab in 2023. A young researcher named Dr. Amelia Chen has accidentally created a miniaturized time loop in her particle accelerator experiment.
+
+                "This shouldn't be possible!" she exclaims. "The equations said—"
+            </div>
+            <div class="puzzle-section">
+                <h4>🧩 Second Puzzle: Equation Verification</h4>
+                <p style="color: #aaffaa; margin-bottom: 15px;">Solve this equation to stabilize the loop:</p>
+                <div style="text-align: center; margin: 20px 0; font-size: 1.2rem;">
+                    <code>(x × 4) + 3 = 35</code>
+                </div>
+                <div class="puzzle-grid" id="puzzle2Grid">
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, '7', 'puzzle2')">7</div>
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, '8', 'puzzle2')">8</div>
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, '9', 'puzzle2')">9</div>
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, '10', 'puzzle2')">10</div>
+                </div>
+                <button class="confirm-puzzle" id="puzzle2Confirm" onclick="confirmPuzzle('puzzle2')">Solve Equation</button>
+            </div>
+        </section>
+
+        <!-- Scene 3 -->
+        <section class="scene" data-scene="3">
+            <div class="scene-header">
+                <div class="scene-title">STAGE 3: TEMPORAL STABILITY</div>
+                <div class="time-stamp">2089-04-17 14:32:01 (ORIGINAL)</div>
+            </div>
+            <div class="story-text">
+                You return to your original time to analyze the results. The system reports: "Paradox partially contained. Stability index: <code>47%</code>."
+            </div>
+            <div class="puzzle-section">
+                <h4>🧩 Third Puzzle: Timeline Alignment</h4>
+                <p style="color: #aaffaa; margin-bottom: 15px;">Arrange the timeline events in correct order:</p>
+                <div class="puzzle-grid" id="puzzle3Grid">
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, 'accident', 'puzzle3')">Accident (2023)</div>
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, 'research', 'puzzle3')">Research (2047)</div>
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, 'detection', 'puzzle3')">Detection (2089)</div>
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, 'solution', 'puzzle3')">Solution</div>
+                </div>
+                <button class="confirm-puzzle" id="puzzle3Confirm" onclick="confirmPuzzle('puzzle3')">Align Timeline</button>
+            </div>
+        </section>
+
+        <!-- Resolution -->
+        <section class="resolution" id="resolution">
+            <h3>🎯 THE SOLUTION</h3>
+            <div class="resolution-text" id="resolutionText">
+                You've successfully contained the Chronos Paradox and stabilized the timeline. Reality is saved, but with every solved paradox comes a new understanding: time isn't a line—it's a tapestry waiting to be woven.
+            </div>
+            <div class="time-map">
+                <h4>📈 Final Stability Report</h4>
+                <div class="time-line">
+                    <div class="time-node selected" data-event="original">
+                        <div class="event-time">2023-11-12</div>
+                        <div class="event-title">Accident averted</div>
+                    </div>
+                    <div class="time-node selected" data-event="fixed">
+                        <div class="event-time">2047-09-03</div>
+                        <div class="event-title">Paradox contained</div>
+                    </div>
+                    <div class="time-node selected" data-event="stable">
+                        <div class="event-time">2089-04-17</div>
+                        <div class="event-title">Timeline stable</div>
+                    </div>
+                </div>
+            </div>
+            <button class="resolution-button" onclick="playAgain()">🔄 Play Again</button>
+        </section>
+    </main>
+
+    <script>
+        // State
+        let sceneIndex = 0;; try { window.__ai_state_monitor.report('sceneIndex', sceneIndex); } catch(e) {} 
+        let stabilityIndex = 0;; try { window.__ai_state_monitor.report('stabilityIndex', stabilityIndex); } catch(e) {} 
+        let selectedEvents = [];; try { window.__ai_state_monitor.report('selectedEvents', selectedEvents); } catch(e) {} 
+        let puzzleSolutions = [];; try { window.__ai_state_monitor.report('puzzleSolutions', puzzleSolutions); } catch(e) {} 
+
+        // Initialize particles
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 100; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 3 + 's';
+                container.appendChild(particle);
+            }
+        }
+        createParticles();
+
+        // Terminal initialization
+        function initTerminal() {
+            const terminalText = document.getElementById('terminalText');
+            const terminalPrompt = document.getElementById('terminalPrompt');
+            const timelineSelect = document.getElementById('timelineSelect');
+            const timeInput = document.getElementById('timeInput');
+            const stabilityIndexEl = document.getElementById('stabilityIndex');
+            const timeJumpBtn = document.getElementById('timeJumpBtn');
+            const glitchOverlay = document.getElementById('glitchOverlay');
+            const missionPanel = document.getElementById('missionPanel');
+
+            // Update timeline info based on selection
+            timelineSelect.addEventListener('change', function() {
+                const timelines = {
+                    original: '2089-04-17 14:32:01',
+                    alpha: '2047-09-03 08:15:00',
+                    beta: '2023-11-12 23:47:00',
+                    delta: '2134-06-29 10:00:00'
+                };
+                timeInput.value = timelines[this.value];
+            });
+
+            // Time jump button animation
+            timeJumpBtn.addEventListener('mouseenter', function() {
+                glitchOverlay.classList.add('active');
+            });
+
+            timeJumpBtn.addEventListener('mouseleave', function() {
+                glitchOverlay.classList.remove('active');
+            });
+        }
+
+        // Scene management
+        function showScene(index) {
+            const scenes = document.querySelectorAll('.scene');
+            scenes.forEach((scene, i) => {
+                if (i === index) {
+                    scene.classList.add('visible');
+                } else {
+                    scene.classList.remove('visible');
+                }
+            });
+            sceneIndex = index;; try { window.__ai_state_monitor.report('sceneIndex', sceneIndex); } catch(e) {}  try { window.__ai_state_monitor.report('sceneIndex', sceneIndex); } catch(e) {} 
+        }
+
+        // Terminal interaction
+        function terminalAction(action) {
+            const terminalText = document.getElementById('terminalText');
+            const terminalPrompt = document.getElementById('terminalPrompt');
+            const terminal = document.getElementById('terminal');
+            const glitchOverlay = document.getElementById('glitchOverlay');
+            const missionPanel = document.getElementById('missionPanel');
+
+            switch(action) {
+                case 'boot':
+                    setTimeout(() => {
+                        terminalText.innerHTML += `
+[SYSTEM BOOTING...]
+Initializing chrono-transference protocol...
+Loading neural interface...
+System status: <span style="color: #00ff00;">✓</span>
+Safety protocols: <span style="color: #ffff00;">⚠ PARTIAL</span>
+`;
+                    }, 500);
+                    break;
+
+                case 'start':
+                    setTimeout(() => {
+                        terminalText.innerHTML += `
+[MISSION RECEIVED]
+Objective: Neutralize Chronos Paradox
+Time Window: <code>± 1 second</code>
+Success Rate: <code>42.7%</code>
+`;
+                        setTimeout(() => {
+                            terminalText.innerHTML += `
+[SYSTEM READY]
+Press <span style="color: #ffff00;">[ENTER]</span> to launch
+`;
+                            setTimeout(() => {
+                                terminal.classList.add('hidden');
+                                missionPanel.classList.add('show');
+                                showScene(0);
+                            }, 2000);
+                        }, 1000);
+                    }, 500);
+                    break;
+
+                case 'timejump':
+                    terminal.classList.remove('hidden');
+                    terminalText.innerHTML = `
+[CHRONO-JUMP INITIATED]
+Destination: <code>${document.getElementById('timeInput').value}</code>
+Stability: <code>${stabilityIndex}%</code>
+Charging capacitors... 100%
+Jump sequence engaged...
+                    `;
+                    setTimeout(() => {
+                        terminal.classList.add('hidden');
+                        missionPanel.classList.add('show');
+                    }, 2000);
+                    break;
+
+                case 'success':
+                    terminal.classList.remove('hidden');
+                    terminalText.innerHTML = `
+[MISSION COMPLETE]
+Paradox Neutralized: <span style="color: #00ff00;">✓</span>
+Timeline Stable: <span style="color: #00ff00;">✓</span>
+Reality: <span style="color: #00ff00;">INTACT</span>
+
+Well done, Agent. The Chronos Paradox has been resolved.
+                    `;
+                    setTimeout(() => {
+                        terminal.classList.add('hidden');
+                        document.getElementById('resolution').scrollIntoView({ behavior: 'smooth' });
+                    }, 3000);
+                    break;
+            }
+        }
+
+        // Puzzle handling
+        function selectPuzzlePiece(element, value, puzzleId) {
+            element.classList.toggle('selected');
+            const selected = document.querySelectorAll(`#${puzzleId}Grid .puzzle-piece.selected`);
+            const confirmBtn = document.getElementById(`${puzzleId}Confirm`);
+            confirmBtn.style.display = selected.length > 0 ? 'inline-block' : 'none';
+        }
+
+        function confirmPuzzle(puzzleId) {
+            const solutions = {
+                'puzzle1': ['R','E','A','L'],
+                'puzzle2': ['8'],
+                'puzzle3': ['accident','research','detection','solution']
+            };
+
+            const selected = [];
+            document.querySelectorAll(`#${puzzleId}Grid .puzzle-piece.selected`).forEach(el => {
+                selected.push(el.dataset.selected || el.textContent.trim());
+            });
+
+            const isCorrect = JSON.stringify(selected.sort()) === JSON.stringify(solutions[puzzleId].sort());
+
+            if (isCorrect) {
+                stabilityIndex += 33;; try { window.__ai_state_monitor.report('stabilityIndex', stabilityIndex); } catch(e) {}  try { window.__ai_state_monitor.report('stabilityIndex', stabilityIndex); } catch(e) {} 
+                updateStability();
+                puzzleSolutions.push(puzzleId); try { window.__ai_state_monitor.report('puzzleSolutions', puzzleSolutions); } catch(e) {} 
+
+                const confirmBtn = document.getElementById(`${puzzleId}Confirm`);
+                confirmBtn.textContent = '✓ Correct!';
+                confirmBtn.style.background = 'rgba(0, 255, 0, 0.3)';
+                confirmBtn.style.borderColor = '#00ff00';
+                confirmBtn.disabled = true;
+
+                setTimeout(() => {
+                    if (puzzleSolutions.length === 3) {
+                        terminalAction('success');
+                    } else {
+                        showScene(sceneIndex + 1);
+                    }
+                }, 1500);
+            } else {
+                const confirmBtn = document.getElementById(`${puzzleId}Confirm`);
+                confirmBtn.textContent = '❌ Try again';
+                confirmBtn.style.background = 'rgba(255, 0, 0, 0.2)';
+                confirmBtn.style.borderColor = '#ff0000';
+                confirmBtn.style.color = '#ff0000';
+
+                setTimeout(() => {
+                    confirmBtn.textContent = puzzleId === 'puzzle1' ? 'Confirm Sequence' :
+                                             puzzleId === 'puzzle2' ? 'Solve Equation' : 'Align Timeline';
+                    confirmBtn.style.background = 'rgba(0, 255, 0, 0.2)';
+                    confirmBtn.style.borderColor = '#00ff00';
+                    confirmBtn.style.color = '#00ff00';
+                }, 1000);
+            }
+        }
+
+        function updateStability() {
+            document.getElementById('stabilityIndex').textContent = stabilityIndex + '%';
+            const missionPanel = document.getElementById('missionPanel');
+            if (stabilityIndex > 0 && !missionPanel.classList.contains('show')) {
+                missionPanel.classList.add('show');
+            }
+        }
+
+        // Event selection
+        function selectEvent(eventId) {
+            const nodes = document.querySelectorAll('.time-node');
+            nodes.forEach(node => node.classList.remove('selected'));
+            const selectedNode = document.querySelector(`.time-node[data-event="${eventId}"]`);
+            if (selectedNode) {
+                selectedNode.classList.add('selected');
+            }
+
+            if (!selectedEvents.includes(eventId)) {
+                selectedEvents.push(eventId);
+            }
+
+            if (selectedEvents.length >= 2) {
+                setTimeout(() => {
+                    showScene(sceneIndex + 1);
+                }, 1000);
+            }
+        }
+
+        // Time jump button
+        function timeJump() {
+            const destination = document.getElementById('timeInput').value;
+            terminalAction('timejump');
+            setTimeout(() => {
+                if (destination === '2089-04-17 14:32:01') {
+                    showScene(0);
+                } else if (destination === '2047-09-03 08:15:00') {
+                    showScene(1);
+                } else if (destination === '2023-11-12 23:47:00') {
+                    showScene(2);
+                }
+            }, 2000);
+        }
+
+        // Play again
+        function playAgain() {
+            location.reload();
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            const terminal = document.getElementById('terminal');
+
+            if (!terminal.classList.contains('hidden')) {
+                if (e.key === 'Enter' && !terminal.classList.contains('hidden')) {
+                    terminalAction('start');
+                }
+            } else {
+                switch(e.key) {
+                    case '1': showScene(0); break;
+                    case '2': showScene(1); break;
+                    case '3': showScene(2); break;
+                    case '4': showScene(3); break;
+                    case '0': document.getElementById('resolution').scrollIntoView({ behavior: 'smooth' }); break;
+                    case 'ArrowLeft': timeJumpToPrevious(); break;
+                    case 'ArrowRight': timeJumpToNext(); break;
+                    case 'Escape': terminalAction('boot'); break;
+                }
+            }
+        });
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            initTerminal();
+            setTimeout(() => {
+                terminalAction('start');
+            }, 1000);
+        });
+    </script>
+<script>
+
+    // ===== COMPREHENSIVE HELPER FUNCTION LIBRARY =====
+    // These helpers work with ANY experience - no modifications needed
+    
+    function checkVisible(selector) {
+        const el = document.querySelector(selector);
+        if (!el) return false;
+        const style = window.getComputedStyle(el);
+        return style.display !== 'none' && 
+               style.visibility !== 'hidden' && 
+               el.offsetParent !== null &&
+               !el.classList.contains('hidden');
+    }
+    
+    function checkHidden(selector) {
+        const el = document.querySelector(selector);
+        if (!el) return true;
+        const style = window.getComputedStyle(el);
+        return style.display === 'none' || 
+               style.visibility === 'hidden' || 
+               el.offsetParent === null ||
+               el.classList.contains('hidden');
+    }
+    
+    function checkStyleProperty(selector, property, value) {
+        const el = document.querySelector(selector);
+        if (!el) return false;
+        // Try direct style first, then computed
+        const directValue = el.style[property];
+        const computedValue = window.getComputedStyle(el)[property];
+        return directValue === value || 
+               directValue.includes(value) ||
+               computedValue === value || 
+               computedValue.includes(value);
+    }
+    
+    function checkTextContent(selector, text, exact = false) {
+        const el = document.querySelector(selector);
+        if (!el) return false;
+        const content = el.textContent.trim();
+        return exact ? content === text : content.includes(text);
+    }
+    
+    function checkClass(selector, className) {
+        const el = document.querySelector(selector);
+        return el ? el.classList.contains(className) : false;
+    }
+    
+    function checkAttribute(selector, attribute, value = null) {
+        const el = document.querySelector(selector);
+        if (!el) return false;
+        if (value === null) return el.hasAttribute(attribute);
+        return el.getAttribute(attribute) === value;
+    }
+    
+    function checkComputedStyle(selector, property, value) {
+        const el = document.querySelector(selector);
+        if (!el) return false;
+        const computedValue = window.getComputedStyle(el)[property];
+        return computedValue === value || computedValue.includes(value);
+    }
+    
+    function checkElementExists(selector) {
+        return document.querySelector(selector) !== null;
+    }
+
+    var currentTrackedState = 0;
+    var stateNames = {"0": "Terminal Boot", "1": "Intro Scene", "2": "Stage 1 Detection", "3": "Stage 2 Paradox", "4": "Stage 3 Stability", "5": "Resolution Complete"};
+    
+    // AI State Monitor - Receives reports from injected code
+    window.__ai_state_monitor = {
+        capturedVariables: {},
+        report: function(varName, value) {
+            this.capturedVariables[varName] = value;
+            // Force state re-evaluation when a variable changes
+            debouncedUpdate();
+        },
+        get: function(varName) {
+            return this.capturedVariables[varName];
+        }
+    };
+    
+    function initStatePanel() {
+        // Initial setup if needed
+    }
+    
+    // Variable finder - searches window object and injected captures
+    function findVariable(varName) {
+        // 1. Check AI Monitor (Injected variables)
+        if (typeof window.__ai_state_monitor !== 'undefined') {
+            const captured = window.__ai_state_monitor.get(varName);
+            if (typeof captured !== 'undefined') return captured;
+        }
+
+        // 2. Try direct global access
+        try {
+            if (typeof window[varName] !== 'undefined') {
+                return window[varName];
+            }
+        } catch(e) {}
+        
+        // 3. Search through window properties
+        try {
+            for (let key in window) {
+                if (window[key] && typeof window[key] === 'object') {
+                    try {
+                        if (varName in window[key]) {
+                            return window[key][varName];
+                        }
+                    } catch(e) {}
+                }
+            }
+        } catch(e) {}
+        
+        return undefined;
+    }
+    
+    function getCurrentState() {
+        // HYBRID PRIORITY SCORE LOGIC
+        // Combines Specificity Rank (New) with weighted signals (Legacy)
+        // Score = (Rank * 100) + (LogicMatch ? 1000 : 0) + (DOMSignals)
+        
+        let bestStateId = currentTrackedState;
+        let maxScore = -10000;
+        
+        try {
+
+        // --- State 0 (Terminal Boot) ---
+        {
+            let score = 0;
+            
+            try {
+                if (!document.getElementById('terminal').classList.contains('hidden')) {
+                    score += 1000;
+                    score += 90 * 100;
+                }
+            } catch(e) {}
+            
+            // DOM Signals
+            if (checkVisible('#terminal')) score += 3;
+            if (checkHidden('#missionPanel')) score += 2;
+            
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestStateId = 0;
+            }
+        }
+
+        // --- State 1 (Intro Scene) ---
+        {
+            let score = 0;
+            
+            try {
+                if (findVariable('sceneIndex') === 0 && document.getElementById('terminal').classList.contains('hidden')) {
+                    score += 1000;
+                    score += 60 * 100;
+                }
+            } catch(e) {}
+            
+            // DOM Signals
+            if (checkVisible('.scene[data-scene="0"]')) score += 3;
+            if (checkTextContent('.scene-title', 'INTRO: FIRST CONTACT')) score += 2;
+            
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestStateId = 1;
+            }
+        }
+
+        // --- State 2 (Stage 1 Detection) ---
+        {
+            let score = 0;
+            
+            try {
+                if (findVariable('sceneIndex') === 1) {
+                    score += 1000;
+                    score += 60 * 100;
+                }
+            } catch(e) {}
+            
+            // DOM Signals
+            if (checkVisible('.scene[data-scene="1"]')) score += 3;
+            if (checkTextContent('.scene-title', 'STAGE 1: PARADOX DETECTION')) score += 2;
+            
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestStateId = 2;
+            }
+        }
+
+        // --- State 3 (Stage 2 Paradox) ---
+        {
+            let score = 0;
+            
+            try {
+                if (findVariable('sceneIndex') === 2) {
+                    score += 1000;
+                    score += 60 * 100;
+                }
+            } catch(e) {}
+            
+            // DOM Signals
+            if (checkVisible('.scene[data-scene="2"]')) score += 3;
+            if (checkTextContent('.scene-title', 'STAGE 2: THE CHRONOS PARADOX')) score += 2;
+            
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestStateId = 3;
+            }
+        }
+
+        // --- State 4 (Stage 3 Stability) ---
+        {
+            let score = 0;
+            
+            try {
+                if (findVariable('sceneIndex') === 3) {
+                    score += 1000;
+                    score += 60 * 100;
+                }
+            } catch(e) {}
+            
+            // DOM Signals
+            if (checkVisible('.scene[data-scene="3"]')) score += 3;
+            if (checkTextContent('.scene-title', 'STAGE 3: TEMPORAL STABILITY')) score += 2;
+            
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestStateId = 4;
+            }
+        }
+
+        // --- State 5 (Resolution Complete) ---
+        {
+            let score = 0;
+            
+            try {
+                if (findVariable('stabilityIndex') >= 99 || findVariable('puzzleSolutions').length >= 3) {
+                    score += 1000;
+                    score += 80 * 100;
+                }
+            } catch(e) {}
+            
+            // DOM Signals
+            if (checkVisible('#resolution')) score += 3;
+            if (checkTextContent('#resolution h3', 'THE SOLUTION')) score += 2;
+            
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestStateId = 5;
+            }
+        }
+
+        } catch(e) {
+            console.error("State detection error:", e);
+        }
+        
+        return bestStateId;
+    }
+
+    // Debounce function to prevent rapid-fire updates
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    // Debounced update function
+    const debouncedUpdate = debounce(updateStateHighlight, 50);
+
+    // Setup SAFE global listeners (no monkey patching)
+    function setupGlobalListeners() {
+        document.addEventListener('click', () => debouncedUpdate());
+        document.addEventListener('keydown', () => debouncedUpdate());
+        document.addEventListener('input', () => debouncedUpdate());
+        document.addEventListener('change', () => debouncedUpdate());
+        document.addEventListener('scroll', () => debouncedUpdate()); 
+        window.addEventListener('hashchange', () => debouncedUpdate());
+        window.addEventListener('popstate', () => debouncedUpdate());
+    }
+    
+    // Helper function to get formatted timestamp
+    function getTimestamp() {
+        const now = new Date();
+        return now.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit', 
+            hour12: true 
+        });
+    }
+    
+    // DOM detection helper functions
+    function checkVisible(selector) {
+        const el = document.querySelector(selector);
+        if (!el) return false;
+        const style = window.getComputedStyle(el);
+        return style.display !== 'none' && 
+               style.visibility !== 'hidden' && 
+               el.offsetParent !== null &&
+               !el.classList.contains('hidden');
+    }
+    
+    function checkHidden(selector) {
+        const el = document.querySelector(selector);
+        if (!el) return true; // Element not existing counts as hidden
+        const style = window.getComputedStyle(el);
+        return style.display === 'none' || 
+               style.visibility === 'hidden' || 
+               el.offsetParent === null ||
+               el.classList.contains('hidden');
+    }
+    
+    function checkClass(selector, className) {
+        const el = document.querySelector(selector);
+        return el ? el.classList.contains(className) : false;
+    }
+    
+    function checkText(selector, text) {
+        const el = document.querySelector(selector);
+        return el ? el.textContent.includes(text) : false;
+    }
+    
+    function updateStateHighlight() {
+        var newState = getCurrentState();
+        if (newState !== currentTrackedState) {
+            var oldState = currentTrackedState;
+            currentTrackedState = newState;
+            
+            // Console log the state change with timestamp and state names
+            var timestamp = getTimestamp();
+            var oldStateName = stateNames[oldState] || 'Unknown';
+            var newStateName = stateNames[newState] || 'Unknown';
+            console.log(
+                '%c[State Change] ' + timestamp + ' %c| State ' + oldState + ' (' + oldStateName + ') → State ' + newState + ' (' + newStateName + ')',
+                'color: #2ecc71; font-weight: bold;',
+                'color: #3498db;'
+            );
+            
+            // Update state panel highlighting
+            for (var i = 0; i < 6; i++) {
+                var segment = document.getElementById('state' + i);
+                if (segment) {
+                    if (i === currentTrackedState) {
+                        segment.classList.add('active');
+                    } else {
+                        segment.classList.remove('active');
+                    }
+                }
+            }
+            
+            // Highlight UI elements when state changes
+            highlightUIElements(currentTrackedState);
+        }
+    }
+    
+    function highlightUIElements(state) {
+        // Remove all previous highlights from page elements
+        var allElements = document.querySelectorAll('.state-highlight');
+        allElements.forEach(function(el) {
+            el.classList.remove('state-highlight');
+        });
+        
+        // Remove all previous highlights from panel items
+        var allPanelItems = document.querySelectorAll('.param-item.highlighted');
+        allPanelItems.forEach(function(item) {
+            item.classList.remove('highlighted');
+        });
+        
+        // Add highlights based on current state
+        var stateConfig = getStateConfig(state);
+        if (stateConfig && stateConfig.elements) {
+            stateConfig.elements.forEach(function(elementInfo) {
+                // Skip disabled elements
+                if (elementInfo.state === 'disabled') return;
+                
+                var selector = elementInfo.selector;
+                
+                // Highlight page elements
+                var elements = document.querySelectorAll(selector);
+                elements.forEach(function(el) {
+                    el.classList.add('state-highlight');
+                });
+                
+                // Highlight corresponding panel items
+                var panelItems = document.querySelectorAll('.param-item');
+                panelItems.forEach(function(item) {
+                    var selectorText = item.querySelector('.param-id');
+                    if (selectorText && selectorText.textContent.includes(selector)) {
+                        item.classList.add('highlighted');
+                    }
+                });
+            });
+        }
+    }
+    
+    function getStateConfig(stateId) {
+        var configs = {
+            0: { elements: [{"selector": "#terminal", "state": "active"}] },
+            1: { elements: [{"selector": "#puzzle1Grid .puzzle-piece", "state": "enabled"}, {"selector": "#missionPanel", "state": "active"}] },
+            2: { elements: [{"selector": ".time-node", "state": "enabled"}] },
+            3: { elements: [{"selector": "#puzzle2Grid .puzzle-piece", "state": "enabled"}] },
+            4: { elements: [{"selector": "#puzzle3Grid .puzzle-piece", "state": "enabled"}] },
+            5: { elements: [{"selector": ".resolution-button", "state": "enabled"}] },
+        };
+        return configs[stateId];
+    }
+    
+    function logNotificationDot() {
+        var stateToLog = getCurrentState();
+        var dotsContainer = stateSegments[stateToLog];
+        if (dotsContainer) {
+            var dot = document.createElement('div');
+            dot.className = 'dot';
+            dotsContainer.appendChild(dot);
+        }
+        
+        updateStateHighlight();
+    }
+    
+    function copyElementHTML(selector) {
+        var element;
+        
+        // Handle different selector types
+        if (selector.startsWith('#') || selector.startsWith('.')) {
+            element = document.querySelector(selector);
+        } else {
+            // Variable name - try to get its value
+            try {
+                var value = eval(selector);
+                navigator.clipboard.writeText(selector + ' = ' + JSON.stringify(value));
+                
+                // Visual feedback
+                if (event && event.target) {
+                    var icon = event.target;
+                    icon.classList.add('copied');
+                    setTimeout(function() {
+                        icon.classList.remove('copied');
+                    }, 500);
+                }
+                return;
+            } catch(e) {
+                console.warn('Could not evaluate:', selector);
+                return;
+            }
+        }
+        
+        if (element) {
+            var html = element.outerHTML;
+            navigator.clipboard.writeText(html).then(function() {
+                // Visual feedback
+                if (event && event.target) {
+                    var icon = event.target;
+                    icon.classList.add('copied');
+                    setTimeout(function() {
+                        icon.classList.remove('copied');
+                    }, 500);
+                }
+            }).catch(function(err) {
+                console.error('Failed to copy:', err);
+            });
+        } else {
+            console.warn('Element not found:', selector);
+        }
+    }
+    
+    // Set variable value in any scope
+    function setVariable(varName, value) {
+        // Try direct global set
+        try {
+            window[varName] = value;
+            return true;
+        } catch(e) {}
+        
+        // Search through window properties for objects containing the variable
+        try {
+            for (let key in window) {
+                if (window[key] && typeof window[key] === 'object') {
+                    try {
+                        if (varName in window[key]) {
+                            window[key][varName] = value;
+                            return true;
+                        }
+                    } catch(e) {}
+                }
+            }
+        } catch(e) {}
+        
+        return false;
+    }
+    
+    function jumpToState(targetState) {
+        console.log('Jump to state', targetState, '- functionality not implemented');
+    }
+    
+    // View switching functions
+    function switchToOriginalView() {
+        // Show iframe container
+        document.getElementById('originalViewContainer').classList.add('active');
+        
+        // Update button states
+        document.getElementById('originalViewBtn').classList.add('active');
+        document.getElementById('analysisViewBtn').classList.remove('active');
+    }
+    
+    function switchToAnalysisView() {
+        // Hide iframe container
+        document.getElementById('originalViewContainer').classList.remove('active');
+        
+        // Update button states
+        document.getElementById('analysisViewBtn').classList.add('active');
+        document.getElementById('originalViewBtn').classList.remove('active');
+    }
+    
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', function() {
+        initStatePanel();
+        setupGlobalListeners(); // <--- SAFE Global Listeners
+        updateStateHighlight();
+        // Highlight initial state elements
+        highlightUIElements(currentTrackedState);
+        
+        // Set up MutationObserver to watch for dynamically created elements
+        var observer = new MutationObserver(function(mutations) {
+            let shouldUpdate = false;
+            for (let mutation of mutations) {
+                // Ignore changes to the panel itself
+                if (mutation.target.closest && mutation.target.closest('#statePanel')) continue;
+                // Ignore changes to highlight classes to PREVENT LOOPS
+                if (mutation.attributeName === 'class' && 
+                    (mutation.target.classList.contains('state-highlight') || 
+                     mutation.target.classList.contains('active') ||
+                     mutation.target.classList.contains('highlighted'))) continue;
+                     
+                shouldUpdate = true;
+                break; 
+            }
+            
+            if (shouldUpdate) {
+                // Re-highlight when new elements are added to DOM
+                highlightUIElements(currentTrackedState);
+                debouncedUpdate(); // <--- Check state on DOM change (Debounced)
+            }
+        });
+        
+        // Observe the main content area (exclude the state panel itself)
+        var mainContent = document.body;
+        if (mainContent) {
+            observer.observe(mainContent, {
+                childList: true,  // Watch for added/removed children
+                subtree: true,     // Watch entire tree
+                attributes: true   // Watch for class changes etc
+            });
+        }
+    });
+    
+    // Periodically check for state changes (lighter polling for state detection only)
+    setInterval(updateStateHighlight, 1000); // Slower polling since we have events
+
+</script>
+
+<!-- View Toggle Controls -->
+<div class="view-toggle-container">
+    <button class="view-toggle-btn active" id="analysisViewBtn" onclick="switchToAnalysisView()">
+        Analysis View
+    </button>
+    <button class="view-toggle-btn" id="originalViewBtn" onclick="switchToOriginalView()">
+        Original View
+    </button>
+</div>
+
+<!-- Original View (iframe) -->
+<div class="original-view-container" id="originalViewContainer">
+    <iframe class="original-view-iframe" id="originalViewIframe" src="index.html"></iframe>
+</div>
+
+<div class="state-panel" id="statePanel">\n
+    <div class="stage-segment stage-0 active" id="state0">
+        <div class="stage-header">
+            State 0: Terminal Boot
+            <button class="jump-button" onclick="jumpToState(0)">Jump</button>
+        </div>
+        <div class="stage-range">Initial boot screen with system initialization messages</div>
+        
+        <!-- State Logic & Description (Full Width) -->
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyToClipboard('The terminal screen is showing system boot messages and waiting for user input to start the mission.')" title="Copy Description">⎘</span>
+                <div class="param-name">Description</div>
+                <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">{user_desc}</div>
+            </div>
+            
+            <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyToClipboard('!document.getElementById(&#39;terminal&#39;).classList.contains(&#39;hidden&#39;)')" title="Copy Logic">⎘</span>
+                <div class="param-name">Trigger Logic</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">{trigger_logic_display}</div>
+            </div>
+        </div>
+
+        <div class="segment-content">
+            <div class="params-column">
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('#terminal')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Terminal Interface</div>
+                    <div class="param-id">Selector: #terminal</div>
+                    <div class="param-state">State: active</div>
+                    <div class="param-mod">Action: terminalAction('start')</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('sceneIndex')" title="Copy value">⎘</span>
+                    <div class="param-name">sceneIndex</div>
+                    <div class="param-id">Variable</div>
+                    <div class="param-state">Value: 0</div>
+                    <div class="param-mod">Purpose: Tracks current scene</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="stage-segment stage-1" id="state1">
+        <div class="stage-header">
+            State 1: Intro Scene
+            <button class="jump-button" onclick="jumpToState(1)">Jump</button>
+        </div>
+        <div class="stage-range">Scene 0 active with system key puzzle</div>
+        
+        <!-- State Logic & Description (Full Width) -->
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyToClipboard('You&#39;re at the Chronos-1 console learning about your mission and solving the first puzzle to override safety protocols.')" title="Copy Description">⎘</span>
+                <div class="param-name">Description</div>
+                <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">{user_desc}</div>
+            </div>
+            
+            <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyToClipboard('findVariable(&#39;sceneIndex&#39;) === 0 && document.getElementById(&#39;terminal&#39;).classList.contains(&#39;hidden&#39;)')" title="Copy Logic">⎘</span>
+                <div class="param-name">Trigger Logic</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">{trigger_logic_display}</div>
+            </div>
+        </div>
+
+        <div class="segment-content">
+            <div class="params-column">
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('#puzzle1Grid .puzzle-piece')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Puzzle Pieces</div>
+                    <div class="param-id">Selector: #puzzle1Grid .puzzle-piece</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: selectPuzzlePiece()</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('#missionPanel')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Mission Panel</div>
+                    <div class="param-id">Selector: #missionPanel</div>
+                    <div class="param-state">State: active</div>
+                    <div class="param-mod">Action: timeJump()</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('sceneIndex')" title="Copy value">⎘</span>
+                    <div class="param-name">sceneIndex</div>
+                    <div class="param-id">Variable</div>
+                    <div class="param-state">Value: 0</div>
+                    <div class="param-mod">Purpose: Current scene identifier</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('stabilityIndex')" title="Copy value">⎘</span>
+                    <div class="param-name">stabilityIndex</div>
+                    <div class="param-id">Variable</div>
+                    <div class="param-state">Value: 0</div>
+                    <div class="param-mod">Purpose: Mission progress tracker</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="stage-segment stage-2" id="state2">
+        <div class="stage-header">
+            State 2: Stage 1 Detection
+            <button class="jump-button" onclick="jumpToState(2)">Jump</button>
+        </div>
+        <div class="stage-range">Scene 1 with time anomaly investigation</div>
+        
+        <!-- State Logic & Description (Full Width) -->
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyToClipboard('You&#39;ve arrived in 2047 and are investigating paradox events. Select which temporal anomaly to examine.')" title="Copy Description">⎘</span>
+                <div class="param-name">Description</div>
+                <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">{user_desc}</div>
+            </div>
+            
+            <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyToClipboard('findVariable(&#39;sceneIndex&#39;) === 1')" title="Copy Logic">⎘</span>
+                <div class="param-name">Trigger Logic</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">{trigger_logic_display}</div>
+            </div>
+        </div>
+
+        <div class="segment-content">
+            <div class="params-column">
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('.time-node')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Time Nodes</div>
+                    <div class="param-id">Selector: .time-node</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: selectEvent()</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('sceneIndex')" title="Copy value">⎘</span>
+                    <div class="param-name">sceneIndex</div>
+                    <div class="param-id">Variable</div>
+                    <div class="param-state">Value: 1</div>
+                    <div class="param-mod">Purpose: Current scene identifier</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('selectedEvents')" title="Copy value">⎘</span>
+                    <div class="param-name">selectedEvents</div>
+                    <div class="param-id">Variable</div>
+                    <div class="param-state">Value: []</div>
+                    <div class="param-mod">Purpose: Tracks selected paradox events</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="stage-segment stage-3" id="state3">
+        <div class="stage-header">
+            State 3: Stage 2 Paradox
+            <button class="jump-button" onclick="jumpToState(3)">Jump</button>
+        </div>
+        <div class="stage-range">Scene 2 with Dr. Chen and equation solving</div>
+        
+        <!-- State Logic & Description (Full Width) -->
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyToClipboard('You&#39;ve traced the anomaly to 2023 and found Dr. Chen&#39;s time loop experiment. Solve the equation to stabilize it.')" title="Copy Description">⎘</span>
+                <div class="param-name">Description</div>
+                <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">{user_desc}</div>
+            </div>
+            
+            <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyToClipboard('findVariable(&#39;sceneIndex&#39;) === 2')" title="Copy Logic">⎘</span>
+                <div class="param-name">Trigger Logic</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">{trigger_logic_display}</div>
+            </div>
+        </div>
+
+        <div class="segment-content">
+            <div class="params-column">
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('#puzzle2Grid .puzzle-piece')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Equation Puzzle</div>
+                    <div class="param-id">Selector: #puzzle2Grid .puzzle-piece</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: selectPuzzlePiece()</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('sceneIndex')" title="Copy value">⎘</span>
+                    <div class="param-name">sceneIndex</div>
+                    <div class="param-id">Variable</div>
+                    <div class="param-state">Value: 2</div>
+                    <div class="param-mod">Purpose: Current scene identifier</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('stabilityIndex')" title="Copy value">⎘</span>
+                    <div class="param-name">stabilityIndex</div>
+                    <div class="param-id">Variable</div>
+                    <div class="param-state">Value: 33-66</div>
+                    <div class="param-mod">Purpose: Mission progress tracker</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="stage-segment stage-4" id="state4">
+        <div class="stage-header">
+            State 4: Stage 3 Stability
+            <button class="jump-button" onclick="jumpToState(4)">Jump</button>
+        </div>
+        <div class="stage-range">Scene 3 with timeline ordering puzzle</div>
+        
+        <!-- State Logic & Description (Full Width) -->
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyToClipboard('Back in your original time, you&#39;re analyzing results and arranging timeline events in the correct order.')" title="Copy Description">⎘</span>
+                <div class="param-name">Description</div>
+                <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">{user_desc}</div>
+            </div>
+            
+            <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyToClipboard('findVariable(&#39;sceneIndex&#39;) === 3')" title="Copy Logic">⎘</span>
+                <div class="param-name">Trigger Logic</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">{trigger_logic_display}</div>
+            </div>
+        </div>
+
+        <div class="segment-content">
+            <div class="params-column">
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('#puzzle3Grid .puzzle-piece')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Timeline Puzzle</div>
+                    <div class="param-id">Selector: #puzzle3Grid .puzzle-piece</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: selectPuzzlePiece()</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('sceneIndex')" title="Copy value">⎘</span>
+                    <div class="param-name">sceneIndex</div>
+                    <div class="param-id">Variable</div>
+                    <div class="param-state">Value: 3</div>
+                    <div class="param-mod">Purpose: Current scene identifier</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('stabilityIndex')" title="Copy value">⎘</span>
+                    <div class="param-name">stabilityIndex</div>
+                    <div class="param-id">Variable</div>
+                    <div class="param-state">Value: 66-99</div>
+                    <div class="param-mod">Purpose: Mission progress tracker</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="stage-segment stage-5" id="state5">
+        <div class="stage-header">
+            State 5: Resolution Complete
+            <button class="jump-button" onclick="jumpToState(5)">Jump</button>
+        </div>
+        <div class="stage-range">All puzzles solved, timeline stable</div>
+        
+        <!-- State Logic & Description (Full Width) -->
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyToClipboard('Mission accomplished! You&#39;ve successfully contained the Chronos Paradox and saved reality.')" title="Copy Description">⎘</span>
+                <div class="param-name">Description</div>
+                <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">{user_desc}</div>
+            </div>
+            
+            <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyToClipboard('findVariable(&#39;stabilityIndex&#39;) >= 99 || findVariable(&#39;puzzleSolutions&#39;).length >= 3')" title="Copy Logic">⎘</span>
+                <div class="param-name">Trigger Logic</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">{trigger_logic_display}</div>
+            </div>
+        </div>
+
+        <div class="segment-content">
+            <div class="params-column">
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('.resolution-button')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Play Again Button</div>
+                    <div class="param-id">Selector: .resolution-button</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: playAgain()</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('stabilityIndex')" title="Copy value">⎘</span>
+                    <div class="param-name">stabilityIndex</div>
+                    <div class="param-id">Variable</div>
+                    <div class="param-state">Value: 99-100</div>
+                    <div class="param-mod">Purpose: Mission completion indicator</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('puzzleSolutions')" title="Copy value">⎘</span>
+                    <div class="param-name">puzzleSolutions</div>
+                    <div class="param-id">Variable</div>
+                    <div class="param-state">Value: 3</div>
+                    <div class="param-mod">Purpose: Completed puzzles count</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>\n
+</body>
+</html>

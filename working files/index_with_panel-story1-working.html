@@ -259,14 +259,14 @@
         }
 
         .stage-segment.stage-0.active {
-            background: linear-gradient(135deg, rgba(22, 33, 62, 0.3) 0%, rgba(22, 33, 62, 0.3) 100%);
-            border-color: rgba(22, 33, 62, 0.6);
-            box-shadow: inset 0 0 30px rgba(22, 33, 62, 0.3);
+            background: linear-gradient(135deg, rgba(83, 52, 131, 0.3) 0%, rgba(83, 52, 131, 0.3) 100%);
+            border-color: rgba(233, 69, 96, 0.6);
+            box-shadow: inset 0 0 30px rgba(83, 52, 131, 0.3);
         }
 
         .stage-0 .dot {
-            background: rgba(22, 33, 62, 0.6);
-            box-shadow: 0 0 5px rgba(22, 33, 62, 0.6);
+            background: rgba(233, 69, 96, 0.6);
+            box-shadow: 0 0 5px rgba(233, 69, 96, 0.6);
         }
 
         .stage-segment.stage-1 {
@@ -274,14 +274,14 @@
         }
 
         .stage-segment.stage-1.active {
-            background: linear-gradient(135deg, rgba(83, 52, 131, 0.3) 0%, rgba(83, 52, 131, 0.3) 100%);
-            border-color: rgba(83, 52, 131, 0.6);
-            box-shadow: inset 0 0 30px rgba(83, 52, 131, 0.3);
+            background: linear-gradient(135deg, rgba(233, 69, 96, 0.3) 0%, rgba(233, 69, 96, 0.3) 100%);
+            border-color: rgba(22, 33, 62, 0.6);
+            box-shadow: inset 0 0 30px rgba(233, 69, 96, 0.3);
         }
 
         .stage-1 .dot {
-            background: rgba(83, 52, 131, 0.6);
-            box-shadow: 0 0 5px rgba(83, 52, 131, 0.6);
+            background: rgba(22, 33, 62, 0.6);
+            box-shadow: 0 0 5px rgba(22, 33, 62, 0.6);
         }
 
         .stage-segment.stage-2 {
@@ -289,29 +289,29 @@
         }
 
         .stage-segment.stage-2.active {
-            background: linear-gradient(135deg, rgba(233, 69, 96, 0.3) 0%, rgba(233, 69, 96, 0.3) 100%);
-            border-color: rgba(233, 69, 96, 0.6);
-            box-shadow: inset 0 0 30px rgba(233, 69, 96, 0.3);
+            background: linear-gradient(135deg, rgba(83, 52, 131, 0.3) 0%, rgba(83, 52, 131, 0.3) 100%);
+            border-color: rgba(15, 52, 96, 0.6);
+            box-shadow: inset 0 0 30px rgba(83, 52, 131, 0.3);
         }
 
         .stage-2 .dot {
-            background: rgba(233, 69, 96, 0.6);
-            box-shadow: 0 0 5px rgba(233, 69, 96, 0.6);
+            background: rgba(15, 52, 96, 0.6);
+            box-shadow: 0 0 5px rgba(15, 52, 96, 0.6);
         }
 
         .stage-segment.stage-3 {
-            background: linear-gradient(135deg, rgba(15, 52, 96, 0.15) 0%, rgba(15, 52, 96, 0.15) 100%);
+            background: linear-gradient(135deg, rgba(83, 52, 131, 0.1) 0%, rgba(83, 52, 131, 0.1) 100%);
         }
 
         .stage-segment.stage-3.active {
-            background: linear-gradient(135deg, rgba(15, 52, 96, 0.3) 0%, rgba(15, 52, 96, 0.3) 100%);
-            border-color: rgba(15, 52, 96, 0.6);
-            box-shadow: inset 0 0 30px rgba(15, 52, 96, 0.3);
+            background: linear-gradient(135deg, rgba(233, 69, 96, 0.1) 0%, rgba(233, 69, 96, 0.1) 100%);
+            border-color: rgba(22, 33, 62, 0.6);
+            box-shadow: inset 0 0 30px rgba(233, 69, 96, 0.1);
         }
 
         .stage-3 .dot {
-            background: rgba(15, 52, 96, 0.6);
-            box-shadow: 0 0 5px rgba(15, 52, 96, 0.6);
+            background: rgba(22, 33, 62, 0.6);
+            box-shadow: 0 0 5px rgba(22, 33, 62, 0.6);
         }
 
 
@@ -768,10 +768,10 @@
                 endingTitle: "The Infinite Explorer",
                 endingText: "You chose to explore and never stopped. Your journals inspire generations of explorers who follow your footsteps into the unknown."
             }
-        };
+        };; try { window.__ai_state_monitor.report('storyData', storyData); } catch(e) {} 
 
         function makeChoice(action) {
-            const scene = storyData[action]; try { window.__ai_state_monitor.report('current_scene', current_scene); } catch(e) {} 
+            const scene = storyData[action];
             if (!scene) return;
 
             // Update story text with animation
@@ -782,10 +782,10 @@
             storyText.innerHTML = scene.text;
 
             // Update chapter indicator
-            document.getElementById('scene-indicator').textContent = scene.chapter;
+            document.getElementById('scene-indicator').textContent = scene.chapter; try { window.__ai_state_monitor.report('currentScene', currentScene); } catch(e) {} 
 
             // Update progress bar
-            document.getElementById('progress').style.width = scene.progress + '%'; try { window.__ai_state_monitor.report('progress_percentage', progress_percentage); } catch(e) {} 
+            document.getElementById('progress').style.width = scene.progress + '%'; try { window.__ai_state_monitor.report('progressValue', progressValue); } catch(e) {} 
 
             // Update choices
             const choicesDiv = document.getElementById('choices');
@@ -900,7 +900,7 @@
 
     var currentTrackedState = 0;
     var stateSegments = {};
-    var stateNames = {"0": "Initial Story", "1": "Second Chapter", "2": "Third Chapter", "3": "Story Ending"};
+    var stateNames = {"0": "Initial Story", "1": "Chapter 2", "2": "Chapter 3", "3": "Story Ending"};
     
     // AI State Monitor - Receives reports from injected code
     window.__ai_state_monitor = {
@@ -920,7 +920,7 @@
             0: document.getElementById('state0Dots'),
             1: document.getElementById('state1Dots'),
             2: document.getElementById('state2Dots'),
-            3: document.getElementById('state3Dots'),
+            3: document.getElementById('state3Dots')
         };
     }
     
@@ -956,74 +956,115 @@
     }
     
     function getCurrentState() {
-        // Adaptive detection: Uses the best method for this experience
+        // HYBRID PRIORITY SCORE LOGIC
+        // Combines Specificity Rank (New) with weighted signals (Legacy)
+        // Score = (Rank * 100) + (LogicMatch ? 1000 : 0) + (DOMSignals)
         
-        // State 0: Initial Story
-        // Weighted DOM Detection
-        let score_0 = 0;
-        let totalWeight_0 = 0;
-        if (checkTextContent('#scene-indicator', 'Chapter 1')) score_0 += 3;
-        totalWeight_0 += 3;
-        if (checkStyleProperty('#progress', 'width', '10%')) score_0 += 2;
-        totalWeight_0 += 2;
-        if (checkHidden('#restart-btn')) score_0 += 1;
-        totalWeight_0 += 1;
-        if (checkVisible('.choice-btn')) score_0 += 1;
-        totalWeight_0 += 1;
-        if (totalWeight_0 > 0 && (score_0 / totalWeight_0) > 0.5) return 0;
-        if (checkTextContent('#scene-indicator', 'Chapter 1') && checkStyleProperty('#progress', 'width', '10%') && checkHidden('#restart-btn')) return 0;
+        let bestStateId = currentTrackedState;
+        let maxScore = -10000;
         
-        // State 1: Second Chapter
-        // Weighted DOM Detection
-        let score_1 = 0;
-        let totalWeight_1 = 0;
-        if (checkTextContent('#scene-indicator', 'Chapter 2')) score_1 += 3;
-        totalWeight_1 += 3;
-        if (checkStyleProperty('#progress', 'width', '25%')) score_1 += 2;
-        totalWeight_1 += 2;
-        if (checkHidden('#restart-btn')) score_1 += 1;
-        totalWeight_1 += 1;
-        if (checkVisible('.choice-btn')) score_1 += 1;
-        totalWeight_1 += 1;
-        if (totalWeight_1 > 0 && (score_1 / totalWeight_1) > 0.5) return 1;
-        if (checkTextContent('#scene-indicator', 'Chapter 2') && checkStyleProperty('#progress', 'width', '25%') && checkHidden('#restart-btn')) return 1;
+        try {
+
+        // --- State 0 (Initial Story) ---
+        {
+            let score = 0;
+            
+            try {
+                if (checkTextContent('#scene-indicator', 'Chapter 1')) {
+                    score += 1000;
+                    score += 10 * 100;
+                }
+            } catch(e) {}
+            
+            // DOM Signals
+            if (checkTextContent('#scene-indicator', 'Chapter 1')) score += 3;
+            if (checkHidden('#restart-btn')) score += 2;
+            if (checkStyleProperty('#progress', 'width', '10%')) score += 2;
+            
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestStateId = 0;
+            }
+        }
+
+        // --- State 1 (Chapter 2) ---
+        {
+            let score = 0;
+            
+            try {
+                if (checkTextContent('#scene-indicator', 'Chapter 2', false)) {
+                    score += 1000;
+                    score += 50 * 100;
+                }
+            } catch(e) {}
+            
+            // DOM Signals
+            if (checkTextContent('#scene-indicator', 'Chapter 2', false)) score += 3;
+            if (checkStyleProperty('#progress', 'width', '25%')) score += 2;
+            if (checkHidden('#restart-btn')) score += 1;
+            
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestStateId = 1;
+            }
+        }
+
+        // --- State 2 (Chapter 3) ---
+        {
+            let score = 0;
+            
+            try {
+                if (checkTextContent('#scene-indicator', 'Chapter 3', false)) {
+                    score += 1000;
+                    score += 60 * 100;
+                }
+            } catch(e) {}
+            
+            // DOM Signals
+            if (checkTextContent('#scene-indicator', 'Chapter 3', false)) score += 3;
+            if (checkStyleProperty('#progress', 'width', '50%')) score += 2;
+            if (checkHidden('#restart-btn')) score += 1;
+            
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestStateId = 2;
+            }
+        }
+
+        // --- State 3 (Story Ending) ---
+        {
+            let score = 0;
+            
+            try {
+                if (checkVisible('#restart-btn') && checkElementExists('.ending')) {
+                    score += 1000;
+                    score += 80 * 100;
+                }
+            } catch(e) {}
+            
+            // DOM Signals
+            if (checkVisible('#restart-btn')) score += 3;
+            if (checkElementExists('.ending')) score += 3;
+            if (checkStyleProperty('#progress', 'width', '100%')) score += 2;
+            if (checkTextContent('#scene-indicator', 'Ending', false)) score += 2;
+            
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestStateId = 3;
+            }
+        }
+
+        } catch(e) {
+            console.error("State detection error:", e);
+        }
         
-        // State 2: Third Chapter
-        // Weighted DOM Detection
-        let score_2 = 0;
-        let totalWeight_2 = 0;
-        if (checkTextContent('#scene-indicator', 'Chapter 3')) score_2 += 3;
-        totalWeight_2 += 3;
-        if (checkStyleProperty('#progress', 'width', '50%')) score_2 += 2;
-        totalWeight_2 += 2;
-        if (checkHidden('#restart-btn')) score_2 += 1;
-        totalWeight_2 += 1;
-        if (checkVisible('.choice-btn')) score_2 += 1;
-        totalWeight_2 += 1;
-        if (totalWeight_2 > 0 && (score_2 / totalWeight_2) > 0.5) return 2;
-        if (checkTextContent('#scene-indicator', 'Chapter 3') && checkStyleProperty('#progress', 'width', '50%') && checkHidden('#restart-btn')) return 2;
-        
-        // State 3: Story Ending
-        // Weighted DOM Detection
-        let score_3 = 0;
-        let totalWeight_3 = 0;
-        if (checkVisible('#restart-btn')) score_3 += 3;
-        totalWeight_3 += 3;
-        if (checkStyleProperty('#progress', 'width', '100%')) score_3 += 3;
-        totalWeight_3 += 3;
-        if (checkVisible('.ending')) score_3 += 2;
-        totalWeight_3 += 2;
-        if (checkTextContent('#scene-indicator', 'Ending')) score_3 += 2;
-        totalWeight_3 += 2;
-        if (checkHidden('.choice-btn')) score_3 += 1;
-        totalWeight_3 += 1;
-        if (totalWeight_3 > 0 && (score_3 / totalWeight_3) > 0.5) return 3;
-        if (checkVisible('#restart-btn') && checkStyleProperty('#progress', 'width', '100%') && checkVisible('.ending') && checkTextContent('#scene-indicator', 'Ending')) return 3;
-        
-        // If all detection fails, stay in current state
-        return currentTrackedState;
+        return bestStateId;
     }
-    
+
     // Debounce function to prevent rapid-fire updates
     function debounce(func, wait) {
         let timeout;
@@ -1042,6 +1083,9 @@
         document.addEventListener('keydown', () => debouncedUpdate());
         document.addEventListener('input', () => debouncedUpdate());
         document.addEventListener('change', () => debouncedUpdate());
+        document.addEventListener('scroll', () => debouncedUpdate()); 
+        window.addEventListener('hashchange', () => debouncedUpdate());
+        window.addEventListener('popstate', () => debouncedUpdate());
     }
     
     // Helper function to get formatted timestamp
@@ -1337,14 +1381,13 @@
     <iframe class="original-view-iframe" id="originalViewIframe" src="index.html"></iframe>
 </div>
 
-<div class="state-panel" id="statePanel">
-
+<div class="state-panel" id="statePanel">\n
     <div class="stage-segment stage-0 active" id="state0">
         <div class="stage-header">
             State 0: Initial Story
             <button class="jump-button" onclick="jumpToState(0)">Jump</button>
         </div>
-        <div class="stage-range">Progress 10%, Chapter 1, initial three choices available</div>
+        <div class="stage-range">Starting state with 3 initial choices</div>
         <div class="segment-content">
             <div class="logging-column">
                 <div class="dots-container" id="state0Dots"></div>
@@ -1353,7 +1396,7 @@
 
                 <div class="param-item">
                     <span class="copy-icon" onclick="copyElementHTML('.choice-btn:first-child')" title="Copy HTML">⎘</span>
-                    <div class="param-name">Open Door Button</div>
+                    <div class="param-name">Open Door</div>
                     <div class="param-id">Selector: .choice-btn:first-child</div>
                     <div class="param-state">State: enabled</div>
                     <div class="param-mod">Action: makeChoice('open')</div>
@@ -1361,7 +1404,7 @@
 
                 <div class="param-item">
                     <span class="copy-icon" onclick="copyElementHTML('.choice-btn:nth-child(2)')" title="Copy HTML">⎘</span>
-                    <div class="param-name">Knock Button</div>
+                    <div class="param-name">Knock</div>
                     <div class="param-id">Selector: .choice-btn:nth-child(2)</div>
                     <div class="param-state">State: enabled</div>
                     <div class="param-mod">Action: makeChoice('knock')</div>
@@ -1369,7 +1412,7 @@
 
                 <div class="param-item">
                     <span class="copy-icon" onclick="copyElementHTML('.choice-btn:last-child')" title="Copy HTML">⎘</span>
-                    <div class="param-name">Walk Away Button</div>
+                    <div class="param-name">Walk Away</div>
                     <div class="param-id">Selector: .choice-btn:last-child</div>
                     <div class="param-state">State: enabled</div>
                     <div class="param-mod">Action: makeChoice('ignore')</div>
@@ -1379,16 +1422,8 @@
                     <span class="copy-icon" onclick="copyElementHTML('progress')" title="Copy value">⎘</span>
                     <div class="param-name">progress</div>
                     <div class="param-id">Variable</div>
-                    <div class="param-state">Value: 10</div>
-                    <div class="param-mod">Purpose: Tracks story completion percentage</div>
-                </div>
-
-                <div class="param-item">
-                    <span class="copy-icon" onclick="copyElementHTML('chapter')" title="Copy value">⎘</span>
-                    <div class="param-name">chapter</div>
-                    <div class="param-id">Variable</div>
-                    <div class="param-state">Value: Chapter 1</div>
-                    <div class="param-mod">Purpose: Current story chapter indicator</div>
+                    <div class="param-state">Value: 10%</div>
+                    <div class="param-mod">Purpose: Track story progression</div>
                 </div>
 
             </div>
@@ -1397,10 +1432,10 @@
 
     <div class="stage-segment stage-1" id="state1">
         <div class="stage-header">
-            State 1: Second Chapter
+            State 1: Chapter 2
             <button class="jump-button" onclick="jumpToState(1)">Jump</button>
         </div>
-        <div class="stage-range">Progress 25%, Chapter 2 variations, branching story paths</div>
+        <div class="stage-range">Progress 25%, multiple Chapter 2 variants</div>
         <div class="segment-content">
             <div class="logging-column">
                 <div class="dots-container" id="state1Dots"></div>
@@ -1409,26 +1444,18 @@
 
                 <div class="param-item">
                     <span class="copy-icon" onclick="copyElementHTML('.choice-btn')" title="Copy HTML">⎘</span>
-                    <div class="param-name">Story Choice Buttons</div>
+                    <div class="param-name">Choice Buttons</div>
                     <div class="param-id">Selector: .choice-btn</div>
                     <div class="param-state">State: enabled</div>
-                    <div class="param-mod">Action: makeChoice(various actions)</div>
+                    <div class="param-mod">Action: makeChoice(action)</div>
                 </div>
 
                 <div class="param-item">
                     <span class="copy-icon" onclick="copyElementHTML('progress')" title="Copy value">⎘</span>
                     <div class="param-name">progress</div>
                     <div class="param-id">Variable</div>
-                    <div class="param-state">Value: 25</div>
-                    <div class="param-mod">Purpose: Story completion at 25%</div>
-                </div>
-
-                <div class="param-item">
-                    <span class="copy-icon" onclick="copyElementHTML('chapter')" title="Copy value">⎘</span>
-                    <div class="param-name">chapter</div>
-                    <div class="param-id">Variable</div>
-                    <div class="param-state">Value: Chapter 2 - [variation]</div>
-                    <div class="param-mod">Purpose: Shows specific Chapter 2 branch</div>
+                    <div class="param-state">Value: 25%</div>
+                    <div class="param-mod">Purpose: Track story progression</div>
                 </div>
 
             </div>
@@ -1437,10 +1464,10 @@
 
     <div class="stage-segment stage-2" id="state2">
         <div class="stage-header">
-            State 2: Third Chapter
+            State 2: Chapter 3
             <button class="jump-button" onclick="jumpToState(2)">Jump</button>
         </div>
-        <div class="stage-range">Progress 50%, Chapter 3 variations, pre-ending decisions</div>
+        <div class="stage-range">Progress 50%, final choices before endings</div>
         <div class="segment-content">
             <div class="logging-column">
                 <div class="dots-container" id="state2Dots"></div>
@@ -1452,23 +1479,15 @@
                     <div class="param-name">Final Choice Buttons</div>
                     <div class="param-id">Selector: .choice-btn</div>
                     <div class="param-state">State: enabled</div>
-                    <div class="param-mod">Action: makeChoice(final actions)</div>
+                    <div class="param-mod">Action: makeChoice(action)</div>
                 </div>
 
                 <div class="param-item">
                     <span class="copy-icon" onclick="copyElementHTML('progress')" title="Copy value">⎘</span>
                     <div class="param-name">progress</div>
                     <div class="param-id">Variable</div>
-                    <div class="param-state">Value: 50</div>
-                    <div class="param-mod">Purpose: Story halfway completion</div>
-                </div>
-
-                <div class="param-item">
-                    <span class="copy-icon" onclick="copyElementHTML('chapter')" title="Copy value">⎘</span>
-                    <div class="param-name">chapter</div>
-                    <div class="param-id">Variable</div>
-                    <div class="param-state">Value: Chapter 3 - [variation]</div>
-                    <div class="param-mod">Purpose: Shows specific Chapter 3 branch</div>
+                    <div class="param-state">Value: 50%</div>
+                    <div class="param-mod">Purpose: Track story progression</div>
                 </div>
 
             </div>
@@ -1480,7 +1499,7 @@
             State 3: Story Ending
             <button class="jump-button" onclick="jumpToState(3)">Jump</button>
         </div>
-        <div class="stage-range">Progress 100%, Ending chapter, restart button visible</div>
+        <div class="stage-range">Progress 100%, story complete</div>
         <div class="segment-content">
             <div class="logging-column">
                 <div class="dots-container" id="state3Dots"></div>
@@ -1499,8 +1518,8 @@
                     <span class="copy-icon" onclick="copyElementHTML('progress')" title="Copy value">⎘</span>
                     <div class="param-name">progress</div>
                     <div class="param-id">Variable</div>
-                    <div class="param-state">Value: 100</div>
-                    <div class="param-mod">Purpose: Story complete at 100%</div>
+                    <div class="param-state">Value: 100%</div>
+                    <div class="param-mod">Purpose: Story completion indicator</div>
                 </div>
 
                 <div class="param-item">
@@ -1508,21 +1527,12 @@
                     <div class="param-name">ending</div>
                     <div class="param-id">Variable</div>
                     <div class="param-state">Value: true</div>
-                    <div class="param-mod">Purpose: Flags story has reached an ending</div>
-                </div>
-
-                <div class="param-item">
-                    <span class="copy-icon" onclick="copyElementHTML('endingTitle')" title="Copy value">⎘</span>
-                    <div class="param-name">endingTitle</div>
-                    <div class="param-id">Variable</div>
-                    <div class="param-state">Value: varies</div>
-                    <div class="param-mod">Purpose: Specific ending title achieved</div>
+                    <div class="param-mod">Purpose: Marks story as complete</div>
                 </div>
 
             </div>
         </div>
     </div>
-</div>
-
+</div>\n
 </body>
 </html>

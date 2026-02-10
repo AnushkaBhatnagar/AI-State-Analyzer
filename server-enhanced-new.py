@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Enhanced server for Instagram AI State Analyzer with state-based code editor
-Provides API endpoints for editing code specific to each state defined in states_schema.json
+Enhanced server for AI State Analyzer with fully data-driven state editor.
+Dynamically extracts code based on states_schema.json without hardcoded mappings.
 """
 
 from flask import Flask, request, jsonify, send_from_directory
@@ -23,8 +23,12 @@ BASE_DIR = Path(__file__).parent
 
 # Load states schema
 STATES_SCHEMA = None
-with open(BASE_DIR / 'states_schema.json', 'r') as f:
-    STATES_SCHEMA = json.load(f)
+try:
+    with open(BASE_DIR / 'states_schema.json', 'r', encoding='utf-8') as f:
+        STATES_SCHEMA = json.load(f)
+except Exception as e:
+    print(f"Error loading states_schema.json: {e}")
+    STATES_SCHEMA = {"states": []}
 
 # Serve static files
 @app.route('/')
@@ -49,10 +53,15 @@ def serve_static(path):
 @app.route('/api/states', methods=['GET'])
 def get_states():
     try:
+        # Reload schema to ensure fresh data
+        with open(BASE_DIR / 'states_schema.json', 'r', encoding='utf-8') as f:
+            current_schema = json.load(f)
+            
         return jsonify({
             'success': True,
-            'states': STATES_SCHEMA.get('states', []),
-            'metadata': STATES_SCHEMA.get('metadata', {})
+            'states': current_schema.get('states', []),
+            'metadata': current_schema.get('metadata', {}),
+            'injection_hooks': current_schema.get('injection_hooks', [])
         })
     except Exception as e:
         return jsonify({
@@ -64,8 +73,12 @@ def get_states():
 @app.route('/api/state/<int:state_id>/code', methods=['GET'])
 def get_state_code(state_id):
     try:
+        # Reload schema
+        with open(BASE_DIR / 'states_schema.json', 'r', encoding='utf-8') as f:
+            current_schema = json.load(f)
+            
         # Find the state in schema
-        state = next((s for s in STATES_SCHEMA['states'] if s['id'] == state_id), None)
+        state = next((s for s in current_schema['states'] if s['id'] == state_id), None)
         if not state:
             return jsonify({
                 'success': False,
@@ -77,15 +90,15 @@ def get_state_code(state_id):
         with open(index_file, 'r', encoding='utf-8') as f:
             content = f.read()
         
-        # Extract code based on state
-        state_code = extract_state_code(content, state_id, state)
+        # Extract code based on state metadata
+        state_code = extract_state_code_dynamic(content, state, current_schema)
         
         return jsonify({
             'success': True,
             'state': state,
             'code': state_code,
-            'functions': state_code.get('functions', []),
-            'variables': state_code.get('variables', [])
+            'extracted_functions': state_code.get('functions', []),
+            'extracted_variables': state_code.get('variables', [])
         })
     
     except Exception as e:
@@ -103,8 +116,12 @@ def save_state_code(state_id):
         changes_description = data.get('changes', [])
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
+        # Reload schema
+        with open(BASE_DIR / 'states_schema.json', 'r', encoding='utf-8') as f:
+            current_schema = json.load(f)
+            
         # Find the state
-        state = next((s for s in STATES_SCHEMA['states'] if s['id'] == state_id), None)
+        state = next((s for s in current_schema['states'] if s['id'] == state_id), None)
         if not state:
             return jsonify({
                 'success': False,
@@ -123,15 +140,15 @@ def save_state_code(state_id):
 
 ---
 
-## State Details
+## State Details from Schema
 
 **Detection Condition:**
-```
-{state['detection_condition']}
+```javascript
+{state.get('detection_condition', 'N/A')}
 ```
 
 **Range Description:**
-{state['range_description']}
+{state.get('range_description', 'N/A')}
 
 **Key Variables:**
 """
@@ -173,6 +190,8 @@ def save_state_code(state_id):
         if state.get('interactive_elements'):
             for elem in state['interactive_elements']:
                 md_content += f"- **{elem['name']}** (selector: `{elem['selector']}`): {elem['type']}\n"
+                if 'onclick' in elem:
+                    md_content += f"  - OnClick: `{elem['onclick']}`\n"
         
         md_content += f"""
 
@@ -182,48 +201,14 @@ def save_state_code(state_id):
 
 Please apply these changes to `index.html` for **State {state_id} ({state['name']})**:
 
-1. Locate the functions and code that apply to this state
-2. Replace with the modified version above
-3. Ensure proper formatting and syntax
-4. Test that the state transitions work correctly
-5. Save the file
-
-**Functions typically involved in State {state_id}:**
-"""
-        
-        # Add relevant function hints based on state
-        if state_id == 0:
-            md_content += "- `document.addEventListener('DOMContentLoaded', ...)` - Signup form setup\n"
-            md_content += "- Check input validation\n"
-        elif state_id == 1:
-            md_content += "- `loadFeed()` - Load initial posts\n"
-            md_content += "- `createPost()` - Create post elements\n"
-            md_content += "- `handleLike()` - Handle like interactions\n"
-            md_content += "- `startNotificationTimer()` - Start notifications\n"
-        elif state_id == 2:
-            md_content += "- `setupChat()` - Initialize chat\n"
-            md_content += "- `openChat()` - Open chat overlay\n"
-            md_content += "- `sendChatMessage()` - Send messages\n"
-            md_content += "- `getAIChatResponse()` - Get AI responses\n"
-        elif state_id == 3:
-            md_content += "- `upgradeCategory()` - Escalate posts\n"
-            md_content += "- `showIOSNotification()` - Show notifications\n"
-            md_content += "- `processRevealQueue()` - Show escalated posts\n"
-        
-        md_content += f"""
+1. Locate the functions and code that apply to this state based on the context provided above.
+2. Replace with the modified version.
+3. Ensure proper formatting and syntax.
+4. Save the file.
 
 ---
 
-## After Applying
-
-Once you've applied these changes:
-1. Confirm the changes were applied successfully
-2. Update this file's status to "Applied ✅"
-3. Test State {state_id} ({state['name']}) transitions
-
----
-
-**Generated by:** Instagram AI State Analyzer - State Editor
+**Generated by:** AI State Analyzer - Data-Driven State Editor
 **File:** state_{state_id}_modifications.md
 **Created:** {timestamp}
 """
@@ -255,7 +240,7 @@ Once you've applied these changes:
                 f.write(history_entry)
         else:
             with open(history_file, 'w', encoding='utf-8') as f:
-                f.write("# State Modification History\n\n")
+                f.write("# Stage Modification History\n\n")
                 f.write(history_entry)
         
         return jsonify({
@@ -271,30 +256,21 @@ Once you've applied these changes:
             'error': str(e)
         }), 500
 
-# API: Get function code from index.html
-@app.route('/api/get-function/<function_name>', methods=['GET'])
-def get_function(function_name):
-    try:
-        index_file = BASE_DIR / 'index.html'
-        
-        if not index_file.exists():
-            return jsonify({
-                'success': False,
-                'error': 'index.html not found'
-            }), 404
-        
-        with open(index_file, 'r', encoding='utf-8') as f:
-            content = f.read()
-        
-        # Extract function code using brace counting for proper nesting
-        pattern = rf'function {function_name}\s*\([^)]*\)\s*\{{'
+def extract_function_code(content, func_name):
+    """Extract a single function's code from content"""
+    # Try different function definition styles
+    patterns = [
+        rf'function {func_name}\s*\([^)]*\)\s*\{{',  # function name() {
+        rf'(?:const|let|var)\s+{func_name}\s*=\s*(?:async\s*)?function\s*\([^)]*\)\s*\{{',  # const name = function() {
+        rf'(?:const|let|var)\s+{func_name}\s*=\s*(?:async\s*)?\([^)]*\)\s*=>\s*\{{',  # const name = () => {
+    ]
+    
+    for pattern in patterns:
         match = re.search(pattern, content)
-        
         if match:
             start_pos = match.start()
-            brace_start = match.end() - 1  # Position of opening brace
+            brace_start = match.end() - 1
             
-            # Count braces to find matching closing brace
             brace_count = 1
             pos = brace_start + 1
             
@@ -306,109 +282,102 @@ def get_function(function_name):
                 pos += 1
             
             if brace_count == 0:
-                function_code = content[start_pos:pos]
-                return jsonify({
-                    'success': True,
-                    'code': function_code
-                })
-        
-        return jsonify({
-            'success': False,
-            'error': f'Function {function_name} not found'
-        }), 404
+                return content[start_pos:pos]
     
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+    return None
 
-def extract_state_code(content, state_id, state):
-    """Extract relevant code for a given state"""
+def extract_state_code_dynamic(content, state, full_schema):
+    """
+    Dynamically extract code relevant to a state based on the JSON schema.
+    No hardcoded mappings allowed!
+    """
     code_info = {
-        'state_id': state_id,
+        'state_id': state['id'],
         'state_name': state['name'],
         'functions': [],
         'variables': [],
         'full_code': ''
     }
     
-    # Define function mappings for each state
-    state_functions = {
-        0: [  # Signup State
-            'DOMContentLoaded event listener',
-            'nameInput event listener',
-            'usernameInput event listener',
-            'signupBtn click handler',
-            'checkInputs function'
-        ],
-        1: [  # Feed State
-            'loadFeed',
-            'createPost',
-            'setupInteractions',
-            'handleLike',
-            'showMeanDM',
-            'startNotificationTimer',
-            'scheduleNextNotification'
-        ],
-        2: [  # Chat State
-            'setupChat',
-            'openChat',
-            'closeChat',
-            'sendChatMessage',
-            'getAIChatResponse',
-            'addChatMessage'
-        ],
-        3: [  # Escalated Feed State
-            'upgradeCategory',
-            'processRevealQueue',
-            'showIOSNotification',
-            'handleLike'
-        ]
-    }
+    # 1. Identify relevant function names from schema
+    relevant_function_names = set()
     
-    # Extract relevant functions
-    functions = state_functions.get(state_id, [])
-    for func_name in functions:
-        pattern = rf'function {func_name}\s*\([^)]*\)\s*\{{'
-        match = re.search(pattern, content)
-        if match:
-            start_pos = match.start()
-            brace_start = match.end() - 1
-            brace_count = 1
-            pos = brace_start + 1
-            
-            while pos < len(content) and brace_count > 0:
-                if content[pos] == '{':
-                    brace_count += 1
-                elif content[pos] == '}':
-                    brace_count -= 1
-                pos += 1
-            
-            if brace_count == 0:
-                func_code = content[start_pos:pos]
-                code_info['functions'].append({
-                    'name': func_name,
-                    'code': func_code
-                })
+    # From interactive_elements (onclick handlers)
+    if state.get('interactive_elements'):
+        for elem in state['interactive_elements']:
+            if 'onclick' in elem:
+                # Extract function name from onclick string (e.g. "terminalAction('start')")
+                # Matches "name(" or "name ("
+                onclick = elem['onclick']
+                match = re.match(r'([a-zA-Z0-9_]+)\s*\(', onclick)
+                if match:
+                    relevant_function_names.add(match.group(1))
     
-    # Extract relevant variables
-    if state.get('key_variables'):
-        for var in state['key_variables']:
-            code_info['variables'].append({
-                'name': var['name'],
-                'type': var['type'],
-                'purpose': var['purpose'],
-                'initial_value': var['value']
+    # From injection_hooks (if any exist globally that reference this state's variables)
+    if full_schema.get('injection_hooks'):
+        state_vars = {v['name'] for v in state.get('key_variables', [])}
+        for hook in full_schema['injection_hooks']:
+            # If the hook modifies a variable used in this state
+            if hook.get('variable') in state_vars:
+                # Extract function name from scope_context (e.g. "showScene function")
+                scope = hook.get('scope_context', '')
+                match = re.match(r'([a-zA-Z0-9_]+)\s+function', scope)
+                if match:
+                    relevant_function_names.add(match.group(1))
+    
+    # From detection_strategy (primary_checks)
+    if state.get('detection_strategy') and state['detection_strategy'].get('primary_checks'):
+        for check in state['detection_strategy']['primary_checks']:
+             # Extract function name from check string (e.g. "checkVisible('#terminal')")
+            match = re.match(r'([a-zA-Z0-9_]+)\s*\(', check)
+            if match:
+                relevant_function_names.add(match.group(1))
+
+    # 2. Extract code for identified functions
+    for func_name in relevant_function_names:
+        func_code = extract_function_code(content, func_name)
+        if func_code:
+            code_info['functions'].append({
+                'name': func_name,
+                'code': func_code,
+                'source': 'schema_inference'
             })
     
-    # Build full code snippet
-    full_code = f"// State {state_id}: {state['name']}\n"
-    full_code += f"// {state['description']}\n\n"
+    # 3. Extract variable declarations (naive approach)
+    if state.get('key_variables'):
+        for var in state['key_variables']:
+            var_name = var['name']
+            # Look for "let name =" or "var name =" or "const name ="
+            pattern = rf'(?:let|var|const)\s+{var_name}\s*=[^;]*;'
+            match = re.search(pattern, content)
+            if match:
+                code_info['variables'].append({
+                    'name': var_name,
+                    'code': match.group(0),
+                    'source': 'variable_declaration'
+                })
     
-    for func in code_info['functions']:
-        full_code += func['code'] + "\n\n"
+    # 4. Build full code snippet
+    full_code = f"// State {state['id']}: {state['name']}\n"
+    full_code += f"// {state.get('description', '')}\n\n"
     
+    if code_info['variables']:
+        full_code += "// --- Key Variables ---\n"
+        for var in code_info['variables']:
+            full_code += var['code'] + "\n"
+        full_code += "\n"
+        
+    if code_info['functions']:
+        full_code += "// --- Related Functions (Extracted from Schema) ---\n"
+        for func in code_info['functions']:
+            full_code += func['code'] + "\n\n"
+    
+    if not code_info['functions'] and not code_info['variables']:
+        full_code += "// No specific functions or variables identified in schema for this state.\n"
+        full_code += "// Please check states_schema.json 'interactive_elements' or 'key_variables'.\n"
+        full_code += "// Showing a snippet of index.html instead:\n\n"
+        full_code += content[:500] + "\n..."
+            
     code_info['full_code'] = full_code
     
     return code_info
@@ -422,7 +391,7 @@ def open_browser():
 
 def main():
     print("\n" + "="*70)
-    print("INSTAGRAM AI STATE ANALYZER - STATE EDITOR SERVER")
+    print("AI STATE ANALYZER - DATA-DRIVEN SERVER")
     print("="*70)
     print(f"Server running at: http://localhost:{PORT}/")
     print(f"Serving directory: {BASE_DIR}")
@@ -430,14 +399,16 @@ def main():
     print("Available endpoints:")
     print(f"  • http://localhost:{PORT}/ - Main app")
     print(f"  • http://localhost:{PORT}/state-editor - State editor panel")
-    print(f"  • http://localhost:{PORT}/api/states - Get all states")
-    print(f"  • http://localhost:{PORT}/api/state/<id>/code - Get state code")
+    print(f"  • http://localhost:{PORT}/api/states - Get all states (JSON)")
+    print(f"  • http://localhost:{PORT}/api/state/<id>/code - Get dynamic state code")
     print(f"  • http://localhost:{PORT}/api/state/<id>/save - Save state modifications")
     print()
-    print("States (from states_schema.json):")
+    print("Configuration:")
+    print(f"  • Loading schema from: states_schema.json")
     if STATES_SCHEMA:
-        for state in STATES_SCHEMA.get('states', []):
-            print(f"  • State {state['id']}: {state['name']} - {state['description']}")
+        print(f"  • Found {len(STATES_SCHEMA.get('states', []))} states")
+    else:
+        print("  • WARNING: states_schema.json not found or invalid")
     print()
     print("="*70)
     print("Press Ctrl+C to stop the server")

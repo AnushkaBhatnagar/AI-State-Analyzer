@@ -52,140 +52,78 @@ IMPORTANT: Keep all text descriptions CONCISE and BRIEF:
 
 For EACH state you identify, provide:
 
-1. **State Identification:**
+1. **State Identification & Specificity (CRITICAL):**
    - State ID (0, 1, 2, etc.)
    - State name (e.g., "Idle", "Active", "Loading")
-   - Clear description of what this state represents
-   - Range or boundary description (e.g., "0-15 notifications", "Before user action")
-   - **User-facing description (2-3 lines, non-technical):** Explain what's happening in simple terms that a non-developer can understand. Focus on the user experience and what changes in this state.
+   - **Specificity Rank (0-100):** Assign a priority number. High numbers check FIRST.
+     * 100: Critical Overrides (Game Over, Error Screens, Modals)
+     * 80: Specific Modes/Stages (Stage 3, Boss Fight)
+     * 50: General Active States (Stage 1, Playing)
+     * 10: Default/Idle States
+   - **User-facing description (2-3 lines, non-technical):** Explain what's happening in simple terms.
 
-2. **Visual Theme:**
-   - Primary color (as rgba or hex)
-   - Active state color (slightly brighter/more opaque)
-   - Border color for highlighting
-   - Suggest appropriate colors that reflect the state's mood/purpose
+2. **Trigger Logic (The "Condition Always True" Fix):**
+   - `trigger_logic`: A single JavaScript condition string that returns TRUE if this state is active.
+   - **Hierarchy Rule:** Since we evaluate High Specificity first, you don't need to manually exclude higher states.
+     * Example: If State 4 is `count > 100` (Rank 80) and State 1 is `count > 0` (Rank 10).
+     * State 1's logic can just be `count > 0`. We will check State 4 first, so if it's > 100, State 4 wins.
+   - Use `findVariable('varName')` to access variables safely.
 
-3. **Interactive Elements:**
-   For each interactive element visible/active in this state:
-   - Element name (human-readable)
-   - CSS selector (ID or class)
-   - Element type (button, input, div, etc.)
-   - Visibility state (visible/hidden)
-   - Enabled state (enabled/disabled/conditional)
-   - Associated function/onclick handler
-   - What properties can be modified
+3. **Experience Archetype Analysis:**
+   - Determine if this is:
+     * "VARIABLE": Driven by global variables (e.g. `stage`, `level`).
+     * "OBJECT": Driven by a state object or specific function calls (e.g. `storyData`).
+     * "SCROLL": Driven by scroll position.
+     * "DOM": Driven by visual changes only.
 
-4. **Key Variables:**
-   - Variable name
-   - Current/initial value in this state
-   - Variable type (number, boolean, string, array, object)
-   - Purpose/what it controls
+   4. **Visual Theme & Elements:**
+   - Primary/Active/Border colors (rgba/hex) reflecting mood.
+   - Interactive Elements: List ALL elements that the user can interact with (click, tap, input) in this state.
+     * Include static elements (buttons, links).
+     * Include DYNAMIC elements created by JS (e.g., notifications, items).
+     * Provide specific selectors (e.g., '.notification', '.item').
 
-5. **State Transitions:**
-   - What condition triggers transition to next state?
-   - What specific code/function causes the transition?
-   - Is there a numeric threshold or flag that changes?
-
-6. **State Detection Logic:**
-   - What variable(s) determine the current state?
-   - What are the exact conditions to be in this state?
-   - How can we programmatically detect when app enters this state?
-
-7. **Detection Strategy Analysis (CRITICAL):**
+5. **Detection Strategy Analysis:**
    For EACH state, analyze and determine the BEST method(s) to detect it in real-time:
    
    Evaluate these detection methods in order of reliability:
-   a) **Variable-based:** Are there global/window-accessible variables that define this state? (e.g., window.stage, window.currentSection)
-   b) **DOM-based:** Are there specific visible/hidden elements unique to this state? (e.g., .chapter[data-section="2"] visible only in state 2)
-   c) **Scroll-based:** Can we detect this state by scroll position? (e.g., section starts at scrollY = 2000)
-   d) **CSS-based:** Are there unique CSS classes/styles visible in this state? (e.g., .active class)
-   e) **Event-based:** Is this state triggered by specific user events?
-   f) **Attribute-based:** Do elements have data-attributes marking this state?
-   
-   For the BEST method identified:
-   - Explain WHY it's most reliable for this state
-   - Provide the exact detection logic/checks needed
-   - Suggest a fallback method if primary fails
-   
-   **CRITICAL - MUTUAL EXCLUSIVITY:**
-   Each state's detection condition MUST be mutually exclusive from other states.
-   For example, if State 0 checks "overlay is visible", State 1 MUST check "overlay is hidden AND currentSection === 0".
-   This ensures states are properly sequential and never overlap.
-   Include NEGATION of previous state conditions to enforce exclusivity.
+   a) **Variable-based:** Global/window-accessible variables.
+   b) **DOM-based:** specific visible/hidden elements.
+   c) **Scroll-based:** Scroll position.
+   d) **CSS-based:** Unique CSS classes.
+   e) **Event-based:** User events.
    
    **CRITICAL - PRIMARY_CHECKS MUST USE HELPER FUNCTIONS:**
    The primary_checks array MUST contain ONLY calls to the provided helper function library.
-   DO NOT write raw JavaScript selectors, getComputedStyle, or DOM API calls.
-   ONLY call the pre-defined helper functions, which are ALWAYS available:
    
    Available Helper Functions:
-   - checkVisible(selector) - checks if element is visible
-   - checkHidden(selector) - checks if element is hidden  
-   - checkStyleProperty(selector, property, value) - checks inline or computed style
-   - checkTextContent(selector, text, exact=false) - checks if text content includes/equals text
-   - checkClass(selector, className) - checks if element has class
-   - checkAttribute(selector, attribute, value=null) - checks element attribute
-   - checkComputedStyle(selector, property, value) - checks computed CSS property
-   - checkElementExists(selector) - checks if element exists in DOM
+   - checkVisible(selector)
+   - checkHidden(selector)
+   - checkStyleProperty(selector, property, value)
+   - checkTextContent(selector, text, exact=false)
+   - checkClass(selector, className)
+   - checkAttribute(selector, attribute, value=null)
+   - checkComputedStyle(selector, property, value)
+   - checkElementExists(selector)
    
-   Example CORRECT primary_checks (use helpers):
-   ```
-   "primary_checks": [
-     "checkElementExists('#scene-indicator')",
-     "checkTextContent('#scene-indicator', 'Chapter 1')",
-     "checkStyleProperty('#progress', 'width', '10%')"
-   ]
-   ```
-   
-   Example INCORRECT primary_checks (DO NOT DO THIS):
-   ```
-   "primary_checks": [
-     "!!document.getElementById('scene-indicator')",  // NO raw DOM calls
-     "window.getComputedStyle(el).width"  // NO getComputedStyle
-   ]
-   ```
-   
-   **WHY:** Helper functions abstract implementation details and work with ANY experience.
-   Helper functions are pre-injected in the generated HTML and handle all edge cases automatically.
-   
-   Example output:
-   ```
-   "detection_strategy": {{
-     "primary_method": "DOM",
-     "primary_reason": "State 2 is uniquely identified by visible .chapter[data-section='2'] element",
-     "primary_checks": ["checkVisible('.chapter[data-section=\\"2\\"]')", "checkInViewport('.chapter[data-section=\\"2\\"]')"],
-     "fallback_method": "scroll_position",
-     "fallback_reason": "Sections align with scroll boundaries",
-     "confidence": 0.95
-   }}
-   ```
+   Example CORRECT primary_checks:
+   `["checkElementExists('#scene-indicator')", "checkTextContent('#scene-indicator', 'Chapter 1')"]`
 
-8. **DOM-Based Detection (Fallback):**
-   - What elements are VISIBLE in this state? (provide selectors)
-   - What elements are HIDDEN in this state? (provide selectors)
-   - What classes are PRESENT on elements? (element selector + class name)
-   - What text content is visible? (element selector + expected text)
-   - This is critical for when variables are inaccessible due to scope
-   
-9. **Injection Hooks (Advanced Variable Capture):**
-   If key state variables are inside closures or private scopes, identify EXACT code locations where we can inject a reporting line.
-   
+6. **Injection Hooks (Variable Access):**
+   If key state variables are inside closures, identify EXACT code locations where we can inject a reporting line.
    For each crucial state variable that is NOT global:
    - Identify the function or block where it is updated.
    - Provide a unique 'search_pattern' (exact code string) that occurs just after the variable update.
    - This allows us to inject `window.__ai_state_monitor.report('varName', varName)` at runtime.
-   
-   Example:
-   If code is: `function update() {{ score++; checkWin(); }}`
-   Hook: `{{ "variable": "score", "search_pattern": "score++;", "injection_type": "after" }}`
 
 IMPORTANT: Return your analysis as a valid JSON object with this EXACT structure:
 
 {{
   "metadata": {{
     "total_states": <number>,
-    "state_variable": "<primary variable that tracks state>",
-    "primary_counter": "<main counter variable if exists>"
+    "archetype": "VARIABLE | OBJECT | SCROLL | DOM",
+    "state_variable": "<primary variable if exists>",
+    "primary_counter": "<main counter if exists>"
   }},
   "injection_hooks": [
     {{
@@ -199,20 +137,20 @@ IMPORTANT: Return your analysis as a valid JSON object with this EXACT structure
     {{
       "id": 0,
       "name": "State Name",
-      "description": "What this state represents",
-      "range_description": "Boundary or range (e.g., '0-15 items', 'Before start')",
-      "user_facing_description": "2-3 line non-technical explanation of what's happening in this state and what the user experiences. Use simple language.",
-      "detection_condition": "JavaScript condition to detect this state (e.g., 'stage === 0', 'count >= 0 && count < 15')",
+      "specificity_rank": 10,
+      "trigger_logic": "findVariable('stage') === 0",
+      "description": "Short technical desc",
+      "range_description": "Boundary desc",
+      "user_facing_description": "Non-technical desc",
+      "detection_condition": "Legacy condition string (keep for reference)",
       "dom_detection": {{
-        "visible_elements": ["#selector1", ".selector2"],
-        "hidden_elements": ["#selector3"],
-        "has_class": [{{"selector": "#element", "class": "active"}}],
-        "text_content": [{{"selector": "#element", "contains": "some text"}}]
+        "visible_elements": ["#selector1"],
+        "hidden_elements": [],
+        "has_class": [],
+        "text_content": []
       }},
       "weighted_dom_signals": [
-        {{ "check": "checkVisible('#start-btn')", "weight": 2 }},
-        {{ "check": "checkHidden('.game-layer')", "weight": 1 }},
-        {{ "check": "checkTextContent('h1', 'Welcome')", "weight": 1 }}
+        {{ "check": "checkVisible('#start-btn')", "weight": 2 }}
       ],
       "color_theme": {{
         "primary": "rgba(r, g, b, 0.15)",
@@ -222,32 +160,26 @@ IMPORTANT: Return your analysis as a valid JSON object with this EXACT structure
       "interactive_elements": [
         {{
           "name": "Element Name",
-          "selector": ".class-name or #id-name",
-          "type": "button/div/input/etc",
-          "visibility": "visible/hidden/conditional",
-          "state": "enabled/disabled/conditional",
-          "onclick": "functionName() or null"
+          "selector": ".class-name",
+          "type": "button",
+          "visibility": "visible",
+          "state": "enabled",
+          "onclick": "functionName()"
         }}
       ],
       "key_variables": [
         {{
           "name": "variableName",
           "value": "initial value",
-          "type": "number/boolean/string/array/object",
+          "type": "number",
           "purpose": "What this variable controls"
         }}
       ],
-      "transition_to_next": {{
-        "condition": "Human-readable condition",
-        "trigger": "Specific function or code that causes transition",
-        "threshold": "Numeric value if applicable, or null"
-      }},
       "detection_strategy": {{
-        "primary_method": "DOM or variable or scroll or css or event or attribute",
-        "primary_reason": "Why this method is most reliable for this state",
-        "primary_checks": ["check1()", "check2()"],
-        "fallback_method": "Alternative detection method if primary fails",
-        "fallback_reason": "Why this fallback would work",
+        "primary_method": "DOM",
+        "primary_reason": "Reasoning",
+        "primary_checks": ["check1()"],
+        "fallback_method": "SCROLL",
         "confidence": 0.95
       }}
     }}

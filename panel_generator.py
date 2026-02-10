@@ -17,19 +17,22 @@ class StatePanelGenerator:
     
     def inject_code_hooks(self, html_content):
         """
-        Inject reporting hooks into the user's JavaScript code.
-        
-        Args:
-            html_content (str): Original HTML content
-            
-        Returns:
-            str: HTML content with injected hooks
+        Inject reporting hooks using both manual patterns and intelligent auto-detection.
         """
+        # 1. Manual Hooks (from AI)
+        modified_content = self._inject_manual_hooks(html_content)
+        
+        # 2. Auto-Discovery Hooks (Tokenizer-based)
+        modified_content = self._inject_auto_hooks(modified_content)
+        
+        return modified_content
+
+    def _inject_manual_hooks(self, html_content):
+        """Process explicit hooks defined in the schema"""
         if not self.injection_hooks:
             return html_content
             
-        print(f"Injecting {len(self.injection_hooks)} code hooks...")
-        
+        print(f"Injecting {len(self.injection_hooks)} manual code hooks...")
         modified_content = html_content
         
         for hook in self.injection_hooks:
@@ -39,20 +42,12 @@ class StatePanelGenerator:
             
             if not variable or not pattern:
                 continue
-                
-            # Create the reporting code
-            # We use window.__ai_state_monitor.report safely
-            report_code = f" try {{ window.__ai_state_monitor.report('{variable}', {variable}); }} catch(e) {{}} "
             
-            # Escape regex special characters in the pattern
-            # But convert multiple spaces to \s+ to be more robust
-            safe_pattern = re.escape(pattern)
-            safe_pattern = safe_pattern.replace(r'\ ', r'\s+')
+            report_code = f" try {{ window.__ai_state_monitor.report('{variable}', {variable}); }} catch(e) {{}} "
+            safe_pattern = re.escape(pattern).replace(r'\ ', r'\s*') # More flexible whitespace
             
             try:
                 if injection_type == 'after':
-                    # Replace pattern with pattern + report_code
-                    # Use a function for replacement to avoid escaping issues
                     modified_content = re.sub(
                         safe_pattern, 
                         lambda m: m.group(0) + report_code, 
@@ -70,6 +65,189 @@ class StatePanelGenerator:
                 print(f"Warning: Failed to inject hook for {variable}: {e}")
                 
         return modified_content
+
+    def _inject_auto_hooks(self, html_content):
+        """
+        Intelligently scan JS code for variable assignments and inject reporting hooks.
+        Uses a robust tokenizer approach to avoid comments and strings.
+        """
+        # Collect target variables
+        target_vars = set()
+        
+        # From metadata
+        if 'state_variable' in self.metadata:
+            target_vars.add(self.metadata['state_variable'])
+        if 'primary_counter' in self.metadata:
+            target_vars.add(self.metadata['primary_counter'])
+            
+        # From states
+        for state in self.state_list:
+            for var in state.get('key_variables', []):
+                if isinstance(var, dict) and 'name' in var:
+                    target_vars.add(var['name'])
+                    
+        if not target_vars:
+            return html_content
+            
+        print(f"Auto-injecting hooks for {len(target_vars)} variables: {', '.join(target_vars)}")
+        
+        # Split HTML to find scripts
+        # Simple split by <script> tags
+        parts = re.split(r'(<script[^>]*>.*?</script>)', html_content, flags=re.DOTALL | re.IGNORECASE)
+        
+        processed_parts = []
+        for part in parts:
+            if part.lower().startswith('<script') and not 'src=' in part.lower():
+                # Extract content inside script tag
+                match = re.match(r'(<script[^>]*>)(.*?)(</script>)', part, re.DOTALL | re.IGNORECASE)
+                if match:
+                    start_tag, script_code, end_tag = match.groups()
+                    modified_code = self._process_script_content(script_code, target_vars)
+                    processed_parts.append(f"{start_tag}{modified_code}{end_tag}")
+                else:
+                    processed_parts.append(part)
+            else:
+                processed_parts.append(part)
+                
+        return "".join(processed_parts)
+
+    def _process_script_content(self, code, target_vars):
+        """
+        Tokenize and inject hooks into JavaScript code.
+        """
+        result = []
+        i = 0
+        length = len(code)
+        last_append = 0
+        
+        def peek(offset=1):
+            if i + offset < length:
+                return code[i + offset]
+            return ''
+
+        while i < length:
+            char = code[i]
+            
+            # Skip Strings
+            if char in ('"', "'", "`"):
+                quote = char
+                i += 1
+                while i < length:
+                    if code[i] == '\\':
+                        i += 2 # Skip escaped char
+                        continue
+                    if code[i] == quote:
+                        i += 1
+                        break
+                    i += 1
+                continue
+                
+            # Skip Comments
+            if char == '/':
+                if peek() == '/': # Single line
+                    i += 2
+                    while i < length and code[i] != '\n':
+                        i += 1
+                    continue
+                elif peek() == '*': # Multi line
+                    i += 2
+                    while i < length - 1:
+                        if code[i] == '*' and code[i+1] == '/':
+                            i += 2
+                            break
+                        i += 1
+                    continue
+            
+            # Check for Identifiers
+            if char.isalpha() or char == '_' or char == '$':
+                # Read full identifier
+                start = i
+                while i < length and (code[i].isalnum() or code[i] == '_' or code[i] == '$'):
+                    i += 1
+                identifier = code[start:i]
+                
+                # If it's a target variable
+                if identifier in target_vars:
+                    # Look ahead for assignment
+                    # Skip whitespace
+                    j = i
+                    while j < length and code[j].isspace():
+                        j += 1
+                    
+                    is_assignment = False
+                    is_unary = False
+                    
+                    # Check for ++ or --
+                    if j < length - 1 and code[j:j+2] in ('++', '--'):
+                        is_unary = True
+                        j += 2
+                    # Check for =, +=, -=, *=, /=
+                    elif j < length and code[j] == '=':
+                        if j > 0 and code[j-1] in ('!', '<', '>', '='): # !=, <=, >=, ==, ===
+                            pass # Not assignment
+                        else:
+                            is_assignment = True
+                            j += 1
+                    elif j < length - 1 and code[j+1] == '=' and code[j] in ('+', '-', '*', '/', '%'):
+                        is_assignment = True
+                        j += 2
+                        
+                    if is_assignment or is_unary:
+                        # Found assignment!
+                        end_pos = j
+                        
+                        if is_unary:
+                            end_pos = j
+                        else:
+                            # Scan until ; or newline
+                            paren_depth = 0
+                            brace_depth = 0
+                            in_val_string = False
+                            val_quote = ''
+                            
+                            while end_pos < length:
+                                c = code[end_pos]
+                                
+                                if in_val_string:
+                                    if c == '\\':
+                                        end_pos += 2
+                                        continue
+                                    if c == val_quote:
+                                        in_val_string = False
+                                    end_pos += 1
+                                    continue
+                                
+                                if c in ('"', "'", "`"):
+                                    in_val_string = True
+                                    val_quote = c
+                                    end_pos += 1
+                                    continue
+                                
+                                if c == '(': paren_depth += 1
+                                elif c == ')': paren_depth -= 1
+                                elif c == '{': brace_depth += 1
+                                elif c == '}': brace_depth -= 1
+                                elif c == ';' and paren_depth == 0 and brace_depth == 0:
+                                    end_pos += 1 # Include semicolon
+                                    break
+                                elif c == '\n' and paren_depth == 0 and brace_depth == 0:
+                                    break
+                                
+                                end_pos += 1
+                        
+                        # Inject hook
+                        result.append(code[last_append:end_pos])
+                        hook = f"; try {{ window.__ai_state_monitor.report('{identifier}', {identifier}); }} catch(e) {{}} "
+                        result.append(hook)
+                        
+                        last_append = end_pos
+                        i = end_pos # Continue scanning from here
+                        continue
+
+            i += 1
+            
+        result.append(code[last_append:])
+        return "".join(result)
 
     def generate_panel_css(self):
         """
@@ -174,7 +352,7 @@ class StatePanelGenerator:
         }
         
         .logging-column {
-            flex: 0 0 160px;
+            display: none;
         }
         
         .params-column {
@@ -191,6 +369,11 @@ class StatePanelGenerator:
             line-height: 1.4;
             position: relative;
             transition: all 0.3s ease;
+        }
+        
+        .param-item.full-width {
+            width: 100%;
+            margin-bottom: 12px;
         }
         
         .param-item.highlighted {
@@ -378,12 +561,22 @@ class StatePanelGenerator:
 
 '''
         
-        html += '<div class="state-panel" id="statePanel">\n'
+        html += '<div class="state-panel" id="statePanel">\\n'
         
         for state in self.state_list:
             state_id = state['id']
             state_name = state['name']
             state_desc = state.get('range_description', state['description'])
+            
+            # Get new fields
+            user_desc = state.get('user_facing_description', 'No description available.')
+            # Pre-escape for safety
+            safe_user_desc = user_desc.replace("'", "&#39;").replace('"', '"').replace('\n', '\\n')
+            
+            trigger_logic = state.get('trigger_logic', 'false')
+            trigger_logic_display = trigger_logic
+            # Pre-escape for safety
+            safe_trigger_logic = trigger_logic.replace("'", "&#39;").replace('"', '"').replace('\n', '\\n')
             
             # Determine if this is the initial active state
             active_class = ' active' if state_id == 0 else ''
@@ -395,10 +588,23 @@ class StatePanelGenerator:
             <button class="jump-button" onclick="jumpToState({state_id})">Jump</button>
         </div>
         <div class="stage-range">{state_desc}</div>
-        <div class="segment-content">
-            <div class="logging-column">
-                <div class="dots-container" id="state{state_id}Dots"></div>
+        
+        <!-- State Logic & Description (Full Width) -->
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyToClipboard('{safe_user_desc}')" title="Copy Description">⎘</span>
+                <div class="param-name">Description</div>
+                <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">{user_desc}</div>
             </div>
+            
+            <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyToClipboard('{safe_trigger_logic}')" title="Copy Logic">⎘</span>
+                <div class="param-name">Trigger Logic</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">{trigger_logic_display}</div>
+            </div>
+        </div>
+
+        <div class="segment-content">
             <div class="params-column">
 '''
             
@@ -441,7 +647,7 @@ class StatePanelGenerator:
     </div>
 '''
         
-        html += '</div>\n'
+        html += '</div>'
         return html
     
     def generate_helper_functions(self):
@@ -535,7 +741,6 @@ class StatePanelGenerator:
         
         js = f"""
     var currentTrackedState = 0;
-    var stateSegments = {{}};
     var stateNames = {json.dumps(state_names_map)};
     
     // AI State Monitor - Receives reports from injected code
@@ -552,128 +757,112 @@ class StatePanelGenerator:
     }};
     
     function initStatePanel() {{
-        stateSegments = {{
-"""
-        
-        for state in self.state_list:
-            state_id = state['id']
-            js += f"            {state_id}: document.getElementById('state{state_id}Dots'),\n"
-        
-        js += """        };
-    }
-    
-    // Variable finder - searches window object and injected captures
-    function findVariable(varName) {
-        // 1. Check AI Monitor (Injected variables)
-        if (typeof window.__ai_state_monitor !== 'undefined') {
-            const captured = window.__ai_state_monitor.get(varName);
-            if (typeof captured !== 'undefined') return captured;
-        }
-
-        // 2. Try direct global access
-        try {
-            if (typeof window[varName] !== 'undefined') {
-                return window[varName];
-            }
-        } catch(e) {}
-        
-        // 3. Search through window properties
-        try {
-            for (let key in window) {
-                if (window[key] && typeof window[key] === 'object') {
-                    try {
-                        if (varName in window[key]) {
-                            return window[key][varName];
-                        }
-                    } catch(e) {}
-                }
-            }
-        } catch(e) {}
-        
-        return undefined;
-    }
-    
-    function getCurrentState() {
-        // Winner-Takes-All Detection Logic
-        // We evaluate ALL states and pick the one with the highest confidence score.
-        
-        let bestStateId = currentTrackedState; // Default to keeping current state
-        let maxScore = -1;
-"""
-        
-        # Generate adaptive detection for each state
-        for i, state in enumerate(self.state_list):
-            state_id = state['id']
-            detection_strategy = state.get('detection_strategy', {})
-            primary_method = detection_strategy.get('primary_method', 'DOM').lower()
-            weighted_signals = state.get('weighted_dom_signals', [])
-            
-            js += f"""        
-        // --- State {state_id}: {state['name']} ---
-        let score_{state_id} = 0;
-"""
-            
-            # --- 1. Weighted DOM Detection (New & Robust) ---
-            if weighted_signals:
-                js += f"        // Weighted Signals\n"
-                
-                for signal in weighted_signals:
-                    check = signal.get('check', 'false')
-                    weight = signal.get('weight', 1)
-                    # Convert querySelector to boolean if needed
-                    if 'querySelector' in check and '!!' not in check:
-                        check = f"!!{check}"
-                    
-                    js += f"        if ({check}) score_{state_id} += {weight};\n"
-            
-            # --- 2. Variable Detection (High Confidence Override) ---
-            # If variable matches, add a huge score (e.g., 10)
-            condition = state.get('detection_condition', '')
-            if condition:
-                import re
-                variables = re.findall(r'\b([a-zA-Z_][a-zA-Z0-9_]*)\b', condition)
-                
-                # Generate variable checking code block
-                var_check_block = ""
-                for var in set(variables):
-                    if var not in ['true', 'false', 'null', 'undefined', 'Array', 'Math']:
-                        var_check_block += f"            const {var} = findVariable('{var}');\n"
-                
-                js += f"""        // Variable Check
-        try {{
-{var_check_block}
-            if ({condition}) score_{state_id} += 10.0;
-        }} catch(e) {{}}
-"""
-
-            # --- 3. Primary Method Fallback (Legacy) ---
-            primary_checks = detection_strategy.get('primary_checks', [])
-            if primary_method == 'dom' or primary_method == 'dom-based':
-                if primary_checks:
-                    boolean_checks = []
-                    for check in primary_checks:
-                        if 'querySelector' in check:
-                            boolean_checks.append(f"!!{check}")
-                        else:
-                            boolean_checks.append(check)
-                    conditions = " && ".join(boolean_checks)
-                    js += f"""        // Legacy DOM Check
-        if ({conditions}) score_{state_id} += 0.8;
-"""
-
-            # --- Compare Score ---
-            # Require minimum score of 0.5 to be considered
-            js += f"""
-        if (score_{state_id} > maxScore && score_{state_id} > 0.5) {{
-            maxScore = score_{state_id};
-            bestStateId = {state_id};
-        }}
-"""
-            
-        js += f"""        
-        return bestStateId;
+        // Initial setup if needed
     }}
     
+    // Variable finder - searches window object and injected captures
+    function findVariable(varName) {{
+        // 1. Check AI Monitor (Injected variables)
+        if (typeof window.__ai_state_monitor !== 'undefined') {{
+            const captured = window.__ai_state_monitor.get(varName);
+            if (typeof captured !== 'undefined') return captured;
+        }}
+
+        // 2. Try direct global access
+        try {{
+            if (typeof window[varName] !== 'undefined') {{
+                return window[varName];
+            }}
+        }} catch(e) {{}}
+        
+        // 3. Search through window properties
+        try {{
+            for (let key in window) {{
+                if (window[key] && typeof window[key] === 'object') {{
+                    try {{
+                        if (varName in window[key]) {{
+                            return window[key][varName];
+                        }}
+                    }} catch(e) {{}}
+                }}
+            }}
+        }} catch(e) {{}}
+        
+        return undefined;
+    }}
+    
+    function getCurrentState() {{
+        // HYBRID PRIORITY SCORE LOGIC
+        // Combines Specificity Rank (New) with weighted signals (Legacy)
+        // Score = (Rank * 100) + (LogicMatch ? 1000 : 0) + (DOMSignals)
+        
+        let bestStateId = currentTrackedState;
+        let maxScore = -10000;
+        
+        try {{
+"""
+        
+        # Sort by ID to ensure deterministic order
+        sorted_states = sorted(self.state_list, key=lambda x: x['id'])
+        
+        for state in sorted_states:
+            state_id = state['id']
+            state_name = state['name']
+            rank = state.get('specificity_rank', 0)
+            
+            # Use new 'trigger_logic' if available, otherwise fall back to 'detection_condition'
+            logic = state.get('trigger_logic', state.get('detection_condition', 'false'))
+            
+            # Fallback: If logic is empty or None, ensure it's false
+            if not logic:
+                logic = 'false'
+                
+            # Fallback: If using legacy condition, try to wrap variable access
+            if 'trigger_logic' not in state and 'findVariable' not in logic:
+                pass
+            
+            # --- Weighted DOM Signals ---
+            weighted_signals = state.get('weighted_dom_signals', [])
+            weighted_signals_js = ""
+            for signal in weighted_signals:
+                check = signal.get('check', 'false')
+                weight = signal.get('weight', 1)
+                if 'querySelector' in check and '!!' not in check:
+                    check = f"!!{check}"
+                weighted_signals_js += f"if ({check}) score += {weight};\n            "
+
+            js += f"""
+        // --- State {state_id} ({state_name}) ---
+        {{
+            let score = 0;
+            
+            try {{
+                if ({logic}) {{
+                    score += 1000;
+                    score += {rank} * 100;
+                }}
+            }} catch(e) {{}}
+            
+            // DOM Signals
+            {weighted_signals_js}
+            
+            if (score > maxScore) {{
+                maxScore = score;
+                bestStateId = {state_id};
+            }}
+        }}
+"""
+
+        js += """
+        } catch(e) {
+            console.error("State detection error:", e);
+        }
+        
+        return bestStateId;
+    }
+"""
+        
+        js += f"""
     // Debounce function to prevent rapid-fire updates
     function debounce(func, wait) {{
         let timeout;
@@ -692,6 +881,9 @@ class StatePanelGenerator:
         document.addEventListener('keydown', () => debouncedUpdate());
         document.addEventListener('input', () => debouncedUpdate());
         document.addEventListener('change', () => debouncedUpdate());
+        document.addEventListener('scroll', () => debouncedUpdate()); 
+        window.addEventListener('hashchange', () => debouncedUpdate());
+        window.addEventListener('popstate', () => debouncedUpdate());
     }}
     
     // Helper function to get formatted timestamp

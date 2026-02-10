@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Chronos Paradox</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
+            line-height: 1.8;
+            overflow-x: hidden;
+            cursor: default;
+        }
+
+        /* Terminal styling */
+        .terminal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, #1a1a1a 0%, #0a0a0a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .terminal.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .terminal-content {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 40px;
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 0 50px rgba(0, 255, 0, 0.3);
+            position: relative;
+        }
+
+        .terminal-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #00ff00;
+            padding-bottom: 10px;
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot.red { background: #ff0000; }
+        .terminal-dot.yellow { background: #ffff00; }
+        .terminal-dot.green { background: #00ff00; }
+
+        .terminal-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            white-space: pre-line;
+        }
+
+        .blink {
+            animation: blink 0.7s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .prompt {
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        /* Mission control panel */
+        .mission-panel {
+            position: fixed;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            min-width: 250px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.2);
+            z-index: 500;
+            display: none;
+        }
+
+        .mission-panel.show {
+            display: block;
+        }
+
+        .mission-panel h3 {
+            color: #00ff00;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #00ff00;
+        }
+
+        .panel-item {
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .panel-item label {
+            display: block;
+            margin-bottom: 5px;
+            color: #00ff00;
+        }
+
+        .panel-item input, .panel-item select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 8px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .time-button {
+            width: 100%;
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+
+        .time-button:hover {
+            background: rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+
+        /* Main content */
+        .story-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 80px 20px;
+            position: relative;
+            z-index: 100;
+        }
+
+        .scene {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #00ff00;
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .scene.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .scene-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #00ff00;
+        }
+
+        .scene-title {
+            font-size: 1.5rem;
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .time-stamp {
+            font-size: 0.85rem;
+            color: #00aa00;
+            background: rgba(0, 255, 0, 0.1);
+            padding: 5px 12px;
+            border-radius: 5px;
+        }
+
+        .story-text {
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            color: #aaffaa;
+        }
+
+        .story-text code {
+            background: rgba(0, 255, 0, 0.1);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #00ff00;
+        }
+
+        /* Puzzle elements */
+        .puzzle-section {
+            background: rgba(0, 255, 0, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 30px 0;
+            border: 1px dashed #00ff00;
+        }
+
+        .puzzle-section h4 {
+            color: #00ff00;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .puzzle-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .puzzle-piece {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff00;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+
+        .puzzle-piece:hover {
+            background: rgba(0, 255, 0, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+        }
+
+        .puzzle-piece.selected {
+            background: rgba(0, 255, 0, 0.3);
+            border-color: #ffff00;
+            color: #ffff00;
+        }
+
+        .confirm-puzzle {
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 10px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            display: none;
+        }
+
+        .confirm-puzzle:hover {
+            background: rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+
+        /* Chronos events */
+        .event-card {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .event-card:hover {
+            background: rgba(0, 255, 0, 0.1);
+            transform: translateX(5px);
+        }
+
+        .event-card.selected::before {
+            content: '▸';
+            position: absolute;
+            left: 10px;
+            color: #00ff00;
+        }
+
+        .event-time {
+            color: #00ff00;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .event-title {
+            color: #aaffaa;
+            font-size: 0.95rem;
+        }
+
+        /* Map */
+        .time-map {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 30px 0;
+        }
+
+        .time-map h4 {
+            color: #00ff00;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .time-line {
+            position: relative;
+            padding: 10px 0;
+            border-left: 2px solid #00ff00;
+        }
+
+        .time-node {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .time-node:hover {
+            padding-left: 35px;
+        }
+
+        .time-node::before {
+            content: '◆';
+            position: absolute;
+            left: -6px;
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .time-node.selected::before {
+            content: '◆';
+            left: -6px;
+            color: #ffff00;
+            text-shadow: 0 0 10px #ffff00;
+        }
+
+        /* Resolution section */
+        .resolution {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(0, 255, 0, 0.05);
+            border: 2px solid #00ff00;
+            border-radius: 20px;
+            margin: 60px 0;
+        }
+
+        .resolution h3 {
+            color: #00ff00;
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+
+        .resolution-text {
+            color: #aaffaa;
+            font-size: 1.2rem;
+            line-height: 2;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .resolution-button {
+            background: linear-gradient(135deg, #00ff00 0%, #008800 100%);
+            border: none;
+            color: #000;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+
+        .resolution-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+        }
+
+        /* Background elements */
+        .glitch-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .glitch-overlay.active {
+            opacity: 1;
+        }
+
+        .glitch {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 0, 0.1) 2px,
+                rgba(0, 255, 0, 0.1) 4px
+            );
+            animation: glitch 0.3s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(2px); }
+            75% { transform: translateX(-2px); }
+        }
+
+        /* Stars/particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #00ff00;
+            border-radius: 50%;
+            animation: float 3s infinite ease-in-out;
+            opacity: 0.6;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0.6; }
+            50% { transform: translateY(-10px) translateX(5px); opacity: 0.9; }
+        }
+
+        /* Accessibility */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #00ff00;
+            color: #000;
+            padding: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: top 0.3s;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .mission-panel {
+                left: 50%;
+                top: 20px;
+                transform: translateX(-50%);
+                min-width: 200px;
+                padding: 15px;
+            }
+
+            .terminal-content {
+                padding: 25px;
+            }
+
+            .scene {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <div class="glitch-overlay" id="glitchOverlay"></div>
+    <div class="particles" id="particles"></div>
+
+    <!-- Terminal interface -->
+    <div class="terminal" id="terminal">
+        <div class="terminal-content">
+            <div class="terminal-header">
+                <div class="terminal-dot red"></div>
+                <div class="terminal-dot yellow"></div>
+                <div class="terminal-dot green"></div>
+            </div>
+            <div class="terminal-text" id="terminalText">
+[SYSTEM BOOTING...]
+Initializing chrono-transference protocol...
+Loading neural interface...
+System status: <span style="color: #00ff00;">✓</span>
+Safety protocols: <span style="color: #ffff00;">⚠ PARTIAL</span>
+            </div>
+            <div style="color: #00ff00;">
+<span class="prompt">$</span> <span id="terminalPrompt">Waiting for authorization...</span><span class="blink">▊</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mission control panel -->
+    <div class="mission-panel" id="missionPanel">
+        <h3>🎛️ MISSION CONTROL</h3>
+        <div class="panel-item">
+            <label>Target Timeline:</label>
+            <select id="timelineSelect">
+                <option value="original">Original Timeline</option>
+                <option value="alpha">Alpha Timeline</option>
+                <option value="beta">Beta Timeline</option>
+                <option value="delta">Delta Timeline</option>
+            </select>
+        </div>
+        <div class="panel-item">
+            <label>Chronos Coordinates:</label>
+            <input type="text" id="timeInput" placeholder="YYYY-MM-DD HH:MM:SS">
+        </div>
+        <div class="panel-item">
+            <label>Stability Index:</label>
+            <div id="stabilityIndex">0%</div>
+        </div>
+        <button class="time-button" id="timeJumpBtn" onclick="timeJump()">⚡ JUMP</button>
+    </div>
+
+    <!-- Main story -->
+    <main class="story-container" id="main-content">
+        <!-- Intro -->
+        <section class="scene intro" data-scene="0">
+            <div class="scene-header">
+                <div class="scene-title">INTRO: FIRST CONTACT</div>
+                <div class="time-stamp">2089-04-17 14:32:01</div>
+            </div>
+            <div class="story-text">
+                You sit at the console of the <code>Chronos-1</code>, the world's first operational time travel device. Years of research. Billions of dollars. The weight of human potential resting on your shoulders.
+
+                "System ready for initialization," the AI voice announces. "This is your mission: identify and neutralize the Chronos Paradox before it unravels reality."
+            </div>
+            <div class="puzzle-section">
+                <h4>🧩 First Puzzle: The System Key</h4>
+                <p style="color: #aaffaa; margin-bottom: 15px;">You need to override the safety protocols. Select the correct sequence:</p>
+                <div class="puzzle-grid" id="puzzle1Grid">
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, '1', 'puzzle1')">R</div>
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, '2', 'puzzle1')">E</div>
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, '3', 'puzzle1')">A</div>
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, '4', 'puzzle1')">L</div>
+                </div>
+                <button class="confirm-puzzle" id="puzzle1Confirm" onclick="confirmPuzzle('puzzle1')">Confirm Sequence</button>
+            </div>
+        </section>
+
+        <!-- Scene 1 -->
+        <section class="scene" data-scene="1">
+            <div class="scene-header">
+                <div class="scene-title">STAGE 1: PARADOX DETECTION</div>
+                <div class="time-stamp">2047-09-03 08:15:00</div>
+            </div>
+            <div class="story-text">
+                You arrive in the year 2047. The device scans nearby time signatures and detects anomalies. "Multiple paradox events detected," the AI reports. "Select one to investigate:"
+            </div>
+            <div class="time-map">
+                <h4>📊 Paradox Events</h4>
+                <div class="time-line">
+                    <div class="time-node" onclick="selectEvent('quantum')" data-event="quantum">
+                        <div class="event-time">2047-09-03 08:15</div>
+                        <div class="event-title">Quantum Resonance Spike</div>
+                    </div>
+                    <div class="time-node" onclick="selectEvent('temporal')" data-event="temporal">
+                        <div class="event-time">2047-09-03 08:18</div>
+                        <div class="event-title">Temporal Wavefront Anomaly</div>
+                    </div>
+                    <div class="time-node" onclick="selectEvent('chronos')" data-event="chronos">
+                        <div class="event-time">2047-09-03 08:21</div>
+                        <div class="event-title">Chronos Signature Mismatch</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Scene 2 -->
+        <section class="scene" data-scene="2">
+            <div class="scene-header">
+                <div class="scene-title">STAGE 2: THE CHRONOS PARADOX</div>
+                <div class="time-stamp">2023-11-12 23:47:00</div>
+            </div>
+            <div class="story-text">
+                You trace the anomaly back to a research lab in 2023. A young researcher named Dr. Amelia Chen has accidentally created a miniaturized time loop in her particle accelerator experiment.
+
+                "This shouldn't be possible!" she exclaims. "The equations said—"
+            </div>
+            <div class="puzzle-section">
+                <h4>🧩 Second Puzzle: Equation Verification</h4>
+                <p style="color: #aaffaa; margin-bottom: 15px;">Solve this equation to stabilize the loop:</p>
+                <div style="text-align: center; margin: 20px 0; font-size: 1.2rem;">
+                    <code>(x × 4) + 3 = 35</code>
+                </div>
+                <div class="puzzle-grid" id="puzzle2Grid">
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, '7', 'puzzle2')">7</div>
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, '8', 'puzzle2')">8</div>
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, '9', 'puzzle2')">9</div>
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, '10', 'puzzle2')">10</div>
+                </div>
+                <button class="confirm-puzzle" id="puzzle2Confirm" onclick="confirmPuzzle('puzzle2')">Solve Equation</button>
+            </div>
+        </section>
+
+        <!-- Scene 3 -->
+        <section class="scene" data-scene="3">
+            <div class="scene-header">
+                <div class="scene-title">STAGE 3: TEMPORAL STABILITY</div>
+                <div class="time-stamp">2089-04-17 14:32:01 (ORIGINAL)</div>
+            </div>
+            <div class="story-text">
+                You return to your original time to analyze the results. The system reports: "Paradox partially contained. Stability index: <code>47%</code>."
+            </div>
+            <div class="puzzle-section">
+                <h4>🧩 Third Puzzle: Timeline Alignment</h4>
+                <p style="color: #aaffaa; margin-bottom: 15px;">Arrange the timeline events in correct order:</p>
+                <div class="puzzle-grid" id="puzzle3Grid">
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, 'accident', 'puzzle3')">Accident (2023)</div>
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, 'research', 'puzzle3')">Research (2047)</div>
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, 'detection', 'puzzle3')">Detection (2089)</div>
+                    <div class="puzzle-piece" onclick="selectPuzzlePiece(this, 'solution', 'puzzle3')">Solution</div>
+                </div>
+                <button class="confirm-puzzle" id="puzzle3Confirm" onclick="confirmPuzzle('puzzle3')">Align Timeline</button>
+            </div>
+        </section>
+
+        <!-- Resolution -->
+        <section class="resolution" id="resolution">
+            <h3>🎯 THE SOLUTION</h3>
+            <div class="resolution-text" id="resolutionText">
+                You've successfully contained the Chronos Paradox and stabilized the timeline. Reality is saved, but with every solved paradox comes a new understanding: time isn't a line—it's a tapestry waiting to be woven.
+            </div>
+            <div class="time-map">
+                <h4>📈 Final Stability Report</h4>
+                <div class="time-line">
+                    <div class="time-node selected" data-event="original">
+                        <div class="event-time">2023-11-12</div>
+                        <div class="event-title">Accident averted</div>
+                    </div>
+                    <div class="time-node selected" data-event="fixed">
+                        <div class="event-time">2047-09-03</div>
+                        <div class="event-title">Paradox contained</div>
+                    </div>
+                    <div class="time-node selected" data-event="stable">
+                        <div class="event-time">2089-04-17</div>
+                        <div class="event-title">Timeline stable</div>
+                    </div>
+                </div>
+            </div>
+            <button class="resolution-button" onclick="playAgain()">🔄 Play Again</button>
+        </section>
+    </main>
+
+    <script>
+        // State
+        let sceneIndex = 0;
+        let stabilityIndex = 0;
+        let selectedEvents = [];
+        let puzzleSolutions = [];
+
+        // Initialize particles
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 100; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 3 + 's';
+                container.appendChild(particle);
+            }
+        }
+        createParticles();
+
+        // Terminal initialization
+        function initTerminal() {
+            const terminalText = document.getElementById('terminalText');
+            const terminalPrompt = document.getElementById('terminalPrompt');
+            const timelineSelect = document.getElementById('timelineSelect');
+            const timeInput = document.getElementById('timeInput');
+            const stabilityIndexEl = document.getElementById('stabilityIndex');
+            const timeJumpBtn = document.getElementById('timeJumpBtn');
+            const glitchOverlay = document.getElementById('glitchOverlay');
+            const missionPanel = document.getElementById('missionPanel');
+
+            // Update timeline info based on selection
+            timelineSelect.addEventListener('change', function() {
+                const timelines = {
+                    original: '2089-04-17 14:32:01',
+                    alpha: '2047-09-03 08:15:00',
+                    beta: '2023-11-12 23:47:00',
+                    delta: '2134-06-29 10:00:00'
+                };
+                timeInput.value = timelines[this.value];
+            });
+
+            // Time jump button animation
+            timeJumpBtn.addEventListener('mouseenter', function() {
+                glitchOverlay.classList.add('active');
+            });
+
+            timeJumpBtn.addEventListener('mouseleave', function() {
+                glitchOverlay.classList.remove('active');
+            });
+        }
+
+        // Scene management
+        function showScene(index) {
+            const scenes = document.querySelectorAll('.scene');
+            scenes.forEach((scene, i) => {
+                if (i === index) {
+                    scene.classList.add('visible');
+                } else {
+                    scene.classList.remove('visible');
+                }
+            });
+            sceneIndex = index;
+        }
+
+        // Terminal interaction
+        function terminalAction(action) {
+            const terminalText = document.getElementById('terminalText');
+            const terminalPrompt = document.getElementById('terminalPrompt');
+            const terminal = document.getElementById('terminal');
+            const glitchOverlay = document.getElementById('glitchOverlay');
+            const missionPanel = document.getElementById('missionPanel');
+
+            switch(action) {
+                case 'boot':
+                    setTimeout(() => {
+                        terminalText.innerHTML += `
+[SYSTEM BOOTING...]
+Initializing chrono-transference protocol...
+Loading neural interface...
+System status: <span style="color: #00ff00;">✓</span>
+Safety protocols: <span style="color: #ffff00;">⚠ PARTIAL</span>
+`;
+                    }, 500);
+                    break;
+
+                case 'start':
+                    setTimeout(() => {
+                        terminalText.innerHTML += `
+[MISSION RECEIVED]
+Objective: Neutralize Chronos Paradox
+Time Window: <code>± 1 second</code>
+Success Rate: <code>42.7%</code>
+`;
+                        setTimeout(() => {
+                            terminalText.innerHTML += `
+[SYSTEM READY]
+Press <span style="color: #ffff00;">[ENTER]</span> to launch
+`;
+                            setTimeout(() => {
+                                terminal.classList.add('hidden');
+                                missionPanel.classList.add('show');
+                                showScene(0);
+                            }, 2000);
+                        }, 1000);
+                    }, 500);
+                    break;
+
+                case 'timejump':
+                    terminal.classList.remove('hidden');
+                    terminalText.innerHTML = `
+[CHRONO-JUMP INITIATED]
+Destination: <code>${document.getElementById('timeInput').value}</code>
+Stability: <code>${stabilityIndex}%</code>
+Charging capacitors... 100%
+Jump sequence engaged...
+                    `;
+                    setTimeout(() => {
+                        terminal.classList.add('hidden');
+                        missionPanel.classList.add('show');
+                    }, 2000);
+                    break;
+
+                case 'success':
+                    terminal.classList.remove('hidden');
+                    terminalText.innerHTML = `
+[MISSION COMPLETE]
+Paradox Neutralized: <span style="color: #00ff00;">✓</span>
+Timeline Stable: <span style="color: #00ff00;">✓</span>
+Reality: <span style="color: #00ff00;">INTACT</span>
+
+Well done, Agent. The Chronos Paradox has been resolved.
+                    `;
+                    setTimeout(() => {
+                        terminal.classList.add('hidden');
+                        document.getElementById('resolution').scrollIntoView({ behavior: 'smooth' });
+                    }, 3000);
+                    break;
+            }
+        }
+
+        // Puzzle handling
+        function selectPuzzlePiece(element, value, puzzleId) {
+            element.classList.toggle('selected');
+            const selected = document.querySelectorAll(`#${puzzleId}Grid .puzzle-piece.selected`);
+            const confirmBtn = document.getElementById(`${puzzleId}Confirm`);
+            confirmBtn.style.display = selected.length > 0 ? 'inline-block' : 'none';
+        }
+
+        function confirmPuzzle(puzzleId) {
+            const solutions = {
+                'puzzle1': ['R','E','A','L'],
+                'puzzle2': ['8'],
+                'puzzle3': ['accident','research','detection','solution']
+            };
+
+            const selected = [];
+            document.querySelectorAll(`#${puzzleId}Grid .puzzle-piece.selected`).forEach(el => {
+                selected.push(el.dataset.selected || el.textContent.trim());
+            });
+
+            const isCorrect = JSON.stringify(selected.sort()) === JSON.stringify(solutions[puzzleId].sort());
+
+            if (isCorrect) {
+                stabilityIndex += 33;
+                updateStability();
+                puzzleSolutions.push(puzzleId);
+
+                const confirmBtn = document.getElementById(`${puzzleId}Confirm`);
+                confirmBtn.textContent = '✓ Correct!';
+                confirmBtn.style.background = 'rgba(0, 255, 0, 0.3)';
+                confirmBtn.style.borderColor = '#00ff00';
+                confirmBtn.disabled = true;
+
+                setTimeout(() => {
+                    if (puzzleSolutions.length === 3) {
+                        terminalAction('success');
+                    } else {
+                        showScene(sceneIndex + 1);
+                    }
+                }, 1500);
+            } else {
+                const confirmBtn = document.getElementById(`${puzzleId}Confirm`);
+                confirmBtn.textContent = '❌ Try again';
+                confirmBtn.style.background = 'rgba(255, 0, 0, 0.2)';
+                confirmBtn.style.borderColor = '#ff0000';
+                confirmBtn.style.color = '#ff0000';
+
+                setTimeout(() => {
+                    confirmBtn.textContent = puzzleId === 'puzzle1' ? 'Confirm Sequence' :
+                                             puzzleId === 'puzzle2' ? 'Solve Equation' : 'Align Timeline';
+                    confirmBtn.style.background = 'rgba(0, 255, 0, 0.2)';
+                    confirmBtn.style.borderColor = '#00ff00';
+                    confirmBtn.style.color = '#00ff00';
+                }, 1000);
+            }
+        }
+
+        function updateStability() {
+            document.getElementById('stabilityIndex').textContent = stabilityIndex + '%';
+            const missionPanel = document.getElementById('missionPanel');
+            if (stabilityIndex > 0 && !missionPanel.classList.contains('show')) {
+                missionPanel.classList.add('show');
+            }
+        }
+
+        // Event selection
+        function selectEvent(eventId) {
+            const nodes = document.querySelectorAll('.time-node');
+            nodes.forEach(node => node.classList.remove('selected'));
+            const selectedNode = document.querySelector(`.time-node[data-event="${eventId}"]`);
+            if (selectedNode) {
+                selectedNode.classList.add('selected');
+            }
+
+            if (!selectedEvents.includes(eventId)) {
+                selectedEvents.push(eventId);
+            }
+
+            if (selectedEvents.length >= 2) {
+                setTimeout(() => {
+                    showScene(sceneIndex + 1);
+                }, 1000);
+            }
+        }
+
+        // Time jump button
+        function timeJump() {
+            const destination = document.getElementById('timeInput').value;
+            terminalAction('timejump');
+            setTimeout(() => {
+                if (destination === '2089-04-17 14:32:01') {
+                    showScene(0);
+                } else if (destination === '2047-09-03 08:15:00') {
+                    showScene(1);
+                } else if (destination === '2023-11-12 23:47:00') {
+                    showScene(2);
+                }
+            }, 2000);
+        }
+
+        // Play again
+        function playAgain() {
+            location.reload();
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            const terminal = document.getElementById('terminal');
+
+            if (!terminal.classList.contains('hidden')) {
+                if (e.key === 'Enter' && !terminal.classList.contains('hidden')) {
+                    terminalAction('start');
+                }
+            } else {
+                switch(e.key) {
+                    case '1': showScene(0); break;
+                    case '2': showScene(1); break;
+                    case '3': showScene(2); break;
+                    case '4': showScene(3); break;
+                    case '0': document.getElementById('resolution').scrollIntoView({ behavior: 'smooth' }); break;
+                    case 'ArrowLeft': timeJumpToPrevious(); break;
+                    case 'ArrowRight': timeJumpToNext(); break;
+                    case 'Escape': terminalAction('boot'); break;
+                }
+            }
+        });
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            initTerminal();
+            setTimeout(() => {
+                terminalAction('start');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
