@@ -1,5 +1,7 @@
 # AI State Analyzer & Panel Generator
 
+Anushka's Note: There are some test vibe-coded examples in the `tests` folder. Just copy-paste that code into `index.html` to run the experience each time. The commands below should be helpful!
+
 Turn any experience into a fully instrumented, state-aware experience with a visual debugging panel.
 
 ## 🚀 Quick Start
