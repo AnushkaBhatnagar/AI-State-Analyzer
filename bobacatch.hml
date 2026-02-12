@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boba Catch!</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 400px;
+            height: 600px;
+            background-color: #fff8e1; /* Light cream background */
+            position: relative;
+            border: 4px solid #8d6e63;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        #score-board {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #5d4037;
+            z-index: 10;
+        }
+
+        /* The Player (Boba Cup) */
+        #player {
+            position: absolute;
+            bottom: 20px;
+            left: 175px; /* Center horizontally (400/2 - 50/2) */
+            width: 50px;
+            height: 70px;
+            background-color: #eceff1; /* Cup color */
+            border: 3px solid #cfd8dc;
+            border-radius: 5px 5px 25px 25px; /* Cup shape */
+            display: flex;
+            justify-content: center;
+            overflow: visible; /* Allow straw to poke out */
+            transition: left 0.1s linear; /* Smooth movement if needed, but we'll update via JS */
+        }
+
+        /* The Straw */
+        #player::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            width: 8px;
+            height: 30px;
+            background-color: #ef5350; /* Red straw */
+            transform: rotate(15deg);
+        }
+
+        /* Drink Liquid (inside cup) */
+        #player::after {
+            content: '';
+            position: absolute;
+            bottom: 5px;
+            width: 80%;
+            height: 60%;
+            background-color: #d7ccc8; /* Milk tea color */
+            border-radius: 2px 2px 20px 20px;
+            z-index: 1;
+        }
+
+        /* Falling Objects */
+        .item {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        /* Boba Pearl */
+        .boba {
+            background-color: #212121; /* Classic black boba */
+            box-shadow: inset -2px -2px 4px rgba(255,255,255,0.2);
+        }
+
+        /* Bomb (Looks similar but dangerous) */
+        .bomb {
+            background-color: #3e2723; /* Very dark brown, almost black */
+            border: 2px solid #b71c1c; /* Thin red border to distinguish */
+            box-sizing: border-box;
+        }
+        
+        .bomb::after {
+            content: '!';
+            color: #b71c1c;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Screens */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        h1 {
+            color: #5d4037;
+            margin-bottom: 10px;
+        }
+        
+        p {
+            color: #795548;
+            margin-bottom: 20px;
+            max-width: 80%;
+        }
+
+        button {
+            background-color: #8d6e63;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #6d4c41;
+        }
+
+        .difficulty-btn {
+            width: 120px;
+        }
+        
+        .instructions {
+            font-size: 14px;
+            margin-top: 20px;
+            color: #666;
+            font-style: italic;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="score-board">Score: 0</div>
+        
+        <div id="player"></div>
+        
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <h1>Boba Catch!</h1>
+            <p>Catch the boba pearls to make the perfect milk tea!</p>
+            <p><strong>Watch out for bombs!</strong> They look similar but have a red rim.</p>
+            
+            <p>Select Difficulty:</p>
+            <button class="difficulty-btn" onclick="startGame('easy')">Easy</button>
+            <button class="difficulty-btn" onclick="startGame('medium')">Medium</button>
+            <button class="difficulty-btn" onclick="startGame('hard')">Hard</button>
+            
+            <div class="instructions">Use ← and → Arrow Keys to move</div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="screen hidden">
+            <h1>Game Over!</h1>
+            <p>You caught a bomb!</p>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <button onclick="showStartScreen()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // Game Constants
+        const GAME_WIDTH = 400;
+        const GAME_HEIGHT = 600;
+        const PLAYER_WIDTH = 50;
+        const PLAYER_HEIGHT = 70;
+        const ITEM_SIZE = 20;
+        const PLAYER_Y = 530; // 600 - 70 (height) -> bottom positioned
+
+        // Game State
+        let score = 0;
+        let isPlaying = false;
+        let animationFrameId;
+        let items = []; // Array to store falling items
+        let playerX = 175;
+        let moveLeft = false;
+        let moveRight = false;
+        
+        // Difficulty Settings
+        let currentDifficulty = 'easy';
+        const difficulties = {
+            easy: { speed: 3, spawnRate: 60, bombChance: 0.1 },   // Slow, infrequent bombs
+            medium: { speed: 5, spawnRate: 45, bombChance: 0.2 }, // Faster, more bombs
+            hard: { speed: 8, spawnRate: 30, bombChance: 0.3 }    // Fast, lots of bombs
+        };
+        
+        let frameCount = 0;
+
+        // DOM Elements
+        const container = document.getElementById('game-container');
+        const player = document.getElementById('player');
+        const scoreBoard = document.getElementById('score-board');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const finalScoreDisplay = document.getElementById('final-score');
+
+        // Input Handling
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') moveLeft = true;
+            if (e.key === 'ArrowRight') moveRight = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft') moveLeft = false;
+            if (e.key === 'ArrowRight') moveRight = false;
+        });
+
+        function showStartScreen() {
+            gameOverScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+
+        function startGame(difficulty) {
+            currentDifficulty = difficulty;
+            score = 0;
+            scoreBoard.innerText = `Score: ${score}`;
+            items = [];
+            document.querySelectorAll('.item').forEach(e => e.remove());
+            playerX = (GAME_WIDTH - PLAYER_WIDTH) / 2;
+            updatePlayerPosition();
+            
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            
+            isPlaying = true;
+            frameCount = 0;
+            gameLoop();
+        }
+
+        function gameOver() {
+            isPlaying = false;
+            cancelAnimationFrame(animationFrameId);
+            finalScoreDisplay.innerText = score;
+            gameOverScreen.classList.remove('hidden');
+        }
+
+        function updatePlayerPosition() {
+            const speed = 7; // Player movement speed
+            if (moveLeft && playerX > 0) playerX -= speed;
+            if (moveRight && playerX < GAME_WIDTH - PLAYER_WIDTH) playerX += speed;
+            player.style.left = `${playerX}px`;
+        }
+
+        function spawnItem() {
+            const settings = difficulties[currentDifficulty];
+            
+            if (frameCount % settings.spawnRate === 0) {
+                const item = document.createElement('div');
+                const isBomb = Math.random() < settings.bombChance;
+                
+                item.classList.add('item');
+                item.classList.add(isBomb ? 'bomb' : 'boba');
+                
+                // Random X position
+                const x = Math.random() * (GAME_WIDTH - ITEM_SIZE);
+                item.style.left = `${x}px`;
+                item.style.top = '0px';
+                
+                container.appendChild(item);
+                
+                items.push({
+                    element: item,
+                    x: x,
+                    y: 0,
+                    type: isBomb ? 'bomb' : 'boba',
+                    speed: settings.speed + (Math.random() * 2 - 1) // Slight speed variation
+                });
+            }
+        }
+
+        function updateItems() {
+            for (let i = items.length - 1; i >= 0; i--) {
+                const item = items[i];
+                item.y += item.speed;
+                item.element.style.top = `${item.y}px`;
+
+                // Check collision with player
+                // Simple AABB collision
+                // Player box: x: playerX, y: PLAYER_Y, w: PLAYER_WIDTH, h: PLAYER_HEIGHT
+                // But we only care about the top opening of the cup mostly
+                const hitBoxY = PLAYER_Y + 10; // Slightly lower than top of div
+                
+                if (
+                    item.y + ITEM_SIZE >= hitBoxY && // Bottom of item hits top of cup
+                    item.y < PLAYER_Y + PLAYER_HEIGHT && // Item hasn't passed through bottom
+                    item.x + ITEM_SIZE > playerX && // Right of item is past left of cup
+                    item.x < playerX + PLAYER_WIDTH // Left of item is before right of cup
+                ) {
+                    // Collision!
+                    if (item.type === 'bomb') {
+                        gameOver();
+                        return;
+                    } else {
+                        // Caught a boba!
+                        score++;
+                        scoreBoard.innerText = `Score: ${score}`;
+                        item.element.remove();
+                        items.splice(i, 1);
+                    }
+                }
+                // Remove if off screen
+                else if (item.y > GAME_HEIGHT) {
+                    item.element.remove();
+                    items.splice(i, 1);
+                }
+            }
+        }
+
+        function gameLoop() {
+            if (!isPlaying) return;
+
+            updatePlayerPosition();
+            spawnItem();
+            updateItems();
+            
+            frameCount++;
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+</html>
