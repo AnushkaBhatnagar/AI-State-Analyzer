@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+        }
+
+        .phone {
+            width: 375px;
+            height: 812px;
+            background: #000;
+            border-radius: 40px;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+            border-radius: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        .app-title {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .notification-counter {
+            background: #ff3333;
+            color: white;
+            border-radius: 15px;
+            padding: 5px 12px;
+            font-size: 14px;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+
+        .content-area {
+            padding: 20px;
+            height: calc(100% - 120px);
+            overflow: hidden;
+        }
+
+        .notification {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 10px;
+            color: white;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .notification:hover {
+            transform: scale(1.02);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .notification.dark {
+            background: rgba(255, 0, 0, 0.2);
+            border-color: #ff3333;
+            box-shadow: 0 0 20px rgba(255, 51, 51, 0.3);
+        }
+
+        .notification.hell {
+            background: rgba(139, 0, 0, 0.4);
+            border-color: #8B0000;
+            box-shadow: 0 0 30px rgba(139, 0, 0, 0.6);
+            animation: shake 0.5s infinite, slideIn 0.2s ease-out;
+        }
+
+        .notification.urgent {
+            background: linear-gradient(45deg, #ff4444, #cc0000);
+            border-color: #ff0000;
+            box-shadow: 0 0 25px rgba(255, 68, 68, 0.6);
+            animation: urgentPulse 1s infinite, slideIn 0.5s ease-out;
+        }
+
+        .notification.reward {
+            background: linear-gradient(45deg, #00ff88, #00cc44);
+            border-color: #00ff00;
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.6);
+            animation: celebration 0.8s ease-out, slideIn 0.5s ease-out;
+        }
+
+        .notification.mystery {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+            border-color: #9b59b6;
+            box-shadow: 0 0 25px rgba(155, 89, 182, 0.6);
+            animation: mysteryPulse 1.5s infinite, slideIn 0.5s ease-out;
+        }
+
+        .notification.jackpot {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            border-color: #f39c12;
+            box-shadow: 0 0 30px rgba(243, 156, 18, 0.8);
+            animation: jackpotCelebration 1s ease-out, slideIn 0.5s ease-out;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            float: left;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+
+        .notification-text {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .countdown-timer {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            background: #ff0000;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+            animation: pulse 0.5s infinite;
+        }
+
+        .pulsing-glow {
+            animation: glowPulse 2s infinite;
+        }
+
+        .flood-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(139, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .flood-text {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            animation: flicker 0.5s infinite;
+        }
+
+        .start-button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .start-button:hover {
+            transform: scale(1.05);
+        }
+
+        .warning-text {
+            color: #ff6b6b;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 20px;
+            opacity: 0.8;
+        }
+
+        .escape-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: not-allowed;
+            transition: all 0.3s ease;
+            display: none;
+            opacity: 0.5;
+        }
+
+        .escape-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .escape-button.enabled {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            opacity: 1;
+        }
+
+        .escape-button.enabled:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .tap-counter {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ff6b6b;
+            font-size: 14px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .notification.bouncing {
+            animation: bounce 0.5s ease-in-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes urgentPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 25px rgba(255, 68, 68, 0.6); }
+            50% { transform: scale(1.02); box-shadow: 0 0 35px rgba(255, 68, 68, 0.9); }
+        }
+
+        @keyframes celebration {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes mysteryPulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes jackpotCelebration {
+            0% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(5deg); }
+            50% { transform: scale(1.1) rotate(-5deg); }
+            75% { transform: scale(1.15) rotate(3deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(255, 255, 255, 0.8); }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <div class="screen">
+            <br><br>
+            
+            <div class="app-header">
+                <div class="app-title">Instagram</div>
+                <div class="notification-counter" id="counter">0</div>
+            </div>
+            
+            <div class="content-area" id="contentArea">
+                <div style="text-align: center; color: white; margin-top: 100px;">
+                    <button class="start-button" onclick="startHell()">Start</button>
+                </div>
+            </div>
+            
+            <div class="flood-overlay" id="floodOverlay">
+                <div class="flood-text">
+                    YOU DON'T EXIST<br>
+                    WHEN NOBODY'S<br>
+                    WATCHING
+                </div>
+            </div>
+
+            <button class="escape-button" id="escapeButton" onclick="tryEscape()">Turn Off Notifications (Disabled)</button>
+            <div class="tap-counter" id="tapCounter">Taps: 0</div>
+        </div>
+    </div>
+
+    <script>
+        var notificationCount = 0;
+        var stage = 0;
+        var isHellMode = false;
+        var tapCount = 0;
+        var notificationSpeed = 800;
+        var escapeAttempts = 0;
+        var urgentTimers = [];
+        var rewardStreak = 0;
+        var totalRewards = 0;
+        
+        var positiveNotifications = [
+            { icon: "❤️", text: "Sarah liked your photo!", time: "now" },
+            { icon: "💬", text: "New comment: 'Looking great!'", time: "1m ago" },
+            { icon: "🔥", text: "You're trending! 47 new likes", time: "2m ago" },
+            { icon: "👥", text: "3 new followers!", time: "3m ago" },
+            { icon: "⭐", text: "Your post got featured!", time: "5m ago" }
+        ];
+        
+        var questioningNotifications = [
+            { icon: "❓", text: "Where are you? You haven't posted in 5 minutes...", time: "now" },
+            { icon: "👁️", text: "We miss you. Come back.", time: "1m ago" },
+            { icon: "⏰", text: "Your followers are waiting...", time: "2m ago" },
+            { icon: "🔍", text: "Are you still real?", time: "3m ago" },
+            { icon: "📱", text: "Check your phone. Now.", time: "4m ago" }
+        ];
+
+        var fomoNotifications = [
+            { icon: "👥", text: "Sarah just got 50 likes while you were idle", time: "2s ago" },
+            { icon: "🔥", text: "Your friends are all online now - 23 active", time: "now" },
+            { icon: "⏰", text: "Limited time: Double likes for next 5 minutes!", time: "EXPIRES SOON" },
+            { icon: "💎", text: "Premium features unlocked for YOU only", time: "SPECIAL OFFER" },
+            { icon: "👻", text: "You're missing out! 12 new conversations", time: "JOIN NOW" },
+            { icon: "📱", text: "Mike is wondering why you're not responding", time: "URGENT" }
+        ];
+
+        var rewardNotifications = [
+            { icon: "🎉", text: "JACKPOT! You earned 100 points!", time: "WINNER" },
+            { icon: "⭐", text: "Perfect timing! +50 bonus points", time: "AMAZING" },
+            { icon: "🏆", text: "Streak bonus! You're on fire!", time: "KEEP GOING" },
+            { icon: "💫", text: "Lucky tap! Mystery reward unlocked!", time: "RARE" }
+        ];
+
+        var punishmentNotifications = [
+            { icon: "😞", text: "Your response was too slow. Friends noticed.", time: "MISSED" },
+            { icon: "📉", text: "Your social score dropped by 15 points", time: "OUCH" },
+            { icon: "💔", text: "Someone unfollowed you while you hesitated", time: "CONSEQUENCE" },
+            { icon: "⚠️", text: "Opportunity expired. Better luck next time.", time: "FAILED" }
+        ];
+
+        var mysteryNotifications = [
+            { icon: "❓", text: "Mystery box - tap to reveal your fate", time: "???" },
+            { icon: "🎲", text: "Fortune or failure? Click to discover", time: "GAMBLE" },
+            { icon: "🔮", text: "Something special awaits... or does it?", time: "MYSTERY" },
+            { icon: "🎪", text: "Surprise inside! Could be anything...", time: "UNKNOWN" }
+        ];
+
+        var urgentNotifications = [
+            { icon: "🚨", text: "URGENT: Tap before timer runs out!", time: "EXPIRING", urgent: true },
+            { icon: "⏰", text: "15 seconds left to claim your reward!", time: "HURRY", urgent: true },
+            { icon: "🔥", text: "Limited time offer ending NOW!", time: "LAST CHANCE", urgent: true },
+            { icon: "💥", text: "Quick! Your streak will break!", time: "SAVE IT", urgent: true }
+        ];
+
+        var guiltNotifications = [
+            { icon: "😢", text: "Emma: 'Are you ignoring me?'", time: "3m ago" },
+            { icon: "💔", text: "Your absence is hurting your relationships", time: "WARNING" },
+            { icon: "👥", text: "5 friends feel neglected by your silence", time: "GUILT TRIP" },
+            { icon: "😕", text: "Mom: 'You never respond anymore...'", time: "FAMILY" }
+        ];
+        
+        var hellNotifications = [
+            { icon: "🔥", text: "YOU CAN'T LEAVE", time: "ERROR" },
+            { icon: "👹", text: "WE OWN YOU NOW", time: "∞" },
+            { icon: "💀", text: "ENDLESS SCROLLING", time: "FOREVER" },
+            { icon: "⚠️", text: "NOTIFICATION OVERLOAD", time: "HELP" },
+            { icon: "🌀", text: "TRAPPED IN THE FEED", time: "NO ESCAPE" },
+            { icon: "👁️", text: "WE'RE ALWAYS WATCHING", time: "ALWAYS" },
+            { icon: "🔒", text: "YOU'RE ADDICTED", time: "ADMIT IT" }
+        ];
+
+        function createCountdownTimer(seconds) {
+            var timer = document.createElement('div');
+            timer.className = 'countdown-timer';
+            timer.textContent = seconds;
+            
+            var countdown = setInterval(function() {
+                seconds--;
+                timer.textContent = seconds;
+                if (seconds <= 0) {
+                    clearInterval(countdown);
+                    timer.textContent = 'EXPIRED';
+                    timer.style.background = '#666';
+                }
+            }, 1000);
+            
+            return { timer: timer, countdown: countdown };
+        }
+
+        function createNotification(notif, className) {
+            className = className || '';
+            var notification = document.createElement('div');
+            notification.className = 'notification ' + className;
+            
+            if (Math.random() < 0.3) {
+                notification.classList.add('pulsing-glow');
+            }
+            
+            notification.innerHTML = 
+                '<div class="notification-icon">' + notif.icon + '</div>' +
+                '<div class="notification-text">' +
+                    notif.text +
+                    '<div class="notification-time">' + notif.time + '</div>' +
+                '</div>';
+            
+            if (notif.urgent) {
+                var timerData = createCountdownTimer(Math.floor(Math.random() * 15) + 5);
+                notification.appendChild(timerData.timer);
+                urgentTimers.push(timerData.countdown);
+            }
+            
+            notification.onclick = function() {
+                handleNotificationClick(notification, notif, className);
+            };
+            
+            return notification;
+        }
+
+        function handleNotificationClick(notification, notif, className) {
+            tapCount++;
+            document.getElementById('tapCounter').textContent = 'Taps: ' + tapCount;
+            
+            if (tapCount % 5 === 0 && notificationSpeed > 100) {
+                notificationSpeed -= 50;
+            }
+            
+            if (!isHellMode) {
+                if (className === 'mystery') {
+                    handleMysteryClick(notification);
+                } else if (className === 'urgent') {
+                    handleUrgentClick(notification);
+                } else if (notif.text.indexOf('Mystery') !== -1 || notif.text.indexOf('Fortune') !== -1 || notif.text.indexOf('Surprise') !== -1) {
+                    handleMysteryClick(notification);
+                } else {
+                    notification.style.opacity = '0.5';
+                    setTimeout(function() { 
+                        if (notification.parentNode) notification.remove(); 
+                    }, 300);
+                }
+                
+                if (Math.random() < 0.15 && stage >= 2) {
+                    setTimeout(function() {
+                        addNotification({ icon: "💥", text: "That created 2 more notifications!", time: "MULTIPLIED" }, 'dark');
+                        addNotification(fomoNotifications[Math.floor(Math.random() * fomoNotifications.length)], 'dark');
+                    }, 500);
+                }
+            } else {
+                notification.classList.add('bouncing');
+                setTimeout(function() { notification.classList.remove('bouncing'); }, 500);
+                
+                setTimeout(function() {
+                    var punishNotif = { icon: "😈", text: "Nice try! Here's another one.", time: "GOTCHA" };
+                    addNotification(punishNotif, 'hell');
+                }, 300);
+            }
+        }
+
+        function handleMysteryClick(notification) {
+            var isJackpot = Math.random() < 0.3;
+            
+            if (isJackpot) {
+                rewardStreak++;
+                totalRewards++;
+                notification.className = notification.className.replace('mystery', 'jackpot');
+                setTimeout(function() {
+                    var reward = rewardNotifications[Math.floor(Math.random() * rewardNotifications.length)];
+                    addNotification(reward, 'reward');
+                }, 200);
+            } else {
+                rewardStreak = 0;
+                notification.style.opacity = '0.3';
+                setTimeout(function() {
+                    var punishment = punishmentNotifications[Math.floor(Math.random() * punishmentNotifications.length)];
+                    addNotification(punishment, 'dark');
+                    if (notification.parentNode) notification.remove();
+                }, 300);
+            }
+        }
+
+        function handleUrgentClick(notification) {
+            var timer = notification.querySelector('.countdown-timer');
+            if (timer && timer.textContent !== 'EXPIRED') {
+                notification.className = notification.className.replace('urgent', 'reward');
+                setTimeout(function() {
+                    addNotification({ icon: "⚡", text: "Perfect timing! Bonus achieved!", time: "SUCCESS" }, 'reward');
+                }, 200);
+            } else {
+                setTimeout(function() {
+                    addNotification({ icon: "⏰", text: "Too slow! You missed the deadline.", time: "FAILED" }, 'dark');
+                }, 200);
+            }
+            setTimeout(function() { 
+                if (notification.parentNode) notification.remove(); 
+            }, 800);
+        }
+
+        function addNotification(notif, className) {
+            var contentArea = document.getElementById('contentArea');
+            var notification = createNotification(notif, className);
+            
+            contentArea.insertBefore(notification, contentArea.firstChild);
+            
+            notificationCount++;
+            document.getElementById('counter').textContent = notificationCount;
+            
+            var notifications = contentArea.querySelectorAll('.notification');
+            if (notifications.length > 12) {
+                notifications[notifications.length - 1].remove();
+            }
+        }
+
+        function addRandomAddictiveNotification() {
+            var rand = Math.random();
+            var notif, className;
+            
+            if (rand < 0.2) {
+                notif = urgentNotifications[Math.floor(Math.random() * urgentNotifications.length)];
+                className = 'urgent';
+            } else if (rand < 0.35) {
+                notif = mysteryNotifications[Math.floor(Math.random() * mysteryNotifications.length)];
+                className = 'mystery';
+            } else if (rand < 0.5) {
+                notif = fomoNotifications[Math.floor(Math.random() * fomoNotifications.length)];
+                className = 'dark';
+            } else if (rand < 0.65) {
+                notif = guiltNotifications[Math.floor(Math.random() * guiltNotifications.length)];
+                className = 'dark';
+            } else {
+                notif = questioningNotifications[Math.floor(Math.random() * questioningNotifications.length)];
+                className = 'dark';
+            }
+            
+            addNotification(notif, className);
+        }
+
+        function startHell() {
+            document.getElementById('contentArea').innerHTML = '';
+            notificationCount = 0;
+            tapCount = 0;
+            stage = 1;
+            
+            document.getElementById('escapeButton').style.display = 'block';
+            document.getElementById('tapCounter').style.display = 'block';
+            
+            var interval = setInterval(function() {
+                if (stage === 1) {
+                    var notif = positiveNotifications[Math.floor(Math.random() * positiveNotifications.length)];
+                    addNotification(notif);
+                    
+                    if (notificationCount >= 15) {
+                        stage = 2;
+                        clearInterval(interval);
+                        setTimeout(startStage2, 2000);
+                    }
+                }
+            }, notificationSpeed);
+        }
+
+        function startStage2() {
+            // Enable the escape button when red notifications start
+            var escapeButton = document.getElementById('escapeButton');
+            escapeButton.classList.add('enabled');
+            escapeButton.textContent = 'Turn Off Notifications';
+            
+            var interval = setInterval(function() {
+                if (stage === 2) {
+                    addRandomAddictiveNotification();
+                    
+                    if (notificationCount >= 50) {
+                        stage = 3;
+                        clearInterval(interval);
+                        setTimeout(startStage3, 2000);
+                    }
+                }
+            }, Math.max(notificationSpeed, 400));
+        }
+
+        function startStage3() {
+            var interval = setInterval(function() {
+                if (stage === 3) {
+                    addRandomAddictiveNotification();
+                    
+                    if (Math.random() < 0.3) {
+                        setTimeout(function() { addRandomAddictiveNotification(); }, 200);
+                    }
+                    
+                    if (notificationCount >= 100) {
+                        stage = 4;
+                        clearInterval(interval);
+                        setTimeout(startHell4, 2000);
+                    }
+                }
+            }, Math.max(notificationSpeed, 200));
+        }
+
+        function startHell4() {
+            isHellMode = true;
+            var interval = setInterval(function() {
+                var notif = hellNotifications[Math.floor(Math.random() * hellNotifications.length)];
+                addNotification(notif, 'hell');
+                
+                if (notificationCount >= 150) {
+                    clearInterval(interval);
+                    setTimeout(function() {
+                        document.getElementById('floodOverlay').style.display = 'flex';
+                    }, 3000);
+                }
+            }, Math.max(notificationSpeed, 100));
+            
+            setTimeout(function() {
+                setInterval(function() {
+                    if (isHellMode) {
+                        var notif = hellNotifications[Math.floor(Math.random() * hellNotifications.length)];
+                        addNotification(notif, 'hell');
+                    }
+                }, Math.max(notificationSpeed / 2, 50));
+            }, 5000);
+        }
+
+        function tryEscape() {
+            var button = document.getElementById('escapeButton');
+            
+            // Only work if button is enabled
+            if (!button.classList.contains('enabled')) {
+                return;
+            }
+            
+            escapeAttempts++;
+            
+            if (escapeAttempts === 1) {
+                button.textContent = "Turn Off (Not Working?)";
+                setTimeout(function() {
+                    addNotification({ icon: "😏", text: "Did you really think that would work?", time: "NAIVE" }, 'hell');
+                    addNotification({ icon: "🔄", text: "Notifications are now FASTER", time: "ENJOY" }, 'hell');
+                }, 500);
+                notificationSpeed = Math.max(notificationSpeed / 2, 100);
+            } else if (escapeAttempts === 2) {
+                button.textContent = "DELETE APP";
+                setTimeout(function() {
+                    addNotification({ icon: "💥", text: "DELETING MAKES IT WORSE", time: "SURPRISE" }, 'hell');
+                    for (var i = 0; i < 5; i++) {
+                        setTimeout(function() {
+                            var notif = { icon: "👻", text: "WE'RE BACK!", time: "FOREVER" };
+                            addNotification(notif, 'hell');
+                        }, i * 200);
+                    }
+                }, 300);
+            } else {
+                button.textContent = "THERE IS NO ESCAPE";
+                button.style.background = "rgba(139, 0, 0, 0.8)";
+                setTimeout(function() {
+                    addNotification({ icon: "🔒", text: "You tried to escape " + escapeAttempts + " times", time: "PATHETIC" }, 'hell');
+                }, 200);
+            }
+        }
+
+        setInterval(function() {
+            if (isHellMode) {
+                var darkColors = ['#0a0a0a', '#1a0a0a', '#2a0a0a', '#0a1a0a', '#0a0a1a', '#1a1a0a', '#1a0a1a', '#0a1a1a', '#2a1a1a'];
+                var randomDark = darkColors[Math.floor(Math.random() * darkColors.length)];
+                document.body.style.background = 'linear-gradient(135deg, ' + randomDark + ' 0%, #8B0000 100%)';
+                setTimeout(function() {
+                    document.body.style.background = 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)';
+                }, 100);
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
