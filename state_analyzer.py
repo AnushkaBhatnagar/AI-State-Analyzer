@@ -116,6 +116,16 @@ For EACH state you identify, provide:
    - Provide a unique 'search_pattern' (exact code string) that occurs just after the variable update.
    - This allows us to inject `window.__ai_state_monitor.report('varName', varName)` at runtime.
 
+7. **Source Code Blocks:**
+   For each state, provide `source_code_blocks` - an array of objects, each containing:
+   - `label`: A short label (e.g., "startStage3() function", "Stage 3 CSS styles")
+   - `code`: The EXACT verbatim source code (functions, event handlers, CSS blocks) that implements or manages this state.
+   Include ALL relevant functions and handlers. Copy the code exactly from the source - do not summarize or truncate.
+
+8. **Related Functions:**
+   For each state, provide `related_functions` - an array of function name strings that trigger, manage, or are called during this state.
+   Example: ["startStage3", "handleUrgentClick", "checkCountdown"]
+
 IMPORTANT: Return your analysis as a valid JSON object with this EXACT structure:
 
 {{
@@ -181,7 +191,14 @@ IMPORTANT: Return your analysis as a valid JSON object with this EXACT structure
         "primary_checks": ["check1()"],
         "fallback_method": "SCROLL",
         "confidence": 0.95
-      }}
+      }},
+      "source_code_blocks": [
+        {{
+          "label": "function name or description",
+          "code": "exact source code text"
+        }}
+      ],
+      "related_functions": ["functionName1", "functionName2"]
     }}
   ]
 }}
@@ -196,7 +213,7 @@ Return ONLY the JSON object, no additional text or explanation.
         try:
             response = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
-                max_tokens=6000,
+                max_tokens=16000,
                 temperature=0.1,
                 messages=[
                     {

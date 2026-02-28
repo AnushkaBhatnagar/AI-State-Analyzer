@@ -257,9 +257,6 @@ class StatePanelGenerator:
             str: CSS code for the panel
         """
         css = """
-        body {
-            zoom: 0.7;
-        }
         
         .view-toggle-container {
             position: fixed;
@@ -443,11 +440,11 @@ class StatePanelGenerator:
             align-items: center;
         }
         
-        .jump-button {
+        .header-button {
             background: rgba(255, 255, 255, 0.1);
             color: rgba(255, 255, 255, 0.8);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 4px 12px;
+            padding: 4px 10px;
             border-radius: 12px;
             font-size: 10px;
             font-weight: 600;
@@ -456,14 +453,14 @@ class StatePanelGenerator:
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        
-        .jump-button:hover {
+
+        .header-button:hover {
             background: rgba(255, 255, 255, 0.2);
             border-color: rgba(255, 255, 255, 0.4);
             transform: scale(1.05);
         }
-        
-        .jump-button:active {
+
+        .header-button:active {
             transform: scale(0.95);
         }
 
@@ -561,7 +558,7 @@ class StatePanelGenerator:
 
 '''
         
-        html += '<div class="state-panel" id="statePanel">\\n'
+        html += '<div class="state-panel" id="statePanel">'
         
         for state in self.state_list:
             state_id = state['id']
@@ -570,37 +567,34 @@ class StatePanelGenerator:
             
             # Get new fields
             user_desc = state.get('user_facing_description', 'No description available.')
-            # Pre-escape for safety
-            safe_user_desc = user_desc.replace("'", "&#39;").replace('"', '"').replace('\n', '\\n')
-            
             trigger_logic = state.get('trigger_logic', 'false')
-            trigger_logic_display = trigger_logic
-            # Pre-escape for safety
-            safe_trigger_logic = trigger_logic.replace("'", "&#39;").replace('"', '"').replace('\n', '\\n')
-            
+
             # Determine if this is the initial active state
             active_class = ' active' if state_id == 0 else ''
-            
+
             html += f'''
     <div class="stage-segment stage-{state_id}{active_class}" id="state{state_id}">
         <div class="stage-header">
             State {state_id}: {state_name}
-            <button class="jump-button" onclick="jumpToState({state_id})">Jump</button>
+            <div style="display: flex; gap: 4px;">
+                <button class="header-button" onclick="copyStateCode({state_id})">Copy Code</button>
+                <button class="header-button" onclick="copyStateReference({state_id})">Copy Ref</button>
+            </div>
         </div>
         <div class="stage-range">{state_desc}</div>
-        
+
         <!-- State Logic & Description (Full Width) -->
         <div style="margin-top: 10px; margin-bottom: 10px;">
             <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
-                <span class="copy-icon" onclick="copyToClipboard('{safe_user_desc}')" title="Copy Description">⎘</span>
+                <span class="copy-icon" onclick="copyDescription({state_id})" title="Copy Description">⎘</span>
                 <div class="param-name">Description</div>
                 <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">{user_desc}</div>
             </div>
-            
+
             <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
-                <span class="copy-icon" onclick="copyToClipboard('{safe_trigger_logic}')" title="Copy Logic">⎘</span>
+                <span class="copy-icon" onclick="copyTriggerLogic({state_id})" title="Copy Logic">⎘</span>
                 <div class="param-name">Trigger Logic</div>
-                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">{trigger_logic_display}</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">{trigger_logic}</div>
             </div>
         </div>
 
@@ -738,10 +732,35 @@ class StatePanelGenerator:
         
         # Create state name mapping for console logs
         state_names_map = {state['id']: state['name'] for state in self.state_list}
-        
+
+        # Build source code blocks map for Copy Code button
+        code_blocks_map = {}
+        for state in self.state_list:
+            code_blocks_map[state['id']] = state.get('source_code_blocks', [])
+
+        # Build reference data map for Copy Ref button
+        reference_data_map = {}
+        for state in self.state_list:
+            reference_data_map[state['id']] = {
+                'name': state['name'],
+                'trigger_logic': state.get('trigger_logic', ''),
+                'related_functions': state.get('related_functions', [])
+            }
+
+        # Build description and trigger logic maps for copy buttons
+        state_descriptions_map = {}
+        state_trigger_logic_map = {}
+        for state in self.state_list:
+            state_descriptions_map[state['id']] = state.get('user_facing_description', '')
+            state_trigger_logic_map[state['id']] = state.get('trigger_logic', '')
+
         js = f"""
     var currentTrackedState = 0;
     var stateNames = {json.dumps(state_names_map)};
+    var stateCodeBlocks = {json.dumps(code_blocks_map)};
+    var stateReferenceData = {json.dumps(reference_data_map)};
+    var stateDescriptions = {json.dumps(state_descriptions_map)};
+    var stateTriggerLogic = {json.dumps(state_trigger_logic_map)};
     
     // AI State Monitor - Receives reports from injected code
     window.__ai_state_monitor = {{
@@ -1018,6 +1037,27 @@ class StatePanelGenerator:
         return configs[stateId];
     }
     
+    function writeToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(text);
+        }
+        return new Promise(function(resolve, reject) {
+            var textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                resolve();
+            } catch(e) {
+                reject(e);
+            }
+            document.body.removeChild(textarea);
+        });
+    }
+
     function logNotificationDot() {
         var stateToLog = getCurrentState();
         var dotsContainer = stateSegments[stateToLog];
@@ -1037,12 +1077,10 @@ class StatePanelGenerator:
         if (selector.startsWith('#') || selector.startsWith('.')) {
             element = document.querySelector(selector);
         } else {
-            // Variable name - try to get its value
-            try {
-                var value = eval(selector);
-                navigator.clipboard.writeText(selector + ' = ' + JSON.stringify(value));
-                
-                // Visual feedback
+            // Variable name - use findVariable to access closure-scoped vars
+            var value = findVariable(selector);
+            var text = (typeof value !== 'undefined') ? selector + ' = ' + JSON.stringify(value) : selector + ' = undefined';
+            writeToClipboard(text).then(function() {
                 if (event && event.target) {
                     var icon = event.target;
                     icon.classList.add('copied');
@@ -1050,16 +1088,15 @@ class StatePanelGenerator:
                         icon.classList.remove('copied');
                     }, 500);
                 }
-                return;
-            } catch(e) {
-                console.warn('Could not evaluate:', selector);
-                return;
-            }
+            }).catch(function(err) {
+                console.warn('Could not copy variable:', selector, err);
+            });
+            return;
         }
         
         if (element) {
             var html = element.outerHTML;
-            navigator.clipboard.writeText(html).then(function() {
+            writeToClipboard(html).then(function() {
                 // Visual feedback
                 if (event && event.target) {
                     var icon = event.target;
@@ -1075,7 +1112,103 @@ class StatePanelGenerator:
             console.warn('Element not found:', selector);
         }
     }
-    
+
+    function copyToClipboard(text) {
+        writeToClipboard(text).then(function() {
+            if (event && event.target) {
+                var icon = event.target;
+                icon.classList.add('copied');
+                setTimeout(function() {
+                    icon.classList.remove('copied');
+                }, 500);
+            }
+        }).catch(function(err) {
+            console.error('Failed to copy:', err);
+        });
+    }
+
+    function copyDescription(stateId) {
+        var text = stateDescriptions[stateId] || '';
+        writeToClipboard(text).then(function() {
+            if (event && event.target) {
+                var icon = event.target;
+                icon.classList.add('copied');
+                setTimeout(function() { icon.classList.remove('copied'); }, 500);
+            }
+        }).catch(function(err) {
+            console.error('Failed to copy description:', err);
+        });
+    }
+
+    function copyTriggerLogic(stateId) {
+        var text = stateTriggerLogic[stateId] || '';
+        writeToClipboard(text).then(function() {
+            if (event && event.target) {
+                var icon = event.target;
+                icon.classList.add('copied');
+                setTimeout(function() { icon.classList.remove('copied'); }, 500);
+            }
+        }).catch(function(err) {
+            console.error('Failed to copy trigger logic:', err);
+        });
+    }
+
+    function copyStateCode(stateId) {
+        var blocks = stateCodeBlocks[stateId];
+        if (!blocks || blocks.length === 0) {
+            copyToClipboard('No source code blocks available for State ' + stateId);
+            return;
+        }
+        var fullCode = blocks.map(function(block) {
+            return '// === ' + block.label + ' ===\\n' + block.code;
+        }).join('\\n\\n');
+
+        writeToClipboard(fullCode).then(function() {
+            if (event && event.target) {
+                var btn = event.target.closest('button') || event.target;
+                var originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.style.background = 'rgba(46, 204, 113, 0.3)';
+                setTimeout(function() {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                }, 1000);
+            }
+        }).catch(function(err) {
+            console.error('Failed to copy code:', err);
+        });
+    }
+
+    function copyStateReference(stateId) {
+        var ref = stateReferenceData[stateId];
+        if (!ref) {
+            copyToClipboard('No reference data available for State ' + stateId);
+            return;
+        }
+
+        var funcStr = (ref.related_functions || []).join(', ') || 'N/A';
+
+        var text = '## State ' + stateId + ': ' + ref.name + '\\n' +
+            '**File:** index.html\\n' +
+            '**Trigger Condition:** ' + ref.trigger_logic + '\\n' +
+            '**Related Functions:** ' + funcStr;
+
+        writeToClipboard(text).then(function() {
+            if (event && event.target) {
+                var btn = event.target.closest('button') || event.target;
+                var originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.style.background = 'rgba(46, 204, 113, 0.3)';
+                setTimeout(function() {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                }, 1000);
+            }
+        }).catch(function(err) {
+            console.error('Failed to copy reference:', err);
+        });
+    }
+
     // Set variable value in any scope
     function setVariable(varName, value) {
         // Try direct global set
@@ -1099,10 +1232,6 @@ class StatePanelGenerator:
         } catch(e) {}
         
         return false;
-    }
-    
-    function jumpToState(targetState) {
-        console.log('Jump to state', targetState, '- functionality not implemented');
     }
     
     // View switching functions
