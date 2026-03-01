@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install watchdog)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\anush\\Downloads\\summer25\\timeline\\controls\\ai-state-analyzer"
+    ]
+  }
+}

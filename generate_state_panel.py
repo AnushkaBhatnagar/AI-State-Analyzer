@@ -3,10 +3,11 @@
 Main script to generate state progression panel for any HTML file.
 
 Usage:
-    python generate_state_panel.py input.html output.html
-    
-Or with custom API key:
-    python generate_state_panel.py input.html output.html --api-key YOUR_KEY
+    python generate_state_panel.py index.html
+    python generate_state_panel.py index.html output.html --api-key YOUR_KEY
+
+Incremental mode (updates existing schema instead of from-scratch):
+    python generate_state_panel.py index.html --mode incremental
 """
 
 import argparse
@@ -45,7 +46,13 @@ def main():
         default='states_schema.json',
         help='Output path for states JSON schema (default: states_schema.json)'
     )
-    
+    parser.add_argument(
+        '--mode',
+        choices=['full', 'incremental'],
+        default='full',
+        help='Analysis mode: full (from scratch) or incremental (update existing schema)'
+    )
+
     args = parser.parse_args()
     
     # Validate input file
@@ -68,15 +75,24 @@ def main():
     print(f"Input:  {input_path}")
     print(f"Output: {output_path}")
     print(f"Schema: {args.schema_output}")
+    print(f"Mode:   {args.mode}")
     print()
-    
+
     try:
         # Step 1: Detect states with AI
-        print("Step 1/3: Analyzing code with AI to detect states...")
-        print("-" * 70)
-        
         analyzer = StateDetectionAnalyzer(api_key=args.api_key)
-        states_data = analyzer.detect_states_from_file(args.input_file)
+
+        if args.mode == 'incremental':
+            print("Step 1/3: Running incremental AI analysis (updating existing schema)...")
+            print("-" * 70)
+            states_data = analyzer.update_states_from_file(
+                args.input_file,
+                existing_schema_path=args.schema_output
+            )
+        else:
+            print("Step 1/3: Running full AI analysis (from scratch)...")
+            print("-" * 70)
+            states_data = analyzer.detect_states_from_file(args.input_file)
         
         print()
         print("[OK] State detection complete!")

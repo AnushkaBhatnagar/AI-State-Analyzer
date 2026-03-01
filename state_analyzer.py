@@ -254,7 +254,126 @@ Return ONLY the JSON object, no additional text or explanation.
             raise
         except Exception as e:
             raise Exception(f"Error detecting states: {str(e)}")
-    
+
+    def update_states(self, code_content, existing_schema, file_type="html"):
+        """
+        Incrementally update an existing state schema based on changed code.
+        Sends existing schema + new code to AI, which updates only what changed.
+        Falls back to full detect_states() if incremental update fails.
+
+        Args:
+            code_content (str): The NEW full code content
+            existing_schema (dict): The existing states_schema.json data
+            file_type (str): File type (html, js, etc.)
+
+        Returns:
+            dict: Updated JSON schema
+        """
+
+        existing_schema_str = json.dumps(existing_schema, indent=2)
+
+        update_prompt = f"""You are updating an existing state analysis for a {file_type.upper()} application.
+The code has been modified. Your job is to produce an UPDATED state schema that reflects the new code.
+
+## EXISTING ANALYSIS (states_schema.json):
+{existing_schema_str}
+
+## UPDATED CODE:
+{code_content}
+
+## INSTRUCTIONS:
+1. Compare the updated code against the existing analysis.
+2. **Preserve state IDs and names** where the underlying logic hasn't fundamentally changed.
+3. **Update these fields** to reflect the NEW code exactly:
+   - `source_code_blocks`: Must contain EXACT verbatim code from the UPDATED source. Copy code exactly - do not summarize.
+   - `trigger_logic`: Update if the conditions changed.
+   - `key_variables`: Update values/purposes if they changed.
+   - `interactive_elements`: Update if elements were added/removed/changed.
+   - `injection_hooks`: Update search_patterns to match the NEW code exactly.
+   - `related_functions`: Update if functions were added/removed/renamed.
+   - `weighted_dom_signals`: Update if DOM structure changed.
+   - `detection_strategy`: Update if detection approach should change.
+4. If NEW states were added in the code, append them with the next available ID.
+5. If states were REMOVED from the code, remove them from the schema.
+6. Update `metadata.total_states` to match the actual number of states.
+7. Keep descriptions CONCISE (description: max 100 chars, purpose: max 50 chars).
+
+IMPORTANT: Return the COMPLETE updated JSON schema in the EXACT same format as the existing one.
+Return ONLY the JSON object, no additional text or explanation."""
+
+        try:
+            print("Running incremental state analysis...")
+            response = self.client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=16000,
+                temperature=0.1,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": update_prompt
+                    }
+                ]
+            )
+
+            response_text = response.content[0].text
+
+            # Parse JSON from response
+            json_match = re.search(r'```json\s*(.*?)\s*```', response_text, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(1)
+            else:
+                json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+                if json_match:
+                    json_str = json_match.group(0)
+                else:
+                    json_str = response_text
+
+            states_data = json.loads(json_str)
+
+            if not self._validate_states_json(states_data):
+                raise ValueError("Invalid JSON structure returned from incremental analysis")
+
+            print(f"[OK] Incremental update: {states_data['metadata']['total_states']} states")
+            return states_data
+
+        except Exception as e:
+            print(f"[WARN] Incremental update failed ({e}), falling back to full analysis")
+            return self.detect_states(code_content, file_type)
+
+    def update_states_from_file(self, file_path, existing_schema_path="states_schema.json"):
+        """
+        Incrementally update states from a code file and existing schema on disk.
+
+        Args:
+            file_path (str): Path to the updated code file
+            existing_schema_path (str): Path to existing states_schema.json
+
+        Returns:
+            dict: Updated JSON schema
+        """
+        file_path = Path(file_path)
+        schema_path = Path(existing_schema_path)
+
+        if not file_path.exists():
+            raise FileNotFoundError(f"File {file_path} does not exist.")
+
+        if not schema_path.exists():
+            print(f"[INFO] No existing schema at {schema_path}, running full analysis")
+            return self.detect_states_from_file(str(file_path))
+
+        file_type = file_path.suffix.lstrip('.') or "txt"
+
+        with open(file_path, 'r', encoding='utf-8') as f:
+            code_content = f.read()
+
+        with open(schema_path, 'r', encoding='utf-8') as f:
+            existing_schema = json.load(f)
+
+        print(f"Updating states for {file_path.name} (incremental)...")
+        print("=" * 50)
+
+        return self.update_states(code_content, existing_schema, file_type)
+
     def _validate_states_json(self, data):
         """
         Validate that the JSON has the expected structure.

@@ -330,6 +330,7 @@ class StatePanelGenerator:
             flex-direction: column;
             box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
             z-index: 1000;
+            padding-top: 45px;
         }
 
         .stage-segment {
@@ -506,6 +507,75 @@ class StatePanelGenerator:
             0%, 100% { box-shadow: 0 0 15px rgba(46, 204, 113, 0.6); }
             50% { box-shadow: 0 0 25px rgba(46, 204, 113, 0.9); }
         }
+
+        .reanalyze-toolbar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 450px;
+            z-index: 1001;
+            background: rgba(10, 10, 10, 0.98);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .reanalyze-status {
+            flex: 1;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .reanalyze-status.running {
+            color: #f39c12;
+        }
+
+        .reanalyze-status.error {
+            color: #e74c3c;
+        }
+
+        .reanalyze-status.complete {
+            color: #2ecc71;
+        }
+
+        .reanalyze-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .reanalyze-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .reanalyze-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .reanalyze-btn-primary {
+            background: rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+        }
+
+        .reanalyze-btn-full {
+            background: rgba(231, 76, 60, 0.2);
+            border-color: rgba(231, 76, 60, 0.5);
+        }
 """
         
         # Generate state-specific CSS
@@ -557,7 +627,17 @@ class StatePanelGenerator:
 </div>
 
 '''
-        
+
+        # Re-analysis toolbar
+        html += '''
+<!-- Re-Analysis Toolbar -->
+<div class="reanalyze-toolbar" id="reanalyzeToolbar">
+    <div class="reanalyze-status" id="reanalyzeStatus">Ready</div>
+    <button class="reanalyze-btn reanalyze-btn-primary" onclick="triggerReanalysis('incremental')" title="Incremental AI re-analysis (~15-25s)">Incremental Analysis</button>
+    <button class="reanalyze-btn reanalyze-btn-full" onclick="triggerReanalysis('full')" title="Full from-scratch AI analysis (~20-30s)">Full Analysis</button>
+</div>
+'''
+
         html += '<div class="state-panel" id="statePanel">'
         
         for state in self.state_list:
@@ -1253,6 +1333,82 @@ class StatePanelGenerator:
         document.getElementById('originalViewBtn').classList.remove('active');
     }
     
+    // === Live Reload & Re-Analysis ===
+    var _sseSource = null;
+
+    function connectSSE() {
+        if (_sseSource) _sseSource.close();
+        try {
+            _sseSource = new EventSource('/api/events');
+        } catch(e) {
+            return; // Not running on dev server
+        }
+
+        _sseSource.onmessage = function(event) {
+            var data = JSON.parse(event.data);
+            var statusEl = document.getElementById('reanalyzeStatus');
+            if (!statusEl) return;
+
+            if (data.type === 'analysis_started') {
+                statusEl.textContent = 'Analyzing (' + data.mode + ')...';
+                statusEl.className = 'reanalyze-status running';
+                setReanalyzeButtons(true);
+            } else if (data.type === 'analysis_complete') {
+                statusEl.textContent = 'Done! ' + data.states + ' states. Reloading...';
+                statusEl.className = 'reanalyze-status complete';
+                setReanalyzeButtons(false);
+                setTimeout(function() { location.reload(); }, 1000);
+            } else if (data.type === 'analysis_error') {
+                statusEl.textContent = 'Error: ' + data.error;
+                statusEl.className = 'reanalyze-status error';
+                setReanalyzeButtons(false);
+            } else if (data.type === 'regen_complete') {
+                statusEl.textContent = 'Regen complete. Reloading...';
+                statusEl.className = 'reanalyze-status complete';
+                setTimeout(function() { location.reload(); }, 500);
+            }
+        };
+
+        _sseSource.onerror = function() {
+            var statusEl = document.getElementById('reanalyzeStatus');
+            if (statusEl) {
+                statusEl.textContent = 'Server disconnected';
+                statusEl.className = 'reanalyze-status error';
+            }
+        };
+    }
+
+    function setReanalyzeButtons(disabled) {
+        var btns = document.querySelectorAll('.reanalyze-btn');
+        btns.forEach(function(btn) { btn.disabled = disabled; });
+    }
+
+    function triggerReanalysis(mode) {
+        fetch('/api/reanalyze', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({mode: mode})
+        }).then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.success) {
+                var statusEl = document.getElementById('reanalyzeStatus');
+                if (statusEl) {
+                    statusEl.textContent = data.error || 'Failed';
+                    statusEl.className = 'reanalyze-status error';
+                }
+            }
+        }).catch(function(err) {
+            var statusEl = document.getElementById('reanalyzeStatus');
+            if (statusEl) {
+                statusEl.textContent = 'Not using dev server';
+                statusEl.className = 'reanalyze-status error';
+            }
+        });
+    }
+
+    // Try connecting SSE (gracefully fails if not using dev server)
+    connectSSE();
+
     // Initialize on page load
     window.addEventListener('DOMContentLoaded', function() {
         initStatePanel();
