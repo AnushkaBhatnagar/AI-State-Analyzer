@@ -582,20 +582,86 @@ Return ONLY the JSON object, no additional text or explanation."""
         except Exception as e:
             raise Exception(f"Error reading file: {str(e)}")
     
+    def generate_mermaid_diagram(self, schema: dict) -> str:
+        """
+        Dedicated AI call to generate a Mermaid flowchart from states/transitions.
+        Generalized — works for any experience analyzed by this tool.
+
+        Args:
+            schema (dict): The full states schema (output of detect_states)
+
+        Returns:
+            str: Raw Mermaid flowchart code
+        """
+        states_summary = [
+            {
+                "id": s["id"],
+                "name": s["name"],
+                "description": s.get("description", ""),
+                "fill_color": s["color_theme"]["primary"],
+                "stroke_color": s["color_theme"]["border"]
+            }
+            for s in schema.get("states", [])
+        ]
+        transitions = schema.get("transitions", [])
+
+        prompt = f"""You are generating a Mermaid diagram for a state machine extracted from an interactive experience.
+
+STATES:
+{json.dumps(states_summary, indent=2)}
+
+TRANSITIONS:
+{json.dumps(transitions, indent=2)}
+
+Generate a Mermaid `flowchart TD` diagram following these rules exactly:
+1. Node IDs must be exactly: S0, S1, S2, ... matching each state's `id` field
+2. Node label format: S0["0 · StateName\\nshort description"] — keep labels concise, max 30 chars per line
+3. user_action transitions: solid arrow with label, e.g. S0 -->|"label"| S1
+4. automatic transitions: dashed arrow with label, e.g. S0 -.->|"⚡ label"| S1
+5. Self-loops and back-edges are fine — show them explicitly
+6. For each transition, use trigger.description as the edge label (truncate to 25 chars if needed)
+7. Add a classDef for each state. Use stroke_color for stroke. For fill, convert fill_color rgba to a dark opaque hex (e.g. rgba(255,183,197,0.15) → #2a1a1e). Keep the dark aesthetic.
+8. Apply class to each node: `class S0 s0style` etc.
+9. Style the active state via a separate classDef named `active` with bright white stroke and glow.
+
+Output ONLY the raw Mermaid code. No markdown fences. No explanation."""
+
+        response = self.client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=3000,
+            temperature=0.1,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        raw = response.content[0].text.strip()
+        # Strip markdown fences if the model wrapped the output anyway
+        raw = re.sub(r'^```[a-z]*\n?', '', raw, flags=re.MULTILINE)
+        raw = re.sub(r'^```\s*$', '', raw, flags=re.MULTILINE)
+        return raw.strip()
+
     def save_states_json(self, states_data, output_path="states_schema.json"):
         """
         Save the detected states to a JSON file.
-        
+        Also generates and embeds a Mermaid diagram for use in the panel.
+
         Args:
             states_data (dict): The states JSON data
             output_path (str): Path to save the JSON file
         """
         try:
+            # Generate Mermaid diagram and embed in schema
+            print("\nGenerating Mermaid state flow diagram...")
+            try:
+                mermaid_code = self.generate_mermaid_diagram(states_data)
+                states_data["mermaid_diagram"] = mermaid_code
+                print("[OK] Mermaid diagram generated")
+            except Exception as e:
+                print(f"[WARN] Mermaid generation failed: {e}. Saving schema without diagram.")
+
             with open(output_path, 'w', encoding='utf-8') as f:
                 json.dump(states_data, f, indent=2)
-            
+
             print(f"[OK] Saved states schema to {output_path}")
-            
+
         except Exception as e:
             raise Exception(f"Error saving JSON: {str(e)}")
 

@@ -2,7 +2,14 @@
   "permissions": {
     "allow": [
       "Bash(pip install watchdog)",
-      "Bash(python panel_generator.py)"
+      "Bash(python panel_generator.py)",
+      "Bash(grep -n \"mermaid\\\\|Mermaid\\\\|MERMAID\" c:/Users/anush/Downloads/summer25/timeline/controls/ai-state-analyzer/*.html)",
+      "Bash(grep -i \"mermaid\" c:/Users/anush/Downloads/summer25/timeline/controls/ai-state-analyzer/index.html c:/Users/anush/Downloads/summer25/timeline/controls/ai-state-analyzer/*.html)",
+      "Bash(python state_analyzer.py)",
+      "Bash(python -c \"import json; d=json.load\\(open\\(''states_schema.json''\\)\\); print\\(''mermaid_diagram'' in d\\); print\\(d.get\\(''mermaid_diagram'',''''\\)[:500]\\)\")",
+      "Bash(python -c \"import json; d=json.load\\(open\\(''states_schema.json''\\)\\); print\\(d.get\\(''mermaid_diagram'',''''\\)\\)\")",
+      "Bash(python -c \"import json,sys; d=json.load\\(open\\(''states_schema.json''\\)\\); sys.stdout.buffer.write\\(d.get\\(''mermaid_diagram'',''''\\).encode\\(''utf-8''\\)\\)\")",
+      "Bash(python -c \":*)"
     ],
     "additionalDirectories": [
       "c:\\Users\\anush\\Downloads\\summer25\\timeline\\controls\\ai-state-analyzer"

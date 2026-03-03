@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import re
 
@@ -899,6 +900,29 @@ class StatePanelGenerator:
             0% { box-shadow: 0 0 20px rgba(46, 204, 113, 0.8); }
             100% { box-shadow: none; }
         }
+
+        /* === Mermaid State Flow Diagram === */
+        .mermaid-wrapper {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 600px;
+            padding: 12px 8px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .mermaid-wrapper .mermaid {
+            min-width: 300px;
+        }
+
+        /* Active state node highlight — applied to SVG <g> elements */
+        .mermaid-node-active > rect,
+        .mermaid-node-active > polygon,
+        .mermaid-node-active > circle,
+        .mermaid-node-active > ellipse {
+            stroke: #ffffff !important;
+            stroke-width: 3px !important;
+            filter: brightness(1.5) drop-shadow(0 0 8px rgba(255,255,255,0.6));
+        }
 """
 
         # Generate state-specific CSS
@@ -927,100 +951,27 @@ class StatePanelGenerator:
 
     def generate_branching_map_html(self):
         """
-        Generate a compact visual state flow map using HTML/CSS.
-        Shows states as nodes with labeled transition edges between them.
+        Render the AI-generated Mermaid state flow diagram from the schema.
+        The Mermaid code is produced by state_analyzer.py and stored in
+        states_schema.json under the 'mermaid_diagram' key.
+        Falls back gracefully if no diagram is present.
         """
-        # Gather all transitions from top-level or per-state
-        transitions = self.states.get('transitions', [])
-        if not transitions:
-            # Fall back: build from per-state transitions
-            transitions = []
-            for state in self.state_list:
-                for t in state.get('transitions', []):
-                    t_copy = dict(t)
-                    t_copy['from_state_id'] = state['id']
-                    t_copy['from_state_name'] = state['name']
-                    transitions.append(t_copy)
+        if not self.states.get('mermaid_diagram', '').strip():
+            return ''
 
-        if not transitions:
-            return ''  # No transitions to show
-
-        html = '''
+        return '''
 <div class="branching-map-container">
     <div class="branching-map-header" onclick="toggleBranchingMap()">
         <span class="branching-map-toggle collapsed" id="branchMapToggle">&#9660;</span>
         STATE FLOW MAP
     </div>
     <div class="branching-map-body" id="branchMapBody" style="display: none;">
-        <div class="flow-diagram">
-'''
-
-        # Build a set of states that have outgoing transitions and their targets
-        rendered_edges = set()
-
-        for state in self.state_list:
-            state_id = state['id']
-            colors = state['color_theme']
-            state_name = state['name']
-
-            # Render node
-            state_desc = state.get('description', '')
-            html += f'''
-            <div class="flow-node" data-state-id="{state_id}"
-                 style="border-color: {colors['border']}; background: {colors['primary']};">
-                <span class="flow-node-id">{state_id}</span>
-                <div class="flow-node-text">
-                    <span class="flow-node-name">{state_name}</span>
-                    <span class="flow-node-desc">{state_desc}</span>
-                </div>
-            </div>
-'''
-
-            # Render outgoing edges for this state
-            outgoing = [t for t in transitions if t.get('from_state_id') == state_id]
-            for t in outgoing:
-                edge_id = t.get('id', '')
-                if edge_id in rendered_edges:
-                    continue
-                rendered_edges.add(edge_id)
-
-                trigger = t.get('trigger', {})
-                desc = trigger.get('description', '')
-                t_type = t.get('type', 'user_action')
-                type_icon = '&#9889;' if t_type == 'automatic' else '&#9758;'
-                branches = t.get('branches')
-
-                if branches:
-                    html += f'''
-            <div class="flow-edge branching-edge">
-                <div class="flow-edge-label">{type_icon} {desc}</div>
-                <div class="flow-branches">
-'''
-                    for branch in branches:
-                        target_id = branch.get('target_state_id', '?')
-                        outcome = branch.get('outcome', '')
-                        html += f'''
-                    <div class="flow-branch-line">
-                        <span class="flow-branch-outcome">{outcome}</span>
-                        <span class="flow-arrow">&#8594;</span>
-                        <span class="flow-branch-target" data-state="{target_id}">S{target_id}</span>
-                    </div>
-'''
-                    html += '                </div>\n            </div>\n'
-                else:
-                    html += f'''
-            <div class="flow-edge">
-                <div class="flow-edge-label">{type_icon} {desc}</div>
-                <div class="flow-arrow-down">&#8595;</div>
-            </div>
-'''
-
-        html += '''
+        <div class="mermaid-wrapper">
+            <div class="mermaid" id="stateFlowMermaid"></div>
         </div>
     </div>
 </div>
 '''
-        return html
 
     def generate_panel_html(self):
         """
@@ -1857,6 +1808,7 @@ class StatePanelGenerator:
         if (body.style.display === 'none') {
             body.style.display = 'block';
             toggle.classList.remove('collapsed');
+            if (typeof window.renderMermaidDiagram === 'function') window.renderMermaidDiagram();
         } else {
             body.style.display = 'none';
             toggle.classList.add('collapsed');
@@ -1864,13 +1816,7 @@ class StatePanelGenerator:
     }
 
     function updateFlowMapHighlight(currentState) {
-        document.querySelectorAll('.flow-node').forEach(function(node) {
-            node.classList.remove('flow-node-active');
-        });
-        var activeNode = document.querySelector('.flow-node[data-state-id="' + currentState + '"]');
-        if (activeNode) {
-            activeNode.classList.add('flow-node-active');
-        }
+        if (typeof window.updateMermaidHighlight === 'function') window.updateMermaidHighlight(currentState);
     }
 
     // Click-to-scroll: clicking a target state in transitions scrolls to that state card
@@ -2072,6 +2018,15 @@ class StatePanelGenerator:
         else:
             # Add style tag in head
             original_html = original_html.replace('</head>', f'<style>\n{css}\n</style>\n</head>')
+
+        # Inject Mermaid CDN + external diagram file (only if mermaid_diagram is present)
+        if self.states.get('mermaid_diagram'):
+            mermaid_scripts = (
+                '<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>\n'
+                '<script>mermaid.initialize({ startOnLoad: false, theme: "dark", securityLevel: "loose" });</script>\n'
+                '<script src="state_flow_diagram.js"></script>\n'
+            )
+            original_html = original_html.replace('</head>', mermaid_scripts + '</head>')
         
         # Inject panel HTML - find the appropriate insertion point
         # Try to inject before closing body tag
@@ -2099,19 +2054,57 @@ class StatePanelGenerator:
     def save_to_file(self, output_path, original_html_path):
         """
         Generate and save the complete HTML file.
-        
+        Also writes state_flow_diagram.js alongside it if a Mermaid diagram exists.
+
         Args:
             output_path (str): Path to save the output HTML
             original_html_path (str): Path to the original HTML file
         """
         try:
             complete_html = self.generate_complete_html(original_html_path)
-            
+
             with open(output_path, 'w', encoding='utf-8') as f:
                 f.write(complete_html)
-            
+
             print(f"[OK] Generated state panel HTML: {output_path}")
-            
+
+            # Write Mermaid diagram to external JS file
+            mermaid_code = self.states.get('mermaid_diagram', '').strip()
+            if mermaid_code:
+                output_dir = os.path.dirname(os.path.abspath(output_path))
+                diagram_path = os.path.join(output_dir, 'state_flow_diagram.js')
+                # Escape backticks and backslashes for JS template literal
+                escaped = mermaid_code.replace('\\', '\\\\').replace('`', '\\`').replace('${', '\\${')
+                js_content = f"""// Auto-generated by panel_generator.py — do not edit
+window.STATE_FLOW_DIAGRAM = `{escaped}`;
+
+// Render diagram on first call
+var _mermaidRendered = false;
+window.renderMermaidDiagram = function() {{
+    if (_mermaidRendered || typeof mermaid === 'undefined') return;
+    var el = document.getElementById('stateFlowMermaid');
+    if (el && window.STATE_FLOW_DIAGRAM) {{
+        el.textContent = window.STATE_FLOW_DIAGRAM;
+        mermaid.run({{ nodes: [el] }});
+        _mermaidRendered = true;
+    }}
+}};
+
+// Highlight active state node in the SVG
+window.updateMermaidHighlight = function(currentState) {{
+    document.querySelectorAll('.mermaid-node-active').forEach(function(el) {{
+        el.classList.remove('mermaid-node-active');
+    }});
+    var activeNode = document.querySelector('[id^="flowchart-S' + currentState + '-"]');
+    if (activeNode) {{
+        activeNode.classList.add('mermaid-node-active');
+    }}
+}};
+"""
+                with open(diagram_path, 'w', encoding='utf-8') as f:
+                    f.write(js_content)
+                print(f"[OK] Generated Mermaid diagram: state_flow_diagram.js")
+
         except Exception as e:
             raise Exception(f"Error saving HTML: {str(e)}")
 
