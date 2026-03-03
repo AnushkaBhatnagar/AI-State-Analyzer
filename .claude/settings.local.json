@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pip install watchdog)"
+      "Bash(pip install watchdog)",
+      "Bash(python panel_generator.py)"
     ],
     "additionalDirectories": [
       "c:\\Users\\anush\\Downloads\\summer25\\timeline\\controls\\ai-state-analyzer"

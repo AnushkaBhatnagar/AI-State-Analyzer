@@ -576,8 +576,331 @@ class StatePanelGenerator:
             background: rgba(231, 76, 60, 0.2);
             border-color: rgba(231, 76, 60, 0.5);
         }
+
+        /* === Transitions / User Choices Section === */
+        .transitions-section {
+            margin-top: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: 10px 12px;
+        }
+
+        .transitions-label {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .trans-group-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 8px 0 6px 0;
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+
+        .trans-group-label.user-actions {
+            color: rgba(0, 210, 211, 0.95);
+            background: rgba(0, 210, 211, 0.1);
+            border-bottom: 1px solid rgba(0, 210, 211, 0.3);
+        }
+
+        .trans-group-label.auto-transitions {
+            color: rgba(241, 196, 15, 0.95);
+            background: rgba(241, 196, 15, 0.08);
+            border-bottom: 1px solid rgba(241, 196, 15, 0.25);
+        }
+
+        .transition-item {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 5px;
+            padding: 8px 10px;
+            margin-bottom: 5px;
+            font-size: 12px;
+            border-left: 3px solid rgba(0, 210, 211, 0.5);
+        }
+
+        .transition-item.automatic {
+            border-left-color: rgba(241, 196, 15, 0.6);
+        }
+
+        .transition-item.branching {
+            border-left-color: rgba(0, 210, 211, 0.7);
+        }
+
+        .trans-flow {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            font-size: 12px;
+        }
+
+        .trans-action-inline {
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 600;
+        }
+
+        .trans-element-inline {
+            color: rgba(0, 210, 211, 0.6);
+            font-family: monospace;
+            font-size: 11px;
+        }
+
+        .trans-condition-inline {
+            color: rgba(241, 196, 15, 0.8);
+            font-family: monospace;
+            font-size: 11px;
+        }
+
+        .trans-arrow, .branch-arrow {
+            color: rgba(0, 210, 211, 0.9);
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .target-state, .branch-target {
+            color: rgba(0, 210, 211, 0.95);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .target-state:hover, .branch-target:hover {
+            text-decoration: underline;
+            color: #00d2d3;
+        }
+
+        .trans-auto-icon {
+            font-size: 14px;
+        }
+
+        .trans-branch-container {
+            margin-top: 6px;
+            padding-left: 10px;
+            border-left: 2px solid rgba(0, 210, 211, 0.25);
+        }
+
+        .trans-branch {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        .branch-outcome {
+            background: rgba(0, 210, 211, 0.15);
+            color: rgba(0, 210, 211, 0.95);
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .branch-prob {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 10px;
+            font-style: italic;
+        }
+
+        /* === Highlight Toggle Button === */
+        .highlight-toggle-btn.active {
+            background: rgba(46, 204, 113, 0.3);
+            border-color: #2ecc71;
+            color: #2ecc71;
+        }
+
+        .highlight-toggle-btn:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* === Global Branching Map === */
+        .branching-map-container {
+            background: rgba(10, 10, 10, 0.6);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .branching-map-header {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 10px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(30, 30, 30, 0.8);
+        }
+
+        .branching-map-header:hover {
+            background: rgba(40, 40, 40, 0.8);
+        }
+
+        .branching-map-toggle {
+            font-size: 10px;
+            transition: transform 0.2s ease;
+            display: inline-block;
+        }
+
+        .branching-map-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .flow-diagram {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+        }
+
+        .flow-node {
+            width: 85%;
+            max-width: 350px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 2px solid;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .flow-node:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
+        }
+
+        .flow-node-active {
+            box-shadow: 0 0 12px rgba(46, 204, 113, 0.5) !important;
+            border-color: #2ecc71 !important;
+        }
+
+        .flow-node-id {
+            background: rgba(0, 0, 0, 0.4);
+            color: white;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .flow-node-name {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .flow-node-text {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .flow-node-desc {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 400;
+        }
+
+        .flow-edge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 4px 0;
+            min-height: 30px;
+        }
+
+        .flow-edge-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: 10px;
+            max-width: 300px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .flow-arrow-down {
+            color: rgba(46, 204, 113, 0.6);
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .branching-edge {
+            background: rgba(155, 89, 182, 0.08);
+            border-radius: 4px;
+            padding: 4px 8px;
+            width: 85%;
+            max-width: 350px;
+        }
+
+        .flow-branches {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding-left: 12px;
+        }
+
+        .flow-branch-line {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 9px;
+        }
+
+        .flow-branch-outcome {
+            color: rgba(155, 89, 182, 0.9);
+            font-weight: 600;
+        }
+
+        .flow-arrow {
+            color: rgba(46, 204, 113, 0.6);
+        }
+
+        .flow-branch-target {
+            color: rgba(46, 204, 113, 0.9);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .state-highlight {
+            animation: highlightPulse 2s ease-out;
+        }
+
+        @keyframes highlightPulse {
+            0% { box-shadow: 0 0 20px rgba(46, 204, 113, 0.8); }
+            100% { box-shadow: none; }
+        }
 """
-        
+
         # Generate state-specific CSS
         for state in self.state_list:
             state_id = state['id']
@@ -601,7 +924,104 @@ class StatePanelGenerator:
 """
         
         return css
-    
+
+    def generate_branching_map_html(self):
+        """
+        Generate a compact visual state flow map using HTML/CSS.
+        Shows states as nodes with labeled transition edges between them.
+        """
+        # Gather all transitions from top-level or per-state
+        transitions = self.states.get('transitions', [])
+        if not transitions:
+            # Fall back: build from per-state transitions
+            transitions = []
+            for state in self.state_list:
+                for t in state.get('transitions', []):
+                    t_copy = dict(t)
+                    t_copy['from_state_id'] = state['id']
+                    t_copy['from_state_name'] = state['name']
+                    transitions.append(t_copy)
+
+        if not transitions:
+            return ''  # No transitions to show
+
+        html = '''
+<div class="branching-map-container">
+    <div class="branching-map-header" onclick="toggleBranchingMap()">
+        <span class="branching-map-toggle collapsed" id="branchMapToggle">&#9660;</span>
+        STATE FLOW MAP
+    </div>
+    <div class="branching-map-body" id="branchMapBody" style="display: none;">
+        <div class="flow-diagram">
+'''
+
+        # Build a set of states that have outgoing transitions and their targets
+        rendered_edges = set()
+
+        for state in self.state_list:
+            state_id = state['id']
+            colors = state['color_theme']
+            state_name = state['name']
+
+            # Render node
+            state_desc = state.get('description', '')
+            html += f'''
+            <div class="flow-node" data-state-id="{state_id}"
+                 style="border-color: {colors['border']}; background: {colors['primary']};">
+                <span class="flow-node-id">{state_id}</span>
+                <div class="flow-node-text">
+                    <span class="flow-node-name">{state_name}</span>
+                    <span class="flow-node-desc">{state_desc}</span>
+                </div>
+            </div>
+'''
+
+            # Render outgoing edges for this state
+            outgoing = [t for t in transitions if t.get('from_state_id') == state_id]
+            for t in outgoing:
+                edge_id = t.get('id', '')
+                if edge_id in rendered_edges:
+                    continue
+                rendered_edges.add(edge_id)
+
+                trigger = t.get('trigger', {})
+                desc = trigger.get('description', '')
+                t_type = t.get('type', 'user_action')
+                type_icon = '&#9889;' if t_type == 'automatic' else '&#9758;'
+                branches = t.get('branches')
+
+                if branches:
+                    html += f'''
+            <div class="flow-edge branching-edge">
+                <div class="flow-edge-label">{type_icon} {desc}</div>
+                <div class="flow-branches">
+'''
+                    for branch in branches:
+                        target_id = branch.get('target_state_id', '?')
+                        outcome = branch.get('outcome', '')
+                        html += f'''
+                    <div class="flow-branch-line">
+                        <span class="flow-branch-outcome">{outcome}</span>
+                        <span class="flow-arrow">&#8594;</span>
+                        <span class="flow-branch-target" data-state="{target_id}">S{target_id}</span>
+                    </div>
+'''
+                    html += '                </div>\n            </div>\n'
+                else:
+                    html += f'''
+            <div class="flow-edge">
+                <div class="flow-edge-label">{type_icon} {desc}</div>
+                <div class="flow-arrow-down">&#8595;</div>
+            </div>
+'''
+
+        html += '''
+        </div>
+    </div>
+</div>
+'''
+        return html
+
     def generate_panel_html(self):
         """
         Generate HTML for the state panel segments.
@@ -635,11 +1055,15 @@ class StatePanelGenerator:
     <div class="reanalyze-status" id="reanalyzeStatus">Ready</div>
     <button class="reanalyze-btn reanalyze-btn-primary" onclick="triggerReanalysis('incremental')" title="Incremental AI re-analysis (~15-25s)">Incremental Analysis</button>
     <button class="reanalyze-btn reanalyze-btn-full" onclick="triggerReanalysis('full')" title="Full from-scratch AI analysis (~20-30s)">Full Analysis</button>
+    <button class="reanalyze-btn highlight-toggle-btn active" id="highlightToggleBtn" onclick="toggleExperienceHighlights()" title="Toggle element highlights on the experience">Highlights</button>
 </div>
 '''
 
         html += '<div class="state-panel" id="statePanel">'
-        
+
+        # Add global branching map at top of panel
+        html += self.generate_branching_map_html()
+
         for state in self.state_list:
             state_id = state['id']
             state_name = state['name']
@@ -714,7 +1138,87 @@ class StatePanelGenerator:
                     <div class="param-mod">Purpose: {var_purpose}</div>
                 </div>
 '''
-            
+
+            # Add transitions / user choices (always visible, no dropdown)
+            transitions = state.get('transitions', [])
+            if transitions:
+                user_transitions = [t for t in transitions if t.get('type') == 'user_action']
+                auto_transitions = [t for t in transitions if t.get('type') == 'automatic']
+
+                html += f'''
+                <div class="transitions-section">
+                    <div class="transitions-label">User Choices &amp; Transitions ({len(transitions)})</div>
+'''
+
+                if user_transitions:
+                    html += '                    <div class="trans-group-label user-actions">User Actions</div>\n'
+                    for t in user_transitions:
+                        trigger = t.get('trigger', {})
+                        action_desc = trigger.get('description', 'Unknown action')
+                        element = trigger.get('element', '')
+                        branches = t.get('branches')
+
+                        if branches:
+                            elem_html = f' <span class="trans-element-inline">{element}</span>' if element else ''
+                            html += f'''
+                    <div class="transition-item branching">
+                        <div class="trans-flow" style="margin-bottom: 4px;">
+                            <span class="trans-action-inline">{action_desc}</span>{elem_html}
+                        </div>
+                        <div class="trans-branch-container">
+'''
+                            for branch in branches:
+                                target_name = branch.get('target_state_name', '?')
+                                target_id = branch.get('target_state_id', '?')
+                                outcome = branch.get('outcome', '')
+                                prob = branch.get('probability', '')
+                                prob_html = f' <span class="branch-prob">{prob}</span>' if prob else ''
+                                html += f'''
+                            <div class="trans-branch">
+                                <span class="branch-outcome">{outcome}</span>
+                                <span class="branch-arrow">&#8594;</span>
+                                <span class="branch-target" data-state="{target_id}">State {target_id}: {target_name}</span>{prob_html}
+                            </div>
+'''
+                            html += '                        </div>\n                    </div>\n'
+                        else:
+                            target_name = t.get('target_state_name', '?')
+                            target_id = t.get('target_state_id', '?')
+                            condition = t.get('condition', '')
+                            elem_html = f' <span class="trans-element-inline">{element}</span>' if element else ''
+                            cond_html = f' <span class="trans-condition-inline">if: {condition}</span>' if condition else ''
+                            html += f'''
+                    <div class="transition-item simple">
+                        <div class="trans-flow">
+                            <span class="trans-action-inline">{action_desc}</span>{elem_html}{cond_html}
+                            <span class="trans-arrow">&#8594;</span>
+                            <span class="target-state" data-state="{target_id}">State {target_id}: {target_name}</span>
+                        </div>
+                    </div>
+'''
+
+                if auto_transitions:
+                    html += '                    <div class="trans-group-label auto-transitions">Automatic Transitions</div>\n'
+                    for t in auto_transitions:
+                        trigger = t.get('trigger', {})
+                        desc = trigger.get('description', 'Unknown condition')
+                        target_name = t.get('target_state_name', '?')
+                        target_id = t.get('target_state_id', '?')
+                        html += f'''
+                    <div class="transition-item automatic">
+                        <div class="trans-flow">
+                            <span class="trans-auto-icon">&#9889;</span>
+                            <span class="trans-action-inline">{desc}</span>
+                            <span class="trans-arrow">&#8594;</span>
+                            <span class="target-state" data-state="{target_id}">State {target_id}: {target_name}</span>
+                        </div>
+                    </div>
+'''
+
+                html += '''
+                </div>
+'''
+
             html += '''
             </div>
         </div>
@@ -1054,41 +1558,52 @@ class StatePanelGenerator:
                     }}
                 }}
             }}
-            
+
+            // Auto-scroll active state card into view
+            var activeCard = document.getElementById('state' + currentTrackedState);
+            if (activeCard) {{
+                activeCard.scrollIntoView({{ behavior: 'smooth', block: 'nearest' }});
+            }}
+
             // Highlight UI elements when state changes
             highlightUIElements(currentTrackedState);
+
+            // Update flow map highlight
+            updateFlowMapHighlight(currentTrackedState);
         }}
     }}
-    
+
     function highlightUIElements(state) {{
         // Remove all previous highlights from page elements
         var allElements = document.querySelectorAll('.state-highlight');
         allElements.forEach(function(el) {{
             el.classList.remove('state-highlight');
         }});
-        
+
         // Remove all previous highlights from panel items
         var allPanelItems = document.querySelectorAll('.param-item.highlighted');
         allPanelItems.forEach(function(item) {{
             item.classList.remove('highlighted');
         }});
-        
+
         // Add highlights based on current state
         var stateConfig = getStateConfig(state);
         if (stateConfig && stateConfig.elements) {{
             stateConfig.elements.forEach(function(elementInfo) {{
                 // Skip disabled elements
                 if (elementInfo.state === 'disabled') return;
-                
+
                 var selector = elementInfo.selector;
-                
-                // Highlight page elements
-                var elements = document.querySelectorAll(selector);
-                elements.forEach(function(el) {{
-                    el.classList.add('state-highlight');
-                }});
-                
-                // Highlight corresponding panel items
+
+                // Highlight page elements (only if toggle is on)
+                if (experienceHighlightsEnabled) {{
+                    var elements = document.querySelectorAll(selector);
+                    elements.forEach(function(el) {{
+                        el.classList.add('state-highlight');
+                    }});
+                }}
+
+                // Highlight corresponding panel items (always active)
                 var panelItems = document.querySelectorAll('.param-item');
                 panelItems.forEach(function(item) {{
                     var selectorText = item.querySelector('.param-id');
@@ -1314,6 +1829,78 @@ class StatePanelGenerator:
         return false;
     }
     
+    // === Transitions & Branching Map Functions ===
+
+    var experienceHighlightsEnabled = true;
+
+    function toggleExperienceHighlights() {
+        experienceHighlightsEnabled = !experienceHighlightsEnabled;
+        var btn = document.getElementById('highlightToggleBtn');
+        if (experienceHighlightsEnabled) {
+            btn.classList.add('active');
+            highlightUIElements(currentTrackedState);
+        } else {
+            btn.classList.remove('active');
+            // Remove ONLY experience highlights, not panel highlights
+            document.querySelectorAll('.state-highlight').forEach(function(el) {
+                if (!el.closest('#statePanel') && !el.closest('.state-panel')) {
+                    el.classList.remove('state-highlight');
+                }
+            });
+        }
+    }
+
+    function toggleBranchingMap() {
+        var body = document.getElementById('branchMapBody');
+        var toggle = document.getElementById('branchMapToggle');
+        if (!body) return;
+        if (body.style.display === 'none') {
+            body.style.display = 'block';
+            toggle.classList.remove('collapsed');
+        } else {
+            body.style.display = 'none';
+            toggle.classList.add('collapsed');
+        }
+    }
+
+    function updateFlowMapHighlight(currentState) {
+        document.querySelectorAll('.flow-node').forEach(function(node) {
+            node.classList.remove('flow-node-active');
+        });
+        var activeNode = document.querySelector('.flow-node[data-state-id="' + currentState + '"]');
+        if (activeNode) {
+            activeNode.classList.add('flow-node-active');
+        }
+    }
+
+    // Click-to-scroll: clicking a target state in transitions scrolls to that state card
+    document.addEventListener('click', function(e) {
+        var target = e.target.closest('[data-state]');
+        if (target) {
+            var stateId = target.getAttribute('data-state');
+            var stateCard = document.getElementById('state' + stateId);
+            if (stateCard) {
+                stateCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                stateCard.classList.add('state-highlight');
+                setTimeout(function() { stateCard.classList.remove('state-highlight'); }, 2000);
+            }
+        }
+    });
+
+    // Clicking a flow node scrolls to corresponding state card
+    document.addEventListener('click', function(e) {
+        var node = e.target.closest('.flow-node');
+        if (node) {
+            var stateId = node.getAttribute('data-state-id');
+            var stateCard = document.getElementById('state' + stateId);
+            if (stateCard) {
+                stateCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                stateCard.classList.add('state-highlight');
+                setTimeout(function() { stateCard.classList.remove('state-highlight'); }, 2000);
+            }
+        }
+    });
+
     // View switching functions
     function switchToOriginalView() {
         // Show iframe container

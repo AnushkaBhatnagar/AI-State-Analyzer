@@ -44,21 +44,33 @@ You are a code analysis expert specializing in identifying behavioral states and
 
 Analyze the following {file_type.upper()} code and detect ALL distinct behavioral states or stages in the application.
 
-IMPORTANT: Keep all text descriptions CONCISE and BRIEF:
-- description: max 100 characters
-- purpose: max 50 characters  
-- range_description: max 100 characters
-- Be clear but brief
+CRITICAL OUTPUT SIZE LIMITS — the response MUST fit in 16000 tokens:
+- description: max 60 characters — VERY SPECIFIC, surface the user's choice or action where applicable, written so that someone with zero knowledge of the experience immediately knows what this state is. Format: "User [does X] — [what this state is]", e.g. "User makes a choice to CONTINUE — first escalation gate". Prioritize user-facing moments over technical details.
+- purpose: max 40 characters
+- range_description: max 60 characters
+- user_facing_description: max 1 sentence (80 chars)
+- trigger descriptions: max 40 characters
+- source_code_blocks: max 2 blocks per state, max 5 lines each. Truncate with "// ..."
+- Be as concise as possible everywhere
 
 For EACH state you identify, provide:
 
 1. **State Identification & Specificity (CRITICAL):**
    - State ID (0, 1, 2, etc.)
    - State name (e.g., "Idle", "Active", "Loading")
+   - **NAMING RULES (CRITICAL):**
+     * State names must be DESCRIPTIVE — do NOT include sequential numbers or the word "stage" in state names.
+       WRONG: "Stage 1 - Warm", "Stage 3 - Intense", "Warm Stage"
+       RIGHT: "Welcome Screen", "Warm Notifications", "Stress Phase", "Intense Phase", "Hell Mode"
+     * Transition/bridge states that connect two other states must reference the STATE IDs
+       they connect, NOT conceptual stage numbers.
+       Example: If a transition screen sits between state 1 (Warm Notifications) and state 3 (Stress Phase),
+       name it "Transition 1-3" — NOT "Transition Screen 1-2".
+     * The numbers in transition names must match the actual state IDs visible in the flow map.
    - **Specificity Rank (0-100):** Assign a priority number. High numbers check FIRST.
      * 100: Critical Overrides (Game Over, Error Screens, Modals)
-     * 80: Specific Modes/Stages (Stage 3, Boss Fight)
-     * 50: General Active States (Stage 1, Playing)
+     * 80: Specific Modes (Boss Fight, Transition Screens)
+     * 50: General Active States (Playing, Active Phase)
      * 10: Default/Idle States
    - **User-facing description (2-3 lines, non-technical):** Explain what's happening in simple terms.
 
@@ -117,14 +129,41 @@ For EACH state you identify, provide:
    - This allows us to inject `window.__ai_state_monitor.report('varName', varName)` at runtime.
 
 7. **Source Code Blocks:**
-   For each state, provide `source_code_blocks` - an array of objects, each containing:
-   - `label`: A short label (e.g., "startStage3() function", "Stage 3 CSS styles")
-   - `code`: The EXACT verbatim source code (functions, event handlers, CSS blocks) that implements or manages this state.
-   Include ALL relevant functions and handlers. Copy the code exactly from the source - do not summarize or truncate.
+   For each state, provide `source_code_blocks` - max 2 objects per state, each containing:
+   - `label`: A short label (e.g., "startStage3() function")
+   - `code`: The first 5 lines of the function/block, then append "// ... (truncated)"
+   Do NOT include full functions. Only the first 5 lines to identify the code.
 
 8. **Related Functions:**
    For each state, provide `related_functions` - an array of function name strings that trigger, manage, or are called during this state.
    Example: ["startStage3", "handleUrgentClick", "checkCountdown"]
+
+9. **Transitions & User Choices:**
+   For EACH state, identify ALL possible transitions OUT of this state:
+
+   a) **User-Driven Transitions:** Actions a user can take that change the state.
+      - What element they interact with (CSS selector)
+      - What action type (click, input, scroll, key_press)
+      - What state it leads to (target state ID and name)
+      - Any branching: if the same action can lead to DIFFERENT states based on conditions
+        (e.g., random outcome, variable check), list ALL possible branches with outcomes.
+
+   b) **Automatic Transitions:** Conditions that trigger state changes without user action.
+      - Threshold conditions (e.g., counter >= 50)
+      - Timer-based transitions (e.g., after timeout)
+      - The target state ID and name
+
+   c) **Branching Transitions:** When one action can lead to multiple outcomes:
+      - Set target_state_id to null at the top level
+      - List each possible outcome in the "branches" array
+      - Include the target state ID/name and probability/condition for each branch
+
+   Rules:
+   - Only include transitions that CHANGE the state (not actions that stay in the same state)
+   - Use state IDs that match the states you defined above
+   - If a state has NO outgoing transitions (terminal state), use an empty array []
+   - Look at the ACTUAL CODE (function calls, variable assignments, setTimeout chains) to find transitions
+   - Keep trigger descriptions concise (max 40 chars)
 
 IMPORTANT: Return your analysis as a valid JSON object with this EXACT structure:
 
@@ -139,8 +178,25 @@ IMPORTANT: Return your analysis as a valid JSON object with this EXACT structure
     {{
       "variable": "variableName",
       "search_pattern": "exact code line to find",
-      "injection_type": "after", 
+      "injection_type": "after",
       "scope_context": "function name or description"
+    }}
+  ],
+  "transitions": [
+    {{
+      "id": "t_<from_id>_<to_id>",
+      "from_state_id": 0,
+      "from_state_name": "Source State Name",
+      "type": "user_action | automatic",
+      "trigger": {{
+        "action": "click | input | scroll | threshold | timer | key_press",
+        "element": ".selector-or-null",
+        "description": "Short human-readable label (max 40 chars)"
+      }},
+      "target_state_id": "<number or null if branching>",
+      "target_state_name": "Target State Name or null",
+      "condition": "optional JS condition or null",
+      "branches": "null OR array of {{ outcome, target_state_id, target_state_name, probability }}"
     }}
   ],
   "states": [
@@ -149,7 +205,7 @@ IMPORTANT: Return your analysis as a valid JSON object with this EXACT structure
       "name": "State Name",
       "specificity_rank": 10,
       "trigger_logic": "findVariable('stage') === 0",
-      "description": "Short technical desc",
+      "description": "User makes a choice to CONTINUE — first escalation gate",
       "range_description": "Boundary desc",
       "user_facing_description": "Non-technical desc",
       "detection_condition": "Legacy condition string (keep for reference)",
@@ -198,7 +254,22 @@ IMPORTANT: Return your analysis as a valid JSON object with this EXACT structure
           "code": "exact source code text"
         }}
       ],
-      "related_functions": ["functionName1", "functionName2"]
+      "related_functions": ["functionName1", "functionName2"],
+      "transitions": [
+        {{
+          "id": "t_<from_id>_<to_id>",
+          "type": "user_action | automatic",
+          "trigger": {{
+            "action": "click | input | scroll | threshold | timer | key_press",
+            "element": ".selector-or-null",
+            "description": "Short label (max 40 chars)"
+          }},
+          "target_state_id": "<number or null if branching>",
+          "target_state_name": "Target State Name or null",
+          "condition": "optional condition or null",
+          "branches": "null OR [{{ outcome, target_state_id, target_state_name, probability }}]"
+        }}
+      ]
     }}
   ]
 }}
@@ -223,9 +294,24 @@ Return ONLY the JSON object, no additional text or explanation.
                 ]
             )
             
+            # Check if response was truncated
+            if response.stop_reason == 'max_tokens':
+                print("[WARN] Response truncated (hit max_tokens). Retrying with concise mode...")
+                retry_messages = [
+                    {"role": "user", "content": state_detection_prompt},
+                    {"role": "assistant", "content": response.content[0].text},
+                    {"role": "user", "content": "Your response was truncated. Please return the COMPLETE JSON but make source_code_blocks shorter (max 5 lines each, truncate with '// ...'). Return ONLY the complete JSON."}
+                ]
+                response = self.client.messages.create(
+                    model="claude-sonnet-4-20250514",
+                    max_tokens=16000,
+                    temperature=0.1,
+                    messages=retry_messages
+                )
+
             # Extract JSON from response
             response_text = response.content[0].text
-            
+
             # Try to parse the response as JSON
             # Sometimes AI might wrap JSON in markdown code blocks
             json_match = re.search(r'```json\s*(.*?)\s*```', response_text, re.DOTALL)
@@ -284,8 +370,9 @@ The code has been modified. Your job is to produce an UPDATED state schema that 
 ## INSTRUCTIONS:
 1. Compare the updated code against the existing analysis.
 2. **Preserve state IDs and names** where the underlying logic hasn't fundamentally changed.
+   **NAMING RULES:** State names must be descriptive without sequential numbers or the word "stage" (e.g., "Warm Notifications" not "Stage 1 - Warm"). Transition states must reference the STATE IDs they bridge (e.g., "Transition 1-3" not "Transition Screen 1-2").
 3. **Update these fields** to reflect the NEW code exactly:
-   - `source_code_blocks`: Must contain EXACT verbatim code from the UPDATED source. Copy code exactly - do not summarize.
+   - `source_code_blocks`: Max 2 blocks per state, max 5 lines each. Truncate longer code with "// ... (truncated)".
    - `trigger_logic`: Update if the conditions changed.
    - `key_variables`: Update values/purposes if they changed.
    - `interactive_elements`: Update if elements were added/removed/changed.
@@ -293,10 +380,12 @@ The code has been modified. Your job is to produce an UPDATED state schema that 
    - `related_functions`: Update if functions were added/removed/renamed.
    - `weighted_dom_signals`: Update if DOM structure changed.
    - `detection_strategy`: Update if detection approach should change.
+   - `transitions`: Update per-state and top-level transitions if state transitions changed, states were added/removed, or interactive elements changed.
 4. If NEW states were added in the code, append them with the next available ID.
 5. If states were REMOVED from the code, remove them from the schema.
 6. Update `metadata.total_states` to match the actual number of states.
-7. Keep descriptions CONCISE (description: max 100 chars, purpose: max 50 chars).
+7. Rebuild the top-level `transitions` array from per-state transitions to keep them in sync.
+8. Keep descriptions CONCISE (description: max 100 chars, purpose: max 50 chars).
 
 IMPORTANT: Return the COMPLETE updated JSON schema in the EXACT same format as the existing one.
 Return ONLY the JSON object, no additional text or explanation."""
@@ -314,6 +403,21 @@ Return ONLY the JSON object, no additional text or explanation."""
                     }
                 ]
             )
+
+            # Check if response was truncated
+            if response.stop_reason == 'max_tokens':
+                print("[WARN] Incremental response truncated. Retrying with concise mode...")
+                retry_messages = [
+                    {"role": "user", "content": update_prompt},
+                    {"role": "assistant", "content": response.content[0].text},
+                    {"role": "user", "content": "Your response was truncated. Please return the COMPLETE JSON but make source_code_blocks shorter (max 5 lines each, truncate with '// ...'). Return ONLY the complete JSON."}
+                ]
+                response = self.client.messages.create(
+                    model="claude-sonnet-4-20250514",
+                    max_tokens=16000,
+                    temperature=0.1,
+                    messages=retry_messages
+                )
 
             response_text = response.content[0].text
 
@@ -414,7 +518,28 @@ Return ONLY the JSON object, no additional text or explanation."""
                 for field in required_fields:
                     if field not in state:
                         return False
-            
+
+            # Validate transitions if present (soft - not required)
+            if "transitions" in data:
+                top_transitions = data["transitions"]
+                if not isinstance(top_transitions, list):
+                    return False
+                for t in top_transitions:
+                    if not isinstance(t, dict):
+                        return False
+                    if "from_state_id" not in t or "type" not in t:
+                        return False
+
+            for state in states:
+                if "transitions" in state:
+                    if not isinstance(state["transitions"], list):
+                        return False
+                    for t in state["transitions"]:
+                        if not isinstance(t, dict):
+                            return False
+                        if "type" not in t or "trigger" not in t:
+                            return False
+
             return True
             
         except Exception:
