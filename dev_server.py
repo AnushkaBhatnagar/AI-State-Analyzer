@@ -88,10 +88,14 @@ def run_analysis(mode="incremental"):
         if mode == "incremental" and schema_path.exists():
             existing_schema = json.loads(schema_path.read_text(encoding="utf-8"))
             states_data = analyzer.update_states(code_content, existing_schema)
+            # Incremental jump codes — only regenerate pairs involving changed states
+            states_data = analyzer.update_jump_codes(code_content, states_data, existing_schema)
         else:
             states_data = analyzer.detect_states(code_content)
+            # Full jump code generation for all pairs
+            states_data = analyzer.generate_jump_codes(code_content, states_data)
 
-        # Save updated schema
+        # Save updated schema (now includes jump_setup + jump_transitions)
         analyzer.save_states_json(states_data, str(schema_path))
 
         # Regenerate panel HTML

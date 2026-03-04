@@ -11,6 +11,7 @@ Incremental mode (updates existing schema instead of from-scratch):
 """
 
 import argparse
+import json
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
@@ -52,6 +53,12 @@ def main():
         default='full',
         help='Analysis mode: full (from scratch) or incremental (update existing schema)'
     )
+    parser.add_argument(
+        '--skip-jump-codes',
+        action='store_true',
+        default=False,
+        help='Skip AI jump code generation (faster pipeline, no state_jumper.js transitions)'
+    )
 
     args = parser.parse_args()
     
@@ -76,6 +83,7 @@ def main():
     print(f"Output: {output_path}")
     print(f"Schema: {args.schema_output}")
     print(f"Mode:   {args.mode}")
+    print(f"Jumper: {'disabled (--skip-jump-codes)' if args.skip_jump_codes else 'enabled'}")
     print()
 
     try:
@@ -83,38 +91,58 @@ def main():
         analyzer = StateDetectionAnalyzer(api_key=args.api_key)
 
         if args.mode == 'incremental':
-            print("Step 1/3: Running incremental AI analysis (updating existing schema)...")
+            print("Step 1/4: Running incremental AI analysis (updating existing schema)...")
             print("-" * 70)
             states_data = analyzer.update_states_from_file(
                 args.input_file,
                 existing_schema_path=args.schema_output
             )
         else:
-            print("Step 1/3: Running full AI analysis (from scratch)...")
+            print("Step 1/4: Running full AI analysis (from scratch)...")
             print("-" * 70)
             states_data = analyzer.detect_states_from_file(args.input_file)
-        
+
         print()
         print("[OK] State detection complete!")
         print(f"  Found {states_data['metadata']['total_states']} states")
         print()
-        
+
         # Show summary
         print("Detected States:")
         for state in states_data['states']:
             print(f"  - State {state['id']}: {state['name']}")
             print(f"    {state.get('range_description', state['description'])}")
         print()
-        
-        # Step 2: Save schema
-        print("Step 2/3: Saving state schema...")
+
+        # Step 2: Generate jump codes
+        print("Step 2/4: Generating AI jump codes...")
         print("-" * 70)
-        
+        if not args.skip_jump_codes:
+            with open(args.input_file, 'r', encoding='utf-8') as f:
+                source_code = f.read()
+            schema_file = Path(args.schema_output)
+            if args.mode == 'incremental' and schema_file.exists():
+                old_schema = json.loads(schema_file.read_text(encoding='utf-8'))
+                states_data = analyzer.update_jump_codes(source_code, states_data, old_schema)
+            else:
+                states_data = analyzer.generate_jump_codes(source_code, states_data)
+            n_pairs = len(states_data.get('jump_transitions', {}))
+            print(f"[OK] {n_pairs} jump transition(s) generated")
+        else:
+            print("[SKIP] Jump code generation skipped (--skip-jump-codes)")
+            states_data.setdefault('jump_setup', '')
+            states_data.setdefault('jump_transitions', {})
+        print()
+
+        # Step 3: Save schema
+        print("Step 3/4: Saving state schema...")
+        print("-" * 70)
+
         analyzer.save_states_json(states_data, args.schema_output)
         print()
-        
-        # Step 3: Generate panel
-        print("Step 3/3: Generating state progression panel...")
+
+        # Step 4: Generate panel
+        print("Step 4/4: Generating state progression panel...")
         print("-" * 70)
         
         generator = StatePanelGenerator(states_data)

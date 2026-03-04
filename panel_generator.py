@@ -44,7 +44,10 @@ class StatePanelGenerator:
             if not variable or not pattern:
                 continue
             
-            report_code = f" try {{ window.__ai_state_monitor.report('{variable}', {variable}); }} catch(e) {{}} "
+            # Extract full access path from search_pattern (e.g. "this.gameState.currentTantrum")
+            lhs_match = re.search(r'([\w$]+(?:\.[\w$]+)*\.' + re.escape(variable) + r')\b', pattern)
+            full_access = lhs_match.group(1) if lhs_match else variable
+            report_code = f" try {{ window.__ai_state_monitor.report('{variable}', {full_access}); }} catch(e) {{}} "
             safe_pattern = re.escape(pattern).replace(r'\ ', r'\s*') # More flexible whitespace
             
             try:
@@ -236,9 +239,25 @@ class StatePanelGenerator:
                                 
                                 end_pos += 1
                         
-                        # Inject hook
+                        # Inject hook — use full property access chain (e.g. this.gameState.needsHug)
                         result.append(code[last_append:end_pos])
-                        hook = f"; try {{ window.__ai_state_monitor.report('{identifier}', {identifier}); }} catch(e) {{}} "
+
+                        # Look backwards from identifier to capture "this.gameState." prefix
+                        full_expr_start = start
+                        while full_expr_start > 0 and code[full_expr_start - 1] == '.':
+                            dot_pos = full_expr_start - 1
+                            ident_end = dot_pos
+                            ident_start = ident_end - 1
+                            while ident_start >= 0 and (code[ident_start].isalnum() or code[ident_start] in ('_', '$')):
+                                ident_start -= 1
+                            ident_start += 1
+                            if ident_start < ident_end:
+                                full_expr_start = ident_start
+                            else:
+                                break
+                        full_lhs = code[full_expr_start:i]
+
+                        hook = f"; try {{ window.__ai_state_monitor.report('{identifier}', {full_lhs}); }} catch(e) {{}} "
                         result.append(hook)
                         
                         last_append = end_pos
@@ -258,7 +277,23 @@ class StatePanelGenerator:
             str: CSS code for the panel
         """
         css = """
-        
+
+        body {
+            justify-content: flex-start !important;
+            overflow: hidden !important;
+        }
+        #analysis-content-area {
+            width: calc(100% - 450px);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        #game-container {
+            transform-origin: center center;
+        }
+
         .view-toggle-container {
             position: fixed;
             top: 20px;
@@ -331,7 +366,6 @@ class StatePanelGenerator:
             flex-direction: column;
             box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
             z-index: 1000;
-            padding-top: 45px;
         }
 
         .stage-segment {
@@ -510,10 +544,8 @@ class StatePanelGenerator:
         }
 
         .reanalyze-toolbar {
-            position: fixed;
-            right: 0;
+            position: sticky;
             top: 0;
-            width: 450px;
             z-index: 1001;
             background: rgba(10, 10, 10, 0.98);
             border-bottom: 1px solid rgba(255, 255, 255, 0.15);
@@ -522,6 +554,7 @@ class StatePanelGenerator:
             align-items: center;
             gap: 8px;
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            flex-shrink: 0;
         }
 
         .reanalyze-status {
@@ -727,8 +760,12 @@ class StatePanelGenerator:
 
         /* === Global Branching Map === */
         .branching-map-container {
+            position: sticky;
+            top: 41px;
+            z-index: 1000;
             background: rgba(10, 10, 10, 0.6);
             border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+            flex-shrink: 0;
         }
 
         .branching-map-header {
@@ -749,15 +786,6 @@ class StatePanelGenerator:
             background: rgba(40, 40, 40, 0.8);
         }
 
-        .branching-map-toggle {
-            font-size: 10px;
-            transition: transform 0.2s ease;
-            display: inline-block;
-        }
-
-        .branching-map-toggle.collapsed {
-            transform: rotate(-90deg);
-        }
 
         .flow-diagram {
             padding: 12px;
@@ -901,28 +929,6 @@ class StatePanelGenerator:
             100% { box-shadow: none; }
         }
 
-        /* === Mermaid State Flow Diagram === */
-        .mermaid-wrapper {
-            overflow-x: auto;
-            overflow-y: auto;
-            max-height: 600px;
-            padding: 12px 8px;
-            background: rgba(0, 0, 0, 0.2);
-        }
-
-        .mermaid-wrapper .mermaid {
-            min-width: 300px;
-        }
-
-        /* Active state node highlight — applied to SVG <g> elements */
-        .mermaid-node-active > rect,
-        .mermaid-node-active > polygon,
-        .mermaid-node-active > circle,
-        .mermaid-node-active > ellipse {
-            stroke: #ffffff !important;
-            stroke-width: 3px !important;
-            filter: brightness(1.5) drop-shadow(0 0 8px rgba(255,255,255,0.6));
-        }
 """
 
         # Generate state-specific CSS
@@ -950,25 +956,14 @@ class StatePanelGenerator:
         return css
 
     def generate_branching_map_html(self):
-        """
-        Render the AI-generated Mermaid state flow diagram from the schema.
-        The Mermaid code is produced by state_analyzer.py and stored in
-        states_schema.json under the 'mermaid_diagram' key.
-        Falls back gracefully if no diagram is present.
-        """
+        """Render a button that opens the state flow map in a new tab."""
         if not self.states.get('mermaid_diagram', '').strip():
             return ''
 
         return '''
 <div class="branching-map-container">
-    <div class="branching-map-header" onclick="toggleBranchingMap()">
-        <span class="branching-map-toggle collapsed" id="branchMapToggle">&#9660;</span>
-        STATE FLOW MAP
-    </div>
-    <div class="branching-map-body" id="branchMapBody" style="display: none;">
-        <div class="mermaid-wrapper">
-            <div class="mermaid" id="stateFlowMermaid"></div>
-        </div>
+    <div class="branching-map-header" onclick="window.open('state_flow_map.html','_blank')">
+        STATE FLOW MAP &#8599;
     </div>
 </div>
 '''
@@ -999,7 +994,9 @@ class StatePanelGenerator:
 
 '''
 
-        # Re-analysis toolbar
+        html += '<div class="state-panel" id="statePanel">'
+
+        # Re-analysis toolbar (inside state panel, sticky at top)
         html += '''
 <!-- Re-Analysis Toolbar -->
 <div class="reanalyze-toolbar" id="reanalyzeToolbar">
@@ -1010,9 +1007,7 @@ class StatePanelGenerator:
 </div>
 '''
 
-        html += '<div class="state-panel" id="statePanel">'
-
-        # Add global branching map at top of panel
+        # Add global branching map at top of panel (sticky below toolbar)
         html += self.generate_branching_map_html()
 
         for state in self.state_list:
@@ -1342,7 +1337,7 @@ class StatePanelGenerator:
             }}
         }} catch(e) {{}}
         
-        return undefined;
+        return null;  // Return null (not undefined) so !== null checks fail when var is not found
     }}
     
     function getCurrentState() {{
@@ -1519,8 +1514,6 @@ class StatePanelGenerator:
             // Highlight UI elements when state changes
             highlightUIElements(currentTrackedState);
 
-            // Update flow map highlight
-            updateFlowMapHighlight(currentTrackedState);
         }}
     }}
 
@@ -1801,24 +1794,6 @@ class StatePanelGenerator:
         }
     }
 
-    function toggleBranchingMap() {
-        var body = document.getElementById('branchMapBody');
-        var toggle = document.getElementById('branchMapToggle');
-        if (!body) return;
-        if (body.style.display === 'none') {
-            body.style.display = 'block';
-            toggle.classList.remove('collapsed');
-            if (typeof window.renderMermaidDiagram === 'function') window.renderMermaidDiagram();
-        } else {
-            body.style.display = 'none';
-            toggle.classList.add('collapsed');
-        }
-    }
-
-    function updateFlowMapHighlight(currentState) {
-        if (typeof window.updateMermaidHighlight === 'function') window.updateMermaidHighlight(currentState);
-    }
-
     // Click-to-scroll: clicking a target state in transitions scrolls to that state card
     document.addEventListener('click', function(e) {
         var target = e.target.closest('[data-state]');
@@ -1986,8 +1961,31 @@ class StatePanelGenerator:
     
     // Periodically check for state changes (lighter polling for state detection only)
     setInterval(updateStateHighlight, 1000); // Slower polling since we have events
+
+    // ===== RESPONSIVE CONTENT SCALING =====
+    function adjustGameScale() {
+        var area = document.getElementById('analysis-content-area');
+        if (!area) return;
+        var areaW = area.clientWidth;
+        var areaH = area.clientHeight;
+        // Find main visual content (first non-script/style child)
+        var main = null;
+        for (var i = 0; i < area.children.length; i++) {
+            var tag = area.children[i].tagName;
+            if (tag !== 'SCRIPT' && tag !== 'STYLE') { main = area.children[i]; break; }
+        }
+        if (!main) return;
+        var w = main.offsetWidth;
+        var h = main.offsetHeight;
+        if (!w || !h) return;
+        var scale = Math.min(areaW / w, areaH / h, 1) * 0.95;
+        main.style.transform = 'scale(' + scale + ')';
+        main.style.transformOrigin = 'center center';
+    }
+    window.addEventListener('resize', adjustGameScale);
+    setTimeout(adjustGameScale, 500);
 """
-        
+
         return js
     
     def generate_complete_html(self, original_html_path):
@@ -2006,7 +2004,20 @@ class StatePanelGenerator:
         
         # --- NEW: Inject Code Hooks into User Script ---
         original_html = self.inject_code_hooks(original_html)
-        
+
+        # Wrap all body content in analysis-content-area for side-by-side layout
+        import re
+        original_html = re.sub(
+            r'(<body[^>]*>)',
+            r'\1\n<div id="analysis-content-area">',
+            original_html,
+            count=1
+        )
+        original_html = original_html.replace(
+            '</body>',
+            '</div><!-- /analysis-content-area -->\n</body>'
+        )
+
         # Generate components
         css = self.generate_panel_css()
         panel_html = self.generate_panel_html()
@@ -2019,15 +2030,6 @@ class StatePanelGenerator:
             # Add style tag in head
             original_html = original_html.replace('</head>', f'<style>\n{css}\n</style>\n</head>')
 
-        # Inject Mermaid CDN + external diagram file (only if mermaid_diagram is present)
-        if self.states.get('mermaid_diagram'):
-            mermaid_scripts = (
-                '<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>\n'
-                '<script>mermaid.initialize({ startOnLoad: false, theme: "dark", securityLevel: "loose" });</script>\n'
-                '<script src="state_flow_diagram.js"></script>\n'
-            )
-            original_html = original_html.replace('</head>', mermaid_scripts + '</head>')
-        
         # Inject panel HTML - find the appropriate insertion point
         # Try to inject before closing body tag
         if '</body>' in original_html:
@@ -2048,13 +2050,158 @@ class StatePanelGenerator:
         else:
             # Add before closing body tag
             original_html = original_html.replace('</body>', f'<script>\n{combined_js}\n</script>\n</body>')
-        
+
+        # Always inject state_jumper.js — buttons show "No path" when transitions are missing,
+        # which is more informative than invisible buttons
+        jumper_tag = '<script src="state_jumper.js"></script>\n'
+        original_html = original_html.replace('</body>', jumper_tag + '</body>')
+
         return original_html
     
+    def generate_jump_js(self):
+        """
+        Generate the content of state_jumper.js — a self-contained, self-injecting
+        plugin that adds Jump buttons to the panel and executes AI-generated jump codes.
+
+        state_jumper.js is NOT referenced in index_with_panel.html. Load it on demand:
+          var s=document.createElement('script');s.src='state_jumper.js';document.body.appendChild(s);
+
+        Returns:
+            str: Complete JavaScript content for state_jumper.js
+        """
+        jump_transitions = self.states.get('jump_transitions', {})
+        jump_setup = self.states.get('jump_setup', '')
+        jump_transitions_json = json.dumps(jump_transitions, indent=2)
+
+        return f"""// state_jumper.js — generated by AI State Analyzer
+// AI-generated jump codes for state navigation. Do not edit manually.
+// Regenerate: python generate_state_panel.py <your-file.html>
+//
+// HOW TO USE:
+//   1. Open index_with_panel.html in your browser (via dev server)
+//   2. Open DevTools console (F12)
+//   3. Paste this line and press Enter:
+//        var s=document.createElement('script');s.src='state_jumper.js';document.body.appendChild(s);
+//   4. "Jump" buttons will appear on each state card in the panel
+
+(function () {{
+    // ── 1. Inject CSS ──────────────────────────────────────────────────────────
+    var style = document.createElement('style');
+    style.textContent = [
+        '.jump-btn {{ background: rgba(155,89,182,0.2); color: rgba(200,150,255,0.9); border: 1px solid rgba(155,89,182,0.5); padding: 4px 10px; border-radius: 12px; font-size: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 2px; }}',
+        '.jump-btn:hover {{ background: rgba(155,89,182,0.4); border-color: rgba(155,89,182,0.8); transform: scale(1.05); box-shadow: 0 0 8px rgba(155,89,182,0.4); }}',
+        '.jump-btn:active {{ transform: scale(0.95); }}',
+        '.jump-btn.jumping {{ background: rgba(241,196,15,0.3); border-color: rgba(241,196,15,0.7); color: rgba(241,196,15,0.9); cursor: not-allowed; }}',
+        '.jump-btn.jump-success {{ background: rgba(46,204,113,0.3); border-color: rgba(46,204,113,0.7); color: rgba(46,204,113,0.9); }}',
+        '.jump-btn.jump-error {{ background: rgba(231,76,60,0.3); border-color: rgba(231,76,60,0.7); color: rgba(231,76,60,0.9); }}'
+    ].join('\\n');
+    document.head.appendChild(style);
+
+    // ── 2. AI jump transition data ────────────────────────────────────────────
+    var stateJumpTransitions = {jump_transitions_json};
+
+    // ── 3. AI jump setup (one-time init, if any) ──────────────────────────────
+    (function () {{
+        {jump_setup}
+    }})();
+
+    // ── 4. Inject Jump buttons into each state card ───────────────────────────
+    function injectButtons() {{
+        document.querySelectorAll('.stage-segment').forEach(function (card) {{
+            var match = card.id && card.id.match(/^state(\\d+)$/);
+            if (!match) return;
+            var stateId = parseInt(match[1]);
+            var btnGroup = card.querySelector('.stage-header > div');
+            if (!btnGroup || btnGroup.querySelector('.jump-btn')) return;
+            var btn = document.createElement('button');
+            btn.className = 'jump-btn';
+            btn.id = 'jumpBtn' + stateId;
+            btn.textContent = 'Jump';
+            btn.title = 'Jump to this state from current state';
+            btn.onclick = (function (id) {{ return function () {{ jumpToState(id); }}; }})(stateId);
+            btnGroup.appendChild(btn);
+        }});
+    }}
+
+    // ── 5. Core jump logic ────────────────────────────────────────────────────
+    window.jumpToState = function (targetStateId) {{
+        var fromStateId = (typeof getCurrentState === 'function') ? getCurrentState() : -1;
+        var key = fromStateId + '_' + targetStateId;
+        var transition = stateJumpTransitions[key];
+        var btn = document.getElementById('jumpBtn' + targetStateId);
+
+        if (!transition || !transition.code) {{
+            if (btn) {{
+                btn.classList.add('jump-error');
+                btn.textContent = (fromStateId === targetStateId) ? 'Here!' : 'No path';
+                setTimeout(function () {{ btn.classList.remove('jump-error'); btn.textContent = 'Jump'; }}, 1500);
+            }}
+            console.warn('[Jump] No transition code for ' + fromStateId + ' \\u2192 ' + targetStateId +
+                '. Available: ' + Object.keys(stateJumpTransitions).join(', '));
+            return;
+        }}
+
+        document.querySelectorAll('.jump-btn').forEach(function (b) {{ b.disabled = true; }});
+        if (btn) {{ btn.classList.add('jumping'); btn.textContent = 'Jumping\\u2026'; }}
+
+        console.log(
+            '%c[Jump] State ' + fromStateId + ' \\u2192 State ' + targetStateId +
+            ' (confidence: ' + Math.round((transition.confidence || 0) * 100) + '%' +
+            (transition.notes ? ' \\u2014 ' + transition.notes : '') + ')',
+            'color:#9b59b6;font-weight:bold'
+        );
+
+        setTimeout(function () {{
+            try {{
+                (new Function(transition.code))();
+            }} catch (e) {{
+                console.error('[Jump] Execution error:', e);
+                _jumpFinalize(btn, targetStateId, false);
+                return;
+            }}
+            setTimeout(function () {{
+                if (typeof debouncedUpdate === 'function') debouncedUpdate();
+                if (typeof updateStateHighlight === 'function') setTimeout(updateStateHighlight, 500);
+                _jumpFinalize(btn, targetStateId, true);
+            }}, 300);
+        }}, 20);
+    }};
+
+    function _jumpFinalize(btn, stateId, success) {{
+        document.querySelectorAll('.jump-btn').forEach(function (b) {{
+            b.disabled = false;
+            b.classList.remove('jumping');
+        }});
+        if (!btn) return;
+        btn.classList.add(success ? 'jump-success' : 'jump-error');
+        btn.textContent = success ? 'Jumped!' : 'Failed';
+        setTimeout(function () {{
+            btn.classList.remove('jump-success', 'jump-error');
+            btn.textContent = 'Jump';
+        }}, 1500);
+        if (success) {{
+            var card = document.getElementById('state' + stateId);
+            if (card) card.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+        }}
+    }}
+
+    // ── 6. Initialize ─────────────────────────────────────────────────────────
+    injectButtons();
+    var n = Object.keys(stateJumpTransitions).length;
+    console.log(
+        '%c[StateJumper] Loaded \\u2014 ' + n + ' jump transition' + (n === 1 ? '' : 's') + ' available',
+        'color:#9b59b6;font-weight:bold;font-size:13px'
+    );
+    if (n === 0) {{
+        console.warn('[StateJumper] No transitions found. Re-run the analyzer to generate jump codes.');
+    }}
+}})();
+"""
+
     def save_to_file(self, output_path, original_html_path):
         """
         Generate and save the complete HTML file.
-        Also writes state_flow_diagram.js alongside it if a Mermaid diagram exists.
+        Also writes state_jumper.js and state_flow_diagram.js alongside it.
 
         Args:
             output_path (str): Path to save the output HTML
@@ -2068,12 +2215,20 @@ class StatePanelGenerator:
 
             print(f"[OK] Generated state panel HTML: {output_path}")
 
-            # Write Mermaid diagram to external JS file
+            # Write state_jumper.js alongside the panel HTML
+            jumper_path = Path(output_path).parent / 'state_jumper.js'
+            with open(jumper_path, 'w', encoding='utf-8') as f:
+                f.write(self.generate_jump_js())
+            n_pairs = len(self.states.get('jump_transitions', {}))
+            print(f"[OK] Generated jump codes:       {jumper_path}  ({n_pairs} transitions)")
+
+            # Write Mermaid diagram to external JS file and standalone HTML page
             mermaid_code = self.states.get('mermaid_diagram', '').strip()
             if mermaid_code:
                 output_dir = os.path.dirname(os.path.abspath(output_path))
+
+                # state_flow_diagram.js — diagram data only
                 diagram_path = os.path.join(output_dir, 'state_flow_diagram.js')
-                # Escape backticks and backslashes for JS template literal
                 escaped = mermaid_code.replace('\\', '\\\\').replace('`', '\\`').replace('${', '\\${')
                 js_content = f"""// Auto-generated by panel_generator.py — do not edit
 window.STATE_FLOW_DIAGRAM = `{escaped}`;
@@ -2089,21 +2244,54 @@ window.renderMermaidDiagram = function() {{
         _mermaidRendered = true;
     }}
 }};
-
-// Highlight active state node in the SVG
-window.updateMermaidHighlight = function(currentState) {{
-    document.querySelectorAll('.mermaid-node-active').forEach(function(el) {{
-        el.classList.remove('mermaid-node-active');
-    }});
-    var activeNode = document.querySelector('[id^="flowchart-S' + currentState + '-"]');
-    if (activeNode) {{
-        activeNode.classList.add('mermaid-node-active');
-    }}
-}};
 """
                 with open(diagram_path, 'w', encoding='utf-8') as f:
                     f.write(js_content)
                 print(f"[OK] Generated Mermaid diagram: state_flow_diagram.js")
+
+                # state_flow_map.html — standalone page for viewing the diagram
+                map_path = os.path.join(output_dir, 'state_flow_map.html')
+                map_html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>State Flow Map</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({{ startOnLoad: false, theme: "dark", securityLevel: "loose", flowchart: {{ useMaxWidth: false }} }});</script>
+<script src="state_flow_diagram.js"></script>
+<style>
+    body {{
+        margin: 0;
+        background: #1a1a2e;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        padding: 40px 20px;
+    }}
+    .mermaid {{
+        width: 90vw;
+    }}
+    .mermaid svg {{
+        width: 100%;
+        height: auto;
+    }}
+</style>
+</head>
+<body>
+<div class="mermaid" id="stateFlowMermaid"></div>
+<script>
+    window.addEventListener('DOMContentLoaded', function() {{
+        if (typeof window.renderMermaidDiagram === 'function') window.renderMermaidDiagram();
+    }});
+</script>
+</body>
+</html>
+"""
+                with open(map_path, 'w', encoding='utf-8') as f:
+                    f.write(map_html)
+                print(f"[OK] Generated flow map page:   state_flow_map.html")
 
         except Exception as e:
             raise Exception(f"Error saving HTML: {str(e)}")

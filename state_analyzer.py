@@ -124,9 +124,12 @@ For EACH state you identify, provide:
 6. **Injection Hooks (Variable Access):**
    If key state variables are inside closures, identify EXACT code locations where we can inject a reporting line.
    For each crucial state variable that is NOT global:
-   - Identify the function or block where it is updated.
-   - Provide a unique 'search_pattern' (exact code string) that occurs just after the variable update.
-   - This allows us to inject `window.__ai_state_monitor.report('varName', varName)` at runtime.
+   - Identify EVERY function or block where it is updated (not just the primary one).
+   - Provide a unique 'search_pattern' (exact code string) for EACH update location.
+   - IMPORTANT: Include ALL locations where the variable changes — both when it's SET and when it's RESET/CLEARED.
+     Example: If `currentTantrum` is set in `triggerTantrum()` AND cleared in `resolveTantrum()`, provide hooks for BOTH.
+   - The injection engine automatically resolves the full property access path
+     (e.g., `this.gameState.needsHug`), so just provide the bare variable name in the hook.
 
 7. **Source Code Blocks:**
    For each state, provide `source_code_blocks` - max 2 objects per state, each containing:
@@ -177,9 +180,15 @@ IMPORTANT: Return your analysis as a valid JSON object with this EXACT structure
   "injection_hooks": [
     {{
       "variable": "variableName",
-      "search_pattern": "exact code line to find",
+      "search_pattern": "exact code line where variable is SET",
       "injection_type": "after",
-      "scope_context": "function name or description"
+      "scope_context": "function that sets the variable"
+    }},
+    {{
+      "variable": "variableName",
+      "search_pattern": "exact code line where variable is RESET/CLEARED",
+      "injection_type": "after",
+      "scope_context": "function that resets the variable"
     }}
   ],
   "transitions": [
@@ -443,6 +452,334 @@ Return ONLY the JSON object, no additional text or explanation."""
         except Exception as e:
             print(f"[WARN] Incremental update failed ({e}), falling back to full analysis")
             return self.detect_states(code_content, file_type)
+
+    def generate_jump_codes(self, code_content, states_schema, file_type="html"):
+        """
+        AI jump analysis agent. Analyzes the experience code and existing state schema,
+        then produces JavaScript jump codes for each FROM->TO state pair.
+
+        The AI freely determines the strategy — no hardcoded approach. It may use
+        global variable assignment, existing init functions, DOM manipulation, or any
+        other technique appropriate for this specific experience.
+
+        Args:
+            code_content (str): Full original experience code
+            states_schema (dict): Existing states schema from detect_states()
+            file_type (str): File type for context
+
+        Returns:
+            dict: states_schema extended with:
+                  - "jump_setup": str (one-time JS run when jumper loads)
+                  - "jump_transitions": dict mapping "fromId_toId" -> { code, confidence, notes }
+        """
+        states_schema_json = json.dumps(states_schema, indent=2)
+
+        state_ids = [s['id'] for s in states_schema.get('states', [])]
+        all_pairs = [(f, t) for f in state_ids for t in state_ids if f != t]
+        pairs_list_str = ', '.join(f'"{f}_{t}"' for f, t in all_pairs)
+
+        jump_prompt = f"""You are a JavaScript execution expert and code analyst. Your task is to analyze an interactive {file_type.upper()} experience and produce "jump codes" — one per FROM->TO state pair — that allow a user to teleport the running application from any current state to any target state, without reloading the page.
+
+## EXPERIENCE CODE:
+{code_content}
+
+## STATE SCHEMA (already analyzed — use this to understand states):
+{states_schema_json}
+
+## YOUR JOB
+
+Deeply analyze the code. Understand how state is actually controlled in THIS specific experience. It may use:
+- Global variables accessible via window
+- Variables declared with var at script top-level (these leak to window in browsers)
+- Variables inside closures or IIFEs (NOT accessible from outside)
+- DOM-based state (CSS classes, visibility, element presence)
+- Object properties on instances
+- Timer/interval-based progression
+- A combination of the above
+
+## REQUIRED PAIRS
+
+You MUST produce a jump code for EVERY one of these {len(all_pairs)} pairs:
+{pairs_list_str}
+
+Do not skip any pair. For each pair, produce a JavaScript code string that:
+- Takes the app from from_state (currently running) to to_state
+- Is safe to execute at any time during the experience
+- Handles whatever cleanup or setup is needed for this specific transition
+- Leverages the experience's own existing mechanisms where possible
+
+You decide the strategy completely. There is no prescribed approach. Ask yourself:
+- Does the target state have an existing init/setup function you can call?
+- What variables need what values?
+- What DOM elements need to be in what state?
+- Does something need to be cleaned up first (timers, DOM elements, etc.)?
+- Are the variables accessible from outside (window-level) or locked in closures?
+
+You may also produce a jump_setup — a one-time JavaScript block that runs when the jump tool first loads (before any jumps). Use it to expose otherwise inaccessible things: wrap existing functions to add hooks, expose closure-scoped variables via window properties, or register helper utilities. The per-pair jump codes can then reference what jump_setup prepared.
+
+## OUTPUT FORMAT
+
+Return ONLY a valid JSON object with this exact structure:
+
+{{
+  "jump_setup": "/* optional one-time JS block, empty string if not needed */",
+  "jump_transitions": {{
+    "0_1": {{ "code": "/* JS to jump from state 0 to state 1 */", "confidence": 0.95, "notes": "brief explanation of strategy used" }},
+    "3_7": {{ "code": "/* JS to jump from state 3 to state 7 */", "confidence": 0.9, "notes": "..." }},
+    "6_1": {{ "code": "/* JS to jump from state 6 to state 1 */", "confidence": 0.85, "notes": "..." }}
+  }}
+}}
+
+Keys in jump_transitions are "fromId_toId" strings (e.g. "0_1", "3_7").
+Only include pairs you can actually implement. Omit pairs where jumping is not feasible.
+
+RULES:
+- Never reload the page or navigate away
+- Never modify or touch any element inside #statePanel (the debug panel UI)
+- Each code string must be self-contained and safely runnable via new Function(code)()
+- confidence: 0.0 = not jumpable, 0.5 = partial/risky, 0.9+ = reliable
+- Return ONLY the JSON object, no additional text or markdown"""
+
+        try:
+            print("Running AI jump code analysis...")
+            response = self.client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=12000,
+                temperature=0.1,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": jump_prompt
+                    }
+                ]
+            )
+
+            if response.stop_reason == 'max_tokens':
+                print("[WARN] Jump code response truncated. Retrying with fewer pairs...")
+                retry_messages = [
+                    {"role": "user", "content": jump_prompt},
+                    {"role": "assistant", "content": response.content[0].text},
+                    {"role": "user", "content": "Your response was truncated. Please return the COMPLETE JSON including ALL required pairs. Do not skip any pairs. Return ONLY the complete valid JSON."}
+                ]
+                response = self.client.messages.create(
+                    model="claude-sonnet-4-20250514",
+                    max_tokens=12000,
+                    temperature=0.1,
+                    messages=retry_messages
+                )
+
+            response_text = response.content[0].text
+
+            json_match = re.search(r'```json\s*(.*?)\s*```', response_text, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(1)
+            else:
+                json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+                if json_match:
+                    json_str = json_match.group(0)
+                else:
+                    json_str = response_text
+
+            jump_data = json.loads(json_str)
+
+            states_schema['jump_setup'] = jump_data.get('jump_setup', '')
+            states_schema['jump_transitions'] = jump_data.get('jump_transitions', {})
+
+            n_pairs = len(states_schema['jump_transitions'])
+            print(f"[OK] Jump codes generated: {n_pairs} transition pair(s)")
+            return states_schema
+
+        except json.JSONDecodeError as e:
+            print(f"[WARN] Failed to parse jump codes response: {e}")
+            print("[WARN] Jump codes will not be available")
+            states_schema.setdefault('jump_setup', '')
+            states_schema.setdefault('jump_transitions', {})
+            return states_schema
+        except Exception as e:
+            print(f"[WARN] Jump code generation failed: {e}")
+            states_schema.setdefault('jump_setup', '')
+            states_schema.setdefault('jump_transitions', {})
+            return states_schema
+
+    def update_jump_codes(self, code_content, new_schema, old_schema, file_type="html"):
+        """
+        Incrementally update jump codes. Only regenerates pairs involving changed states.
+        Falls back to full generate_jump_codes() if >50% of states changed.
+
+        Args:
+            code_content (str): Full updated experience code
+            new_schema (dict): Updated states schema (from update_states())
+            old_schema (dict): Previous states schema (with existing jump_transitions)
+            file_type (str): File type for context
+
+        Returns:
+            dict: new_schema extended with updated jump_setup + jump_transitions
+        """
+        old_states = {s['id']: s for s in old_schema.get('states', [])}
+        new_states = {s['id']: s for s in new_schema.get('states', [])}
+        old_ids = set(old_states.keys())
+        new_ids = set(new_states.keys())
+
+        added = new_ids - old_ids
+        removed = old_ids - new_ids
+        changed = set()
+        for sid in old_ids & new_ids:
+            if json.dumps(old_states[sid], sort_keys=True) != json.dumps(new_states[sid], sort_keys=True):
+                changed.add(sid)
+
+        affected = added | changed
+
+        # Nothing changed — reuse existing jump codes as-is
+        if not affected and not removed:
+            new_schema['jump_setup'] = old_schema.get('jump_setup', '')
+            new_schema['jump_transitions'] = dict(old_schema.get('jump_transitions', {}))
+            print(f"[OK] Jump codes unchanged (no states modified)")
+            return new_schema
+
+        print(f"[INFO] States changed: {sorted(affected)}" +
+              (f", removed: {sorted(removed)}" if removed else ""))
+
+        # Too many changes — full regen is more efficient
+        if len(affected) > len(new_ids) * 0.5:
+            print(f"[INFO] {len(affected)}/{len(new_ids)} states affected, running full jump code generation")
+            return self.generate_jump_codes(code_content, new_schema, file_type)
+
+        # Start from existing transitions, purge stale pairs
+        existing = dict(old_schema.get('jump_transitions', {}))
+        for key in list(existing.keys()):
+            parts = key.split('_')
+            f_id, t_id = int(parts[0]), int(parts[1])
+            if f_id in removed or t_id in removed or f_id not in new_ids or t_id not in new_ids:
+                del existing[key]
+
+        # Compute pairs that need regeneration (any pair touching an affected state)
+        sorted_ids = sorted(new_ids)
+        pairs_to_regen = [(f, t) for f in sorted_ids for t in sorted_ids
+                          if f != t and (f in affected or t in affected)]
+
+        if not pairs_to_regen:
+            new_schema['jump_setup'] = old_schema.get('jump_setup', '')
+            new_schema['jump_transitions'] = existing
+            print(f"[OK] Jump codes unchanged after pruning")
+            return new_schema
+
+        pairs_list_str = ', '.join(f'"{f}_{t}"' for f, t in pairs_to_regen)
+        new_schema_json = json.dumps(new_schema, indent=2)
+
+        update_prompt = f"""You are a JavaScript execution expert. An interactive {file_type.upper()} experience has been updated and some state jump codes need regeneration.
+
+## UPDATED EXPERIENCE CODE:
+{code_content}
+
+## UPDATED STATE SCHEMA:
+{new_schema_json}
+
+## EXISTING JUMP SETUP (from previous analysis — may need updating):
+{old_schema.get('jump_setup', '')}
+
+## YOUR JOB
+
+States {sorted(affected)} have changed. You need to regenerate jump codes for pairs that involve these states.
+
+Deeply analyze the UPDATED code. Understand how state is controlled in this experience.
+
+## REQUIRED PAIRS
+
+You MUST produce a jump code for EVERY one of these {len(pairs_to_regen)} pairs:
+{pairs_list_str}
+
+Do not skip any pair. For each pair, produce a JavaScript code string that:
+- Takes the app from from_state (currently running) to to_state
+- Is safe to execute at any time during the experience
+- Handles whatever cleanup or setup is needed for this specific transition
+- Leverages the experience's own existing mechanisms where possible
+
+You decide the strategy completely. Ask yourself:
+- Does the target state have an existing init/setup function you can call?
+- What variables need what values?
+- What DOM elements need to be in what state?
+- Does something need to be cleaned up first (timers, DOM elements, etc.)?
+- Are the variables accessible from outside (window-level) or locked in closures?
+
+Also update jump_setup if needed (one-time JS that runs when the jumper loads).
+
+## OUTPUT FORMAT
+
+Return ONLY a valid JSON object:
+
+{{
+  "jump_setup": "/* updated one-time JS block, or same as before if no change needed */",
+  "jump_transitions": {{
+    "0_1": {{ "code": "/* JS */", "confidence": 0.95, "notes": "brief explanation" }}
+  }}
+}}
+
+Keys in jump_transitions are "fromId_toId" strings.
+
+RULES:
+- Never reload the page or navigate away
+- Never modify or touch any element inside #statePanel
+- Each code string must be self-contained and safely runnable via new Function(code)()
+- confidence: 0.0 = not jumpable, 0.5 = partial/risky, 0.9+ = reliable
+- Return ONLY the JSON object, no additional text or markdown"""
+
+        try:
+            print(f"Running incremental jump code analysis ({len(pairs_to_regen)} pairs)...")
+            response = self.client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=12000,
+                temperature=0.1,
+                messages=[{"role": "user", "content": update_prompt}]
+            )
+
+            if response.stop_reason == 'max_tokens':
+                print("[WARN] Incremental jump response truncated. Retrying...")
+                retry_messages = [
+                    {"role": "user", "content": update_prompt},
+                    {"role": "assistant", "content": response.content[0].text},
+                    {"role": "user", "content": "Your response was truncated. Please return the COMPLETE JSON including ALL required pairs. Do not skip any pairs. Return ONLY the complete valid JSON."}
+                ]
+                response = self.client.messages.create(
+                    model="claude-sonnet-4-20250514",
+                    max_tokens=12000,
+                    temperature=0.1,
+                    messages=retry_messages
+                )
+
+            response_text = response.content[0].text
+
+            json_match = re.search(r'```json\s*(.*?)\s*```', response_text, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(1)
+            else:
+                json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+                if json_match:
+                    json_str = json_match.group(0)
+                else:
+                    json_str = response_text
+
+            jump_data = json.loads(json_str)
+
+            # Merge: overwrite affected pairs, keep unaffected
+            for key, value in jump_data.get('jump_transitions', {}).items():
+                existing[key] = value
+
+            new_schema['jump_setup'] = jump_data.get('jump_setup', old_schema.get('jump_setup', ''))
+            new_schema['jump_transitions'] = existing
+
+            n_updated = len(jump_data.get('jump_transitions', {}))
+            n_total = len(existing)
+            print(f"[OK] Jump codes updated: {n_updated} regenerated, {n_total} total")
+            return new_schema
+
+        except json.JSONDecodeError as e:
+            print(f"[WARN] Failed to parse incremental jump response: {e}")
+            print("[WARN] Falling back to full jump code generation")
+            return self.generate_jump_codes(code_content, new_schema, file_type)
+        except Exception as e:
+            print(f"[WARN] Incremental jump code update failed: {e}")
+            print("[WARN] Falling back to full jump code generation")
+            return self.generate_jump_codes(code_content, new_schema, file_type)
 
     def update_states_from_file(self, file_path, existing_schema_path="states_schema.json"):
         """

@@ -9,7 +9,16 @@
       "Bash(python -c \"import json; d=json.load\\(open\\(''states_schema.json''\\)\\); print\\(''mermaid_diagram'' in d\\); print\\(d.get\\(''mermaid_diagram'',''''\\)[:500]\\)\")",
       "Bash(python -c \"import json; d=json.load\\(open\\(''states_schema.json''\\)\\); print\\(d.get\\(''mermaid_diagram'',''''\\)\\)\")",
       "Bash(python -c \"import json,sys; d=json.load\\(open\\(''states_schema.json''\\)\\); sys.stdout.buffer.write\\(d.get\\(''mermaid_diagram'',''''\\).encode\\(''utf-8''\\)\\)\")",
-      "Bash(python -c \":*)"
+      "Bash(python -c \":*)",
+      "Bash(python -c \"from state_analyzer import StateDetectionAnalyzer; print\\(''state_analyzer OK''\\)\")",
+      "Bash(python -c \"from panel_generator import StatePanelGenerator; print\\(''panel_generator OK''\\)\")",
+      "Bash(python -c \"import generate_state_panel; print\\(''generate_state_panel OK''\\)\")",
+      "Bash(python generate_state_panel.py --help)",
+      "Bash(python state_analyzer.py index.html)",
+      "Read(//c/Users/anush/.claude/projects/c--Users-anush-Downloads-summer25-timeline-controls-ai-state-analyzer/455579f4-38b8-44ac-be04-e04ae282bd3d/tool-results/**)",
+      "Bash(python -c \"import state_analyzer; print\\(''state_analyzer OK''\\)\")",
+      "Bash(python -c \"import panel_generator; print\\(''panel_generator OK''\\)\")",
+      "Read(//c/Users/anush/.claude/projects/c--Users-anush-Downloads-summer25-timeline-controls-ai-state-analyzer/2466c2c4-819b-4daf-b8b6-81b9e1c79c42/tool-results/**)"
     ],
     "additionalDirectories": [
       "c:\\Users\\anush\\Downloads\\summer25\\timeline\\controls\\ai-state-analyzer"
