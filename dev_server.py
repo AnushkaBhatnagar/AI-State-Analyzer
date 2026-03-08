@@ -13,6 +13,7 @@ Usage:
 """
 
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -155,10 +156,24 @@ class IndexFileHandler(FileSystemEventHandler):
         self.debounce_seconds = debounce_seconds
         self._timer = None
         self._lock = threading.Lock()
+        self._last_hash = self._compute_hash()
+
+    def _compute_hash(self):
+        """Compute MD5 hash of index.html content."""
+        try:
+            index_path = os.path.join(BASE_DIR, "index.html")
+            with open(index_path, "rb") as f:
+                return hashlib.md5(f.read()).hexdigest()
+        except (FileNotFoundError, OSError):
+            return None
 
     def _handle_change(self, path):
         filename = os.path.basename(path)
         if filename == "index.html":
+            current_hash = self._compute_hash()
+            if current_hash == self._last_hash:
+                return  # No actual content change
+            self._last_hash = current_hash
             with self._lock:
                 if self._timer:
                     self._timer.cancel()

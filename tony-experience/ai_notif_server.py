@@ -1,12 +1,12 @@
 """
 AI Notification Server
-Generates mean Instagram-style notifications using Anthropic Claude
+Generates mean Instagram-style notifications using Google Gemini
 Notifications get meaner with each level (1-5)
 """
 
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
-import anthropic
+import google.generativeai as genai
 import os
 from dotenv import load_dotenv
 
@@ -20,8 +20,9 @@ CORS(app)
 def serve_index():
     return send_file('index.html')
 
-# Anthropic client
-client = anthropic.Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+# Gemini client
+genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
+gemini_model = genai.GenerativeModel("gemini-2.5-pro")
 
 # Intensity descriptions for each level
 INTENSITY_LEVELS = {
@@ -110,19 +111,19 @@ Examples at this intensity:
 
 Generate one message about {category}:"""
 
-        response = client.messages.create(
-            model="claude-3-haiku-20240307",
-            max_tokens=50,
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
+        response = gemini_model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                max_output_tokens=50,
+                temperature=0.7,
+            )
         )
-        
-        message = response.content[0].text.strip()
+
+        message = response.text.strip()
         # Clean up any quotes
         message = message.strip('"\'')
-        
-        # Check if Claude refused (contains certain phrases)
+
+        # Check if Gemini refused (contains certain phrases)
         refusal_phrases = ["I don't feel comfortable", "I can't", "I won't", "not appropriate", "harmful", "constructive"]
         if any(phrase.lower() in message.lower() for phrase in refusal_phrases) or len(message) > 100:
             # Use fallback
@@ -180,18 +181,18 @@ They just said: "{user_message}"
 
 Respond as this mean person would (keep it brief, max 15 words):"""
 
-        response = client.messages.create(
-            model="claude-3-haiku-20240307",
-            max_tokens=60,
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
+        response = gemini_model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                max_output_tokens=60,
+                temperature=0.7,
+            )
         )
-        
-        message = response.content[0].text.strip()
+
+        message = response.text.strip()
         message = message.strip('"\'')
-        
-        # Fallback if Claude refuses
+
+        # Fallback if Gemini refuses
         refusal_phrases = ["I don't feel comfortable", "I can't", "I won't", "not appropriate", "harmful"]
         if any(phrase.lower() in message.lower() for phrase in refusal_phrases) or len(message) > 80:
             fallbacks = ["k", "lol ok", "sure", "whatever", "lol", "ok", "cool story", "anyway", "mhm"]

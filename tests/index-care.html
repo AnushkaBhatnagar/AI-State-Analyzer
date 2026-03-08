@@ -24,6 +24,517 @@
 <body>
     <div id="game-container"></div>
     <script>
+// --- SCENES ---
+
+class IntroScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'IntroScene' });
+        this.currentScreen = 1;
+        this.screens = [
+            "Think of someone who cared for you when you were young...",
+            "Maybe they made you breakfast, read you stories, or always knew when you needed a hug...",
+            "Can you picture their face? Their voice? The way they made you feel safe?",
+            "Time has a way of changing things...",
+            "The person who once cared for you now needs care themselves. Simple tasks become challenging. Communication becomes harder.",
+            "But the love between you remains. And now, it's your turn to be there for them."
+        ];
+    }
+
+    create() {
+        this.cameras.main.setBackgroundColor('#fdf5e6');
+
+        // Skip button - moved to the left
+        const skipBtn = this.add.text(100, 30, "Skip Intro", {
+            fontSize: '18px',
+            fill: '#888',
+            backgroundColor: '#f0f0f0',
+            padding: { x: 10, y: 5 }
+        }).setInteractive({ useHandCursor: true });
+
+        skipBtn.on('pointerdown', () => {
+            this.scene.start('StartScene');
+        });
+
+        // Text display
+        this.mainText = this.add.text(500, 400, this.screens[0], {
+            fontSize: '36px',
+            fill: '#2c3e50',
+            align: 'center',
+            wordWrap: { width: 800 },
+            lineSpacing: 10
+        }).setOrigin(0.5);
+
+        // Next button
+        this.nextBtn = this.add.rectangle(500, 650, 200, 60, 0x27ae60).setInteractive({ useHandCursor: true });
+        this.nextBtnText = this.add.text(500, 650, "Next", {
+            fontSize: '28px',
+            fill: '#fff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+
+        this.nextBtn.on('pointerdown', () => {
+            this.advanceScreen();
+        });
+    }
+
+    advanceScreen() {
+        this.currentScreen++;
+        if (this.currentScreen <= this.screens.length) {
+            // Fade out
+            this.tweens.add({
+                targets: this.mainText,
+                alpha: 0,
+                duration: 300,
+                onComplete: () => {
+                    this.mainText.setText(this.screens[this.currentScreen - 1]);
+                    // Fade in
+                    this.tweens.add({
+                        targets: this.mainText,
+                        alpha: 1,
+                        duration: 300
+                    });
+                }
+            });
+        } else {
+            this.scene.start('MemoryScene');
+        }
+    }
+}
+
+class MemoryScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'MemoryScene' });
+        this.interactionCount = 0;
+    }
+
+    create() {
+        this.cameras.main.setBackgroundColor('#87ceeb'); // Light blue sky
+
+        // Title text
+        this.add.text(500, 60, "This is Pengy.", {
+            fontSize: '48px',
+            fill: '#2c3e50',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+
+        this.add.text(500, 120, "Full of energy, always ready to help, always there when you needed them...",
+            {
+                fontSize: '24px',
+                fill: '#555',
+                align: 'center',
+                wordWrap: { width: 800 }
+            }).setOrigin(0.5);
+
+        // Create young, vibrant Pengy
+        this.createYoungPenguin();
+
+        // Create interactive elements
+        this.createInteractiveElements();
+
+        // Continue button (initially hidden)
+        this.continueBtn = this.add.rectangle(500, 720, 240, 60, 0x27ae60).setInteractive({ useHandCursor: true }).setAlpha(0);
+        this.continueBtnText = this.add.text(500, 720, "Continue", {
+            fontSize: '28px',
+            fill: '#fff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5).setAlpha(0);
+
+        this.continueBtn.on('pointerdown', () => {
+            this.scene.start('TransitionScene');
+        });
+
+        // Show continue button after timer or interactions
+        this.time.delayedCall(45000, () => this.showContinueButton());
+    }
+
+    createYoungPenguin() {
+        this.youngPenguin = this.add.container(500, 400);
+
+        const body = this.add.ellipse(0, 0, 90, 110, 0x000000);
+        const belly = this.add.ellipse(0, 10, 70, 90, 0xffffff);
+        const eyeL = this.add.circle(-18, -28, 8, 0xffffff); // Bigger eyes
+        const pupilL = this.add.circle(-18, -28, 3, 0x000000);
+        const eyeR = this.add.circle(18, -28, 8, 0xffffff);
+        const pupilR = this.add.circle(18, -28, 3, 0x000000);
+        const beak = this.add.triangle(0, -10, -6, -15, 6, -15, 0, -5, 0xffa500);
+        const footL = this.add.ellipse(-25, 55, 35, 18, 0xffa500);
+        const footR = this.add.ellipse(25, 55, 35, 18, 0xffa500);
+
+        // Colorful scarf accessory
+        const scarf = this.add.ellipse(0, 15, 100, 20, 0xff69b4);
+        const scarfEnd1 = this.add.rectangle(-40, 30, 15, 40, 0xff69b4);
+        const scarfEnd2 = this.add.rectangle(40, 30, 15, 40, 0xff1493);
+
+        this.youngPenguin.add([footL, footR, body, belly, scarf, scarfEnd1, scarfEnd2, eyeL, pupilL, eyeR, pupilR, beak]);
+
+        const hitArea = new Phaser.Geom.Rectangle(-45, -55, 90, 110);
+        this.youngPenguin.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains, { useHandCursor: true });
+
+        this.youngPenguin.on('pointerdown', () => {
+            this.penguinDance();
+        });
+    }
+
+    createInteractiveElements() {
+        // Ball
+        this.ball = this.add.circle(250, 500, 25, 0xff6347).setInteractive({ useHandCursor: true });
+        this.add.text(250, 560, "Ball", { fontSize: '18px', fill: '#000' }).setOrigin(0.5);
+        this.ball.on('pointerdown', () => this.playWithBall());
+
+        // Radio
+        this.radio = this.add.rectangle(150, 300, 60, 40, 0x8b4513).setStrokeStyle(2, 0x000000).setInteractive({ useHandCursor: true });
+        this.add.circle(140, 300, 10, 0x000000);
+        this.add.text(150, 350, "Radio", { fontSize: '18px', fill: '#000' }).setOrigin(0.5);
+        this.radio.on('pointerdown', () => this.playMusic());
+
+        // Speech bubble
+        this.speechBubble = this.add.circle(750, 300, 40, 0xffffff).setStrokeStyle(3, 0x000000).setInteractive({ useHandCursor: true });
+        this.add.text(750, 300, "💬", { fontSize: '40px' }).setOrigin(0.5);
+        this.add.text(750, 360, "Chat", { fontSize: '18px', fill: '#000' }).setOrigin(0.5);
+        this.speechBubble.on('pointerdown', () => this.startConversation());
+
+        // Kitchen/cooking area
+        this.kitchen = this.add.rectangle(850, 500, 80, 60, 0x8b4513).setStrokeStyle(2, 0x000000).setInteractive({ useHandCursor: true });
+        this.add.text(850, 500, "🍳", { fontSize: '40px' }).setOrigin(0.5);
+        this.add.text(850, 560, "Kitchen", { fontSize: '18px', fill: '#000' }).setOrigin(0.5);
+        this.kitchen.on('pointerdown', () => this.cookingActivity());
+
+        // Instruction text
+        this.add.text(500, 180, "Click on Pengy or the objects to interact!", {
+            fontSize: '20px',
+            fill: '#333',
+            fontStyle: 'italic'
+        }).setOrigin(0.5);
+    }
+
+    penguinDance() {
+        if (this.isAnimating) return;
+        this.isAnimating = true;
+        this.recordInteraction();
+
+        // Dance animation
+        this.tweens.add({
+            targets: this.youngPenguin,
+            y: '-=30',
+            duration: 200,
+            yoyo: true,
+            repeat: 5,
+            onComplete: () => {
+                this.isAnimating = false;
+            }
+        });
+
+        this.tweens.add({
+            targets: this.youngPenguin,
+            angle: { from: -15, to: 15 },
+            duration: 200,
+            yoyo: true,
+            repeat: 5
+        });
+
+        // Show hearts
+        for (let i = 0; i < 5; i++) {
+            const heart = this.add.text(500 + Phaser.Math.Between(-50, 50), 400, "♥", {
+                fontSize: '30px',
+                fill: '#ff69b4'
+            });
+            this.tweens.add({
+                targets: heart,
+                y: 300,
+                alpha: 0,
+                duration: 1000,
+                delay: i * 100,
+                onComplete: () => heart.destroy()
+            });
+        }
+    }
+
+    playWithBall() {
+        if (this.isAnimating) return;
+        this.isAnimating = true;
+        this.recordInteraction();
+
+        // Move ball to penguin
+        this.tweens.add({
+            targets: this.ball,
+            x: 500,
+            y: 350,
+            duration: 500,
+            onComplete: () => {
+                // Bounce ball back
+                this.tweens.add({
+                    targets: this.ball,
+                    x: 250,
+                    y: 500,
+                    duration: 500,
+                    onComplete: () => {
+                        this.isAnimating = false;
+                    }
+                });
+            }
+        });
+
+        // Penguin reacts
+        this.tweens.add({
+            targets: this.youngPenguin,
+            scaleX: 1.1,
+            scaleY: 1.1,
+            duration: 500,
+            yoyo: true
+        });
+    }
+
+    playMusic() {
+        if (this.isAnimating) return;
+        this.isAnimating = true;
+        this.recordInteraction();
+
+        // Musical notes
+        for (let i = 0; i < 4; i++) {
+            const note = this.add.text(150, 300, "♪", {
+                fontSize: '30px',
+                fill: '#ff69b4'
+            });
+            this.tweens.add({
+                targets: note,
+                y: 200,
+                x: 150 + Phaser.Math.Between(-30, 30),
+                alpha: 0,
+                duration: 1500,
+                delay: i * 200,
+                onComplete: () => note.destroy()
+            });
+        }
+
+        // Penguin bobs to music
+        this.tweens.add({
+            targets: this.youngPenguin,
+            x: '+=10',
+            duration: 300,
+            yoyo: true,
+            repeat: 5,
+            onComplete: () => {
+                this.isAnimating = false;
+            }
+        });
+    }
+
+    startConversation() {
+        if (this.isAnimating) return;
+        this.isAnimating = true;
+        this.recordInteraction();
+
+        const dialogue = this.add.text(500, 250, "I met the nicest person at the market today!\nHow was your day? Tell me everything!",
+            {
+                fontSize: '20px',
+                fill: '#000',
+                backgroundColor: '#ffffff',
+                padding: { x: 20, y: 15 },
+                align: 'center',
+                wordWrap: { width: 400 }
+            }).setOrigin(0.5).setAlpha(0);
+
+        this.tweens.add({
+            targets: dialogue,
+            alpha: 1,
+            duration: 300
+        });
+
+        // Penguin animated talking
+        this.tweens.add({
+            targets: this.youngPenguin,
+            scaleY: 1.05,
+            duration: 200,
+            yoyo: true,
+            repeat: 8
+        });
+
+        this.time.delayedCall(3000, () => {
+            this.tweens.add({
+                targets: dialogue,
+                alpha: 0,
+                duration: 300,
+                onComplete: () => {
+                    dialogue.destroy();
+                    this.isAnimating = false;
+                }
+            });
+        });
+    }
+
+    cookingActivity() {
+        if (this.isAnimating) return;
+        this.isAnimating = true;
+        this.recordInteraction();
+
+        // Move penguin to kitchen
+        const originalX = this.youngPenguin.x;
+        const originalY = this.youngPenguin.y;
+
+        this.tweens.add({
+            targets: this.youngPenguin,
+            x: 800,
+            y: 500,
+            duration: 800,
+            onComplete: () => {
+                // Cooking animation
+                this.tweens.add({
+                    targets: this.youngPenguin,
+                    angle: { from: -5, to: 5 },
+                    duration: 300,
+                    yoyo: true,
+                    repeat: 5
+                });
+
+                // Show steam/sparkles
+                for (let i = 0; i < 3; i++) {
+                    const steam = this.add.text(850, 480, "✨", {
+                        fontSize: '25px'
+                    });
+                    this.tweens.add({
+                        targets: steam,
+                        y: 420,
+                        alpha: 0,
+                        duration: 1000,
+                        delay: i * 300,
+                        onComplete: () => steam.destroy()
+                    });
+                }
+
+                // Return to original position
+                this.time.delayedCall(2000, () => {
+                    this.tweens.add({
+                        targets: this.youngPenguin,
+                        x: originalX,
+                        y: originalY,
+                        duration: 800,
+                        onComplete: () => {
+                            this.isAnimating = false;
+                        }
+                    });
+                });
+            }
+        });
+    }
+
+    recordInteraction() {
+        this.interactionCount++;
+        if (this.interactionCount >= 2) {
+            this.showContinueButton();
+        }
+    }
+
+    showContinueButton() {
+        if (this.continueBtn.alpha === 0) {
+            this.tweens.add({
+                targets: [this.continueBtn, this.continueBtnText],
+                alpha: 1,
+                duration: 500
+            });
+        }
+    }
+}
+
+class TransitionScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'TransitionScene' });
+    }
+
+    create() {
+        // Start with bright background
+        this.cameras.main.setBackgroundColor('#87ceeb');
+
+
+        // Create young penguin (same as memory scene)
+        const youngPenguin = this.add.container(500, 400);
+        const body = this.add.ellipse(0, 0, 90, 110, 0x000000);
+        const belly = this.add.ellipse(0, 10, 70, 90, 0xffffff);
+        const eyeL = this.add.circle(-18, -28, 8, 0xffffff);
+        const pupilL = this.add.circle(-18, -28, 3, 0x000000);
+        const eyeR = this.add.circle(18, -28, 8, 0xffffff);
+        const pupilR = this.add.circle(18, -28, 3, 0x000000);
+        const beak = this.add.triangle(0, -10, -6, -15, 6, -15, 0, -5, 0xffa500);
+        const footL = this.add.ellipse(-25, 55, 35, 18, 0xffa500);
+        const footR = this.add.ellipse(25, 55, 35, 18, 0xffa500);
+        const scarf = this.add.ellipse(0, 15, 100, 20, 0xff69b4);
+        const scarfEnd1 = this.add.rectangle(-40, 30, 15, 40, 0xff69b4);
+        const scarfEnd2 = this.add.rectangle(40, 30, 15, 40, 0xff1493);
+
+        youngPenguin.add([footL, footR, body, belly, scarf, scarfEnd1, scarfEnd2, eyeL, pupilL, eyeR, pupilR, beak]);
+
+        // Text overlay
+        const text1 = this.add.text(500, 150, "But time has been unkind to Pengy's body,\nthough not their spirit...",
+            {
+                fontSize: '28px',
+                fill: '#2c3e50',
+                align: 'center',
+                wordWrap: { width: 700 },
+                fontStyle: 'italic'
+            }).setOrigin(0.5).setAlpha(0);
+
+        const text2 = this.add.text(500, 650, "Today, Pengy needs you.\nJust as someone once needed you.",
+            {
+                fontSize: '28px',
+                fill: '#2c3e50',
+                align: 'center',
+                wordWrap: { width: 700 },
+                fontStyle: 'italic'
+            }).setOrigin(0.5).setAlpha(0);
+
+        // Fade in first text
+        this.tweens.add({
+            targets: text1,
+            alpha: 1,
+            duration: 1000
+        });
+
+        // Fade out scarf and desaturate
+        this.time.delayedCall(1500, () => {
+            this.tweens.add({
+                targets: [scarf, scarfEnd1, scarfEnd2],
+                alpha: 0,
+                duration: 1000
+            });
+
+            // Fade background to cream
+            this.tweens.addCounter({
+                from: 0,
+                to: 1,
+                duration: 2000,
+                onUpdate: (tween) => {
+                    const value = tween.getValue();
+                    const r = Math.floor(135 + (253 - 135) * value);
+                    const g = Math.floor(206 + (245 - 206) * value);
+                    const b = Math.floor(235 + (230 - 235) * value);
+                    const color = Phaser.Display.Color.GetColor(r, g, b);
+                    this.cameras.main.setBackgroundColor(color);
+                }
+            });
+
+            // Slight posture change
+            this.tweens.add({
+                targets: youngPenguin,
+                scaleY: 0.95,
+                y: 420,
+                duration: 2000
+            });
+        });
+
+        // Fade in second text
+        this.time.delayedCall(2500, () => {
+            this.tweens.add({
+                targets: text2,
+                alpha: 1,
+                duration: 1000
+            });
+        });
+
+        // Transition to StartScene
+        this.time.delayedCall(5000, () => {
+            this.scene.start('StartScene');
+        });
+    }
+}
 
 class StartScene extends Phaser.Scene {
     constructor() {
@@ -835,13 +1346,15 @@ class GameScene extends Phaser.Scene {
     }
 }
 
+// --- CONFIG ---
+
 const config = {
     type: Phaser.AUTO,
     width: 1000,
     height: 800,
     backgroundColor: '#fffdf0',
     parent: 'game-container',
-    scene: [StartScene, GameScene, EndScene]
+    scene: [IntroScene, MemoryScene, TransitionScene, StartScene, GameScene, EndScene]
 };
 
 const game = new Phaser.Game(config);

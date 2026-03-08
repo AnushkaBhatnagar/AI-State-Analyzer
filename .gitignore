@@ -46,3 +46,6 @@ playwright/.env
 dist/
 build/
 *.egg-info/
+
+# Claude
+.claude/

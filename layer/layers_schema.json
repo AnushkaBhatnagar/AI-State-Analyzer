@@ -1,0 +1,525 @@
+{
+  "metadata": {
+    "total_states": 12,
+    "experience_name": "The Social Capital Trap",
+    "overall_arc": "Comfort \u2192 Engagement \u2192 Anxiety \u2192 Pressure \u2192 Overwhelm \u2192 Resignation"
+  },
+  "states": [
+    {
+      "state_id": 0,
+      "state_name": "Welcome Screen",
+      "ai_reasoning": {
+        "explanation": "This is a classic onboarding screen designed to be inviting and non-threatening, using positive language and soft visuals to encourage the user to begin the experience.",
+        "confidence": 1.0
+      },
+      "emotions": [
+        {
+          "name": "Comfort",
+          "description": "Warm, pink-toned gradient, gentle 'breathing' animation on button, welcoming text, flower emoji"
+        },
+        {
+          "name": "Anticipation",
+          "description": "Promise of 'something wonderful', glowing start button, familiar 'Instagram' branding"
+        }
+      ],
+      "strategy": [
+        {
+          "category": "Strategy",
+          "description": "Onboard the user, establish a positive and familiar tone, provide a clear CTA"
+        },
+        {
+          "category": "User Role",
+          "description": "Potential Participant"
+        },
+        {
+          "category": "Directives",
+          "description": "Read the welcome message, click the start button"
+        },
+        {
+          "category": "Choices",
+          "description": "Start the experience \u2192 Warm Notifications, Close window \u2192 Exit"
+        },
+        {
+          "category": "World State",
+          "description": "Calm, inviting, zero stakes, warm aesthetic"
+        }
+      ]
+    },
+    {
+      "state_id": 1,
+      "state_name": "Warm Notifications",
+      "ai_reasoning": {
+        "explanation": "This state establishes a positive reinforcement loop using classic gamification to build user investment. The disabled escape button subtly introduces the theme of losing control.",
+        "confidence": 1.0
+      },
+      "emotions": [
+        {
+          "name": "Delight",
+          "description": "Positive feedback notifications, heart emoji bursts on click, warm color palette"
+        },
+        {
+          "name": "Engagement",
+          "description": "Constant stream of notifications, satisfying click interactions, rising counter"
+        },
+        {
+          "name": "Comfort",
+          "description": "Gentle slide-in animations, soft visual style, non-threatening content"
+        }
+      ],
+      "strategy": [
+        {
+          "category": "Strategy",
+          "description": "Create a positive feedback loop, build user investment, establish a baseline"
+        },
+        {
+          "category": "User Role",
+          "description": "Valued User, Recipient of Praise"
+        },
+        {
+          "category": "Directives",
+          "description": "Tap notifications, watch the counter increase, feel popular"
+        },
+        {
+          "category": "Choices",
+          "description": "Tap notifications \u2192 reward, Click disabled escape button \u2192 no effect"
+        },
+        {
+          "category": "World State",
+          "description": "Positive, rewarding, low stakes, warm purple/pink aesthetic"
+        }
+      ]
+    },
+    {
+      "state_id": 2,
+      "state_name": "Stress Phase",
+      "ai_reasoning": {
+        "explanation": "The experience pivots from pure positive reinforcement to a mix of positive and negative feedback, creating performance anxiety. The degrading visual cues reinforce this emotional shift.",
+        "confidence": 1.0
+      },
+      "emotions": [
+        {
+          "name": "Anxiety",
+          "description": "Negative notifications, muted/cool color palette, slow background color shift"
+        },
+        {
+          "name": "Unease",
+          "description": "Glitching app title, eyeball burst animations on click, darkening screen vignette"
+        },
+        {
+          "name": "Tension",
+          "description": "Enabled but ineffective escape button, introduction of punishment notifications"
+        }
+      ],
+      "strategy": [
+        {
+          "category": "Strategy",
+          "description": "Introduce negative feedback, shift emotional tone, create performance anxiety"
+        },
+        {
+          "category": "User Role",
+          "description": "Performer, Scrutinized User"
+        },
+        {
+          "category": "Directives",
+          "description": "Keep tapping, try to escape, notice the negative shift"
+        },
+        {
+          "category": "Choices",
+          "description": "Continue tapping \u2192 mixed results, Attempt escape \u2192 ineffective"
+        },
+        {
+          "category": "World State",
+          "description": "Tense, cool-toned, rising stakes, subtle visual degradation"
+        }
+      ]
+    },
+    {
+      "state_id": 3,
+      "state_name": "Intense Phase",
+      "ai_reasoning": {
+        "explanation": "This phase simulates addictive social media mechanics, using variable rewards (mystery boxes) and loss aversion (timers, guilt) to compel frantic interaction.",
+        "confidence": 1.0
+      },
+      "emotions": [
+        {
+          "name": "Urgency",
+          "description": "Notifications with countdown timers, FOMO-inducing content, faster notification speed"
+        },
+        {
+          "name": "Pressure",
+          "description": "Guilt-tripping messages, punishment for slow responses, constant demands"
+        },
+        {
+          "name": "Addiction",
+          "description": "Mystery boxes and jackpots creating a variable reward loop, chasing streaks"
+        }
+      ],
+      "strategy": [
+        {
+          "category": "Strategy",
+          "description": "Employ dark patterns, variable reinforcement, and time pressure to maximize stress"
+        },
+        {
+          "category": "User Role",
+          "description": "Addict, Gambler"
+        },
+        {
+          "category": "Directives",
+          "description": "Tap faster, respond to urgent prompts, chase rewards, avoid punishments"
+        },
+        {
+          "category": "Choices",
+          "description": "Engage with high-risk notifications, try to escape"
+        },
+        {
+          "category": "World State",
+          "description": "High pressure, chaotic, urgent, mix of red/gold/purple visuals"
+        }
+      ]
+    },
+    {
+      "state_id": 4,
+      "state_name": "Hell Mode",
+      "ai_reasoning": {
+        "explanation": "This is the climax of the negative arc, representing total loss of agency. The experience breaks its own rules (notifications leaving the phone) to show the user they are completely trapped.",
+        "confidence": 1.0
+      },
+      "emotions": [
+        {
+          "name": "Overwhelm",
+          "description": "Extremely fast notification storm, chaotic shaking animations, sensory overload"
+        },
+        {
+          "name": "Dread",
+          "description": "Ominous messages, demonic/skull icons, dark red and black color scheme"
+        },
+        {
+          "name": "Powerlessness",
+          "description": "Escape button becomes a taunt, notifications escaping the phone frame, loss of control"
+        }
+      ],
+      "strategy": [
+        {
+          "category": "Strategy",
+          "description": "Induce sensory overload, break the fourth wall, demonstrate inescapability"
+        },
+        {
+          "category": "User Role",
+          "description": "Trapped Soul, Helpless Observer"
+        },
+        {
+          "category": "Directives",
+          "description": "Witness the chaos, attempt futile escape, endure the onslaught"
+        },
+        {
+          "category": "Choices",
+          "description": "Click notifications \u2192 more chaos, Click escape \u2192 punishment"
+        },
+        {
+          "category": "World State",
+          "description": "Apocalyptic, chaotic, inescapable, hellish red/black visuals"
+        }
+      ]
+    },
+    {
+      "state_id": 5,
+      "state_name": "Transition 1-2",
+      "ai_reasoning": {
+        "explanation": "This is a 'velvet rope' strategy. It makes the user feel successful and frames the choice to continue not as a risk, but as the obvious next step for a high-achiever.",
+        "confidence": 1.0
+      },
+      "emotions": [
+        {
+          "name": "Empowerment",
+          "description": "Positive framing, flattering stats, feeling of success and popularity"
+        },
+        {
+          "name": "Temptation",
+          "description": "Encouraging language, promise of 'something bigger', large, glowing 'Yes' button"
+        }
+      ],
+      "strategy": [
+        {
+          "category": "Strategy",
+          "description": "Gate progression with a choice, use flattery and FOMO to encourage continuation"
+        },
+        {
+          "category": "User Role",
+          "description": "Decision-Maker, Star Performer"
+        },
+        {
+          "category": "Directives",
+          "description": "Read the praise, feel special, click the big 'Yes' button"
+        },
+        {
+          "category": "Choices",
+          "description": "Continue \u2192 Stress Phase, Stop \u2192 Trap Screen"
+        },
+        {
+          "category": "World State",
+          "description": "Pause in action, celebratory, low-pressure decision point"
+        }
+      ]
+    },
+    {
+      "state_id": 6,
+      "state_name": "Transition 2-3",
+      "ai_reasoning": {
+        "explanation": "The strategy shifts from simple flattery to creating a sense of social responsibility, a more powerful and manipulative motivator for the user to continue.",
+        "confidence": 1.0
+      },
+      "emotions": [
+        {
+          "name": "Validation",
+          "description": "Escalated praise, impressive-sounding stats like 'Trending in 3 cities'"
+        },
+        {
+          "name": "Obligation",
+          "description": "Manipulative language ('they need you!'), creating social pressure to continue"
+        }
+      ],
+      "strategy": [
+        {
+          "category": "Strategy",
+          "description": "Increase manipulative praise, introduce social obligation, reinforce sunk cost"
+        },
+        {
+          "category": "User Role",
+          "description": "Influencer, Valued Commodity"
+        },
+        {
+          "category": "Directives",
+          "description": "Internalize the praise, feel the social pressure, continue the journey"
+        },
+        {
+          "category": "Choices",
+          "description": "Continue \u2192 Intense Phase, Stop \u2192 Trap Screen"
+        },
+        {
+          "category": "World State",
+          "description": "Pause in action, high praise, increased social stakes"
+        }
+      ]
+    },
+    {
+      "state_id": 7,
+      "state_name": "Transition 3-4",
+      "ai_reasoning": {
+        "explanation": "This is the final point of no return. The language is designed to be irresistible, playing on the user's ego and sunk cost fallacy to push them into the final, chaotic stage.",
+        "confidence": 1.0
+      },
+      "emotions": [
+        {
+          "name": "Exaltation",
+          "description": "Extreme praise ('You're a LEGEND.'), claims of exclusivity ('Top 0.1%')"
+        },
+        {
+          "name": "Intense Curiosity",
+          "description": "Promise of something 'incredible', framing the choice as the final step to a reward"
+        },
+        {
+          "name": "Dread",
+          "description": "The 'Yes' button text ('I NEED to see') has a desperate, obsessive quality"
+        }
+      ],
+      "strategy": [
+        {
+          "category": "Strategy",
+          "description": "Use ultimate praise and exclusivity, leverage intense FOMO, frame escalation as reward"
+        },
+        {
+          "category": "User Role",
+          "description": "Legend, The Chosen One"
+        },
+        {
+          "category": "Directives",
+          "description": "Accept legendary status, give in to curiosity, click to see the end"
+        },
+        {
+          "category": "Choices",
+          "description": "Continue \u2192 Hell Mode, Stop \u2192 Trap Screen"
+        },
+        {
+          "category": "World State",
+          "description": "Final pause, ultimate stakes, a sense of destiny or doom"
+        }
+      ]
+    },
+    {
+      "state_id": 8,
+      "state_name": "Trap Screen",
+      "ai_reasoning": {
+        "explanation": "This state simulates hostile design patterns that make it hard to leave a service. It punishes the user for trying to exit by making it frustrating and psychologically costly.",
+        "confidence": 1.0
+      },
+      "emotions": [
+        {
+          "name": "Frustration",
+          "description": "The 'No' button actively dodges the cursor, making escape a difficult mini-game"
+        },
+        {
+          "name": "Manipulation",
+          "description": "Each screen uses a different psychological hook like FOMO or loss aversion"
+        },
+        {
+          "name": "Desperation",
+          "description": "Overwhelmingly attractive 'Yes' button vs a tiny, difficult 'No' button"
+        }
+      ],
+      "strategy": [
+        {
+          "category": "Strategy",
+          "description": "Hostile design, prevent exit via manipulative choices and interaction difficulty"
+        },
+        {
+          "category": "User Role",
+          "description": "Escape Artist, Target of Manipulation"
+        },
+        {
+          "category": "Directives",
+          "description": "Try to click the dodging 'No' button, give in and click 'Yes'"
+        },
+        {
+          "category": "Choices",
+          "description": "Give in (Yes) \u2192 return to flow, Persist (No) \u2192 new trap or Game Over"
+        },
+        {
+          "category": "World State",
+          "description": "Hostile, manipulative, a mini-game of attrition"
+        }
+      ]
+    },
+    {
+      "state_id": 9,
+      "state_name": "Reflection Easter Egg",
+      "ai_reasoning": {
+        "explanation": "This is a meta-commentary that rewards deep engagement by showing users *how* the system sees them, briefly turning the participant into an observer of their own behavior.",
+        "confidence": 1.0
+      },
+      "emotions": [
+        {
+          "name": "Surprise",
+          "description": "An unexpected, shimmering notification appears, breaking the established pattern"
+        },
+        {
+          "name": "Intrigue",
+          "description": "Mysterious text ('Something just happened...'), promise of a secret 'profile'"
+        },
+        {
+          "name": "Self-Awareness",
+          "description": "Overlay reveals the user's own interaction data, creating a meta-reflection"
+        }
+      ],
+      "strategy": [
+        {
+          "category": "Strategy",
+          "description": "Reward deep engagement with a secret, break the fourth wall with user metrics"
+        },
+        {
+          "category": "User Role",
+          "description": "Explorer, The Analyst"
+        },
+        {
+          "category": "Directives",
+          "description": "Find the secret, click it, read your own data, reflect on your behavior"
+        },
+        {
+          "category": "Choices",
+          "description": "Click notification \u2192 see overlay, Ignore \u2192 continue, Close overlay \u2192 return"
+        },
+        {
+          "category": "World State",
+          "description": "Secretive, calm, meta-analytical, a break from the main loop"
+        }
+      ]
+    },
+    {
+      "state_id": 10,
+      "state_name": "Flood Screen",
+      "ai_reasoning": {
+        "explanation": "This is the narrative punchline. After stripping the user of all agency, it delivers a powerful, cynical message about online identity, leaving a lasting impression.",
+        "confidence": 1.0
+      },
+      "emotions": [
+        {
+          "name": "Dread",
+          "description": "Bleak, existential final message, flickering text effect"
+        },
+        {
+          "name": "Emptiness",
+          "description": "Stark, dark red screen, all interactive elements are gone"
+        },
+        {
+          "name": "Resignation",
+          "description": "The experience ends with a chilling, unchangeable statement, no further action"
+        }
+      ],
+      "strategy": [
+        {
+          "category": "Strategy",
+          "description": "Deliver the final thematic message, remove all user agency, end on a bleak note"
+        },
+        {
+          "category": "User Role",
+          "description": "Recipient of the Moral"
+        },
+        {
+          "category": "Directives",
+          "description": "Read the final message, contemplate its meaning"
+        },
+        {
+          "category": "Choices",
+          "description": "None, the experience is over"
+        },
+        {
+          "category": "World State",
+          "description": "Final, static, nihilistic, deep red and black"
+        }
+      ]
+    },
+    {
+      "state_id": 11,
+      "state_name": "Game Over",
+      "ai_reasoning": {
+        "explanation": "This is a manipulative twist where 'winning' the escape mini-game is framed as a catastrophic loss, reinforcing the core message that leaving the system is the worst outcome.",
+        "confidence": 1.0
+      },
+      "emotions": [
+        {
+          "name": "Failure",
+          "description": "Large 'GAME OVER' text, tagline about losing all social capital"
+        },
+        {
+          "name": "Frustration",
+          "description": "Score rapidly and visibly drains to zero, representing a total loss"
+        },
+        {
+          "name": "Defeat",
+          "description": "Dark, muted, depressing aesthetic, a tiny and weak 'try again' button"
+        }
+      ],
+      "strategy": [
+        {
+          "category": "Strategy",
+          "description": "Punish the user for escaping the trap, frame leaving as a total loss"
+        },
+        {
+          "category": "User Role",
+          "description": "Loser, Failure"
+        },
+        {
+          "category": "Directives",
+          "description": "Watch your score deplete, feel the loss, consider restarting"
+        },
+        {
+          "category": "Choices",
+          "description": "Restart \u2192 Welcome Screen, Close window \u2192 Exit"
+        },
+        {
+          "category": "World State",
+          "description": "Bleak, punishing, a definitive end state of failure"
+        }
+      ]
+    }
+  ]
+}

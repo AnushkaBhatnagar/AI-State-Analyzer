@@ -1,5 +1,5 @@
 import os
-import anthropic
+import google.generativeai as genai
 import json
 import re
 from pathlib import Path
@@ -11,21 +11,22 @@ load_dotenv()
 class StateDetectionAnalyzer:
     def __init__(self, api_key=None):
         """
-        Initialize the state detection analyzer with Anthropic API key.
-        
+        Initialize the state detection analyzer with Google Gemini API key.
+
         Args:
-            api_key (str, optional): Anthropic API key. If not provided, 
-                                   will look for ANTHROPIC_API_KEY environment variable.
+            api_key (str, optional): Google API key. If not provided,
+                                   will look for GOOGLE_API_KEY environment variable.
         """
         if api_key:
             self.api_key = api_key
         else:
-            self.api_key = os.getenv('ANTHROPIC_API_KEY')
-            
+            self.api_key = os.getenv('GOOGLE_API_KEY')
+
         if not self.api_key:
-            raise ValueError("Anthropic API key is required. Set ANTHROPIC_API_KEY environment variable or pass api_key parameter.")
-            
-        self.client = anthropic.Anthropic(api_key=self.api_key)
+            raise ValueError("Google API key is required. Set GOOGLE_API_KEY environment variable or pass api_key parameter.")
+
+        genai.configure(api_key=self.api_key)
+        self.model = genai.GenerativeModel("gemini-2.5-pro")
     
     def detect_states(self, code_content, file_type="html"):
         """
@@ -131,6 +132,28 @@ For EACH state you identify, provide:
    - The injection engine automatically resolves the full property access path
      (e.g., `this.gameState.needsHug`), so just provide the bare variable name in the hook.
 
+6b. **State Tracking Code (CRITICAL for framework-based experiences):**
+   Provide `state_tracking_code`: a JavaScript snippet (as a string) that continuously monitors
+   the primary state variable and reports it via `window.__ai_state_monitor.report('varName', value)`.
+
+   This is ESSENTIAL when state changes happen via METHOD CALLS (e.g., Phaser `scene.start()`,
+   React `setState()`, router navigation) rather than simple variable assignments that
+   injection hooks can capture.
+
+   Guidelines:
+   - Use `setInterval(function() {{ ... }}, 200)` to poll framework-specific state APIs
+   - Reference framework objects by their local variable name (they may use `const`/`let` and NOT be on `window`)
+   - Wrap everything in `try/catch` so it never breaks the experience
+   - Report ALL variables used in `trigger_logic` that aren't captured by injection hooks
+   - The snippet will be injected inside the SAME `<script>` tag as the original code, so closure-scoped
+     variables (like `const game = new Phaser.Game(...)`) ARE accessible
+
+   Examples by framework:
+   - Phaser: `setInterval(function() {{ try {{ var s = game.scene.getScenes(true); if (s.length) window.__ai_state_monitor.report('currentScene', s[0].scene.key); }} catch(e) {{}} }}, 200);`
+   - React Router: `setInterval(function() {{ try {{ window.__ai_state_monitor.report('route', window.location.pathname); }} catch(e) {{}} }}, 200);`
+   - Scroll-based: `setInterval(function() {{ try {{ window.__ai_state_monitor.report('scrollY', window.scrollY); }} catch(e) {{}} }}, 200);`
+   - Vanilla JS classes: `setInterval(function() {{ try {{ window.__ai_state_monitor.report('state', app.state); }} catch(e) {{}} }}, 200);`
+
 7. **Source Code Blocks:**
    For each state, provide `source_code_blocks` - max 2 objects per state, each containing:
    - `label`: A short label (e.g., "startStage3() function")
@@ -191,6 +214,7 @@ IMPORTANT: Return your analysis as a valid JSON object with this EXACT structure
       "scope_context": "function that resets the variable"
     }}
   ],
+  "state_tracking_code": "setInterval(function() {{ try {{ /* poll framework state and report via window.__ai_state_monitor.report('varName', value) */ }} catch(e) {{}} }}, 200);",
   "transitions": [
     {{
       "id": "t_<from_id>_<to_id>",
@@ -229,7 +253,6 @@ IMPORTANT: Return your analysis as a valid JSON object with this EXACT structure
       ],
       "color_theme": {{
         "primary": "rgba(r, g, b, 0.15)",
-        "active": "rgba(r, g, b, 0.3)",
         "border": "rgba(r, g, b, 0.6)"
       }},
       "interactive_elements": [
@@ -291,35 +314,23 @@ Return ONLY the JSON object, no additional text or explanation.
 """
 
         try:
-            response = self.client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=16000,
+            config = genai.types.GenerationConfig(
+                max_output_tokens=16000,
                 temperature=0.1,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": state_detection_prompt
-                    }
-                ]
             )
-            
+            chat = self.model.start_chat()
+            response = chat.send_message(state_detection_prompt, generation_config=config)
+
             # Check if response was truncated
-            if response.stop_reason == 'max_tokens':
+            if response.candidates[0].finish_reason.name == 'MAX_TOKENS':
                 print("[WARN] Response truncated (hit max_tokens). Retrying with concise mode...")
-                retry_messages = [
-                    {"role": "user", "content": state_detection_prompt},
-                    {"role": "assistant", "content": response.content[0].text},
-                    {"role": "user", "content": "Your response was truncated. Please return the COMPLETE JSON but make source_code_blocks shorter (max 5 lines each, truncate with '// ...'). Return ONLY the complete JSON."}
-                ]
-                response = self.client.messages.create(
-                    model="claude-sonnet-4-20250514",
-                    max_tokens=16000,
-                    temperature=0.1,
-                    messages=retry_messages
+                response = chat.send_message(
+                    "Your response was truncated. Please return the COMPLETE JSON but make source_code_blocks shorter (max 5 lines each, truncate with '// ...'). Return ONLY the complete JSON.",
+                    generation_config=config
                 )
 
             # Extract JSON from response
-            response_text = response.content[0].text
+            response_text = response.text
 
             # Try to parse the response as JSON
             # Sometimes AI might wrap JSON in markdown code blocks
@@ -401,34 +412,22 @@ Return ONLY the JSON object, no additional text or explanation."""
 
         try:
             print("Running incremental state analysis...")
-            response = self.client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=16000,
+            config = genai.types.GenerationConfig(
+                max_output_tokens=16000,
                 temperature=0.1,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": update_prompt
-                    }
-                ]
             )
+            chat = self.model.start_chat()
+            response = chat.send_message(update_prompt, generation_config=config)
 
             # Check if response was truncated
-            if response.stop_reason == 'max_tokens':
+            if response.candidates[0].finish_reason.name == 'MAX_TOKENS':
                 print("[WARN] Incremental response truncated. Retrying with concise mode...")
-                retry_messages = [
-                    {"role": "user", "content": update_prompt},
-                    {"role": "assistant", "content": response.content[0].text},
-                    {"role": "user", "content": "Your response was truncated. Please return the COMPLETE JSON but make source_code_blocks shorter (max 5 lines each, truncate with '// ...'). Return ONLY the complete JSON."}
-                ]
-                response = self.client.messages.create(
-                    model="claude-sonnet-4-20250514",
-                    max_tokens=16000,
-                    temperature=0.1,
-                    messages=retry_messages
+                response = chat.send_message(
+                    "Your response was truncated. Please return the COMPLETE JSON but make source_code_blocks shorter (max 5 lines each, truncate with '// ...'). Return ONLY the complete JSON.",
+                    generation_config=config
                 )
 
-            response_text = response.content[0].text
+            response_text = response.text
 
             # Parse JSON from response
             json_match = re.search(r'```json\s*(.*?)\s*```', response_text, re.DOTALL)
@@ -475,7 +474,13 @@ Return ONLY the JSON object, no additional text or explanation."""
         states_schema_json = json.dumps(states_schema, indent=2)
 
         state_ids = [s['id'] for s in states_schema.get('states', [])]
-        all_pairs = [(f, t) for f in state_ids for t in state_ids if f != t]
+        # Hub-and-spoke: only generate transitions to/from state 0
+        # For N states this gives 2*(N-1) pairs instead of N²-N
+        base_state = state_ids[0] if state_ids else 0
+        all_pairs = (
+            [(base_state, t) for t in state_ids if t != base_state] +
+            [(f, base_state) for f in state_ids if f != base_state]
+        )
         pairs_list_str = ', '.join(f'"{f}_{t}"' for f, t in all_pairs)
 
         jump_prompt = f"""You are a JavaScript execution expert and code analyst. Your task is to analyze an interactive {file_type.upper()} experience and produce "jump codes" — one per FROM->TO state pair — that allow a user to teleport the running application from any current state to any target state, without reloading the page.
@@ -497,13 +502,19 @@ Deeply analyze the code. Understand how state is actually controlled in THIS spe
 - Timer/interval-based progression
 - A combination of the above
 
-## REQUIRED PAIRS
+## REQUIRED PAIRS (hub-and-spoke model)
 
-You MUST produce a jump code for EVERY one of these {len(all_pairs)} pairs:
+We use a hub-and-spoke model where State {base_state} is the hub. You only need to produce transitions TO and FROM State {base_state}:
+- Forward: State {base_state} → each other state (to set up that state)
+- Backward: each other state → State {base_state} (to reset back)
+
+The jump UI will automatically chain through State {base_state} for non-hub jumps (e.g., State 2→3 becomes 2→{base_state} then {base_state}→3).
+
+Produce a jump code for each of these {len(all_pairs)} pairs:
 {pairs_list_str}
 
-Do not skip any pair. For each pair, produce a JavaScript code string that:
-- Takes the app from from_state (currently running) to to_state
+For each pair, produce a JavaScript code string that:
+- Takes the app from from_state to to_state
 - Is safe to execute at any time during the experience
 - Handles whatever cleanup or setup is needed for this specific transition
 - Leverages the experience's own existing mechanisms where possible
@@ -524,14 +535,15 @@ Return ONLY a valid JSON object with this exact structure:
 {{
   "jump_setup": "/* optional one-time JS block, empty string if not needed */",
   "jump_transitions": {{
-    "0_1": {{ "code": "/* JS to jump from state 0 to state 1 */", "confidence": 0.95, "notes": "brief explanation of strategy used" }},
-    "3_7": {{ "code": "/* JS to jump from state 3 to state 7 */", "confidence": 0.9, "notes": "..." }},
-    "6_1": {{ "code": "/* JS to jump from state 6 to state 1 */", "confidence": 0.85, "notes": "..." }}
+    "0_1": {{ "code": "/* JS to jump from state 0 to state 1 */", "confidence": 0.95, "notes": "brief explanation" }},
+    "0_2": {{ "code": "/* JS to jump from state 0 to state 2 */", "confidence": 0.9, "notes": "..." }},
+    "1_0": {{ "code": "/* JS to jump from state 1 back to state 0 */", "confidence": 0.95, "notes": "..." }},
+    "2_0": {{ "code": "/* JS to jump from state 2 back to state 0 */", "confidence": 0.85, "notes": "..." }}
   }}
 }}
 
-Keys in jump_transitions are "fromId_toId" strings (e.g. "0_1", "3_7").
-Only include pairs you can actually implement. Omit pairs where jumping is not feasible.
+Keys in jump_transitions are "fromId_toId" strings. Only hub pairs (to/from State {base_state}) are needed.
+Omit pairs where jumping is not feasible.
 
 RULES:
 - Never reload the page or navigate away
@@ -542,33 +554,21 @@ RULES:
 
         try:
             print("Running AI jump code analysis...")
-            response = self.client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=12000,
+            config = genai.types.GenerationConfig(
+                max_output_tokens=12000,
                 temperature=0.1,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": jump_prompt
-                    }
-                ]
             )
+            chat = self.model.start_chat()
+            response = chat.send_message(jump_prompt, generation_config=config)
 
-            if response.stop_reason == 'max_tokens':
+            if response.candidates[0].finish_reason.name == 'MAX_TOKENS':
                 print("[WARN] Jump code response truncated. Retrying with fewer pairs...")
-                retry_messages = [
-                    {"role": "user", "content": jump_prompt},
-                    {"role": "assistant", "content": response.content[0].text},
-                    {"role": "user", "content": "Your response was truncated. Please return the COMPLETE JSON including ALL required pairs. Do not skip any pairs. Return ONLY the complete valid JSON."}
-                ]
-                response = self.client.messages.create(
-                    model="claude-sonnet-4-20250514",
-                    max_tokens=12000,
-                    temperature=0.1,
-                    messages=retry_messages
+                response = chat.send_message(
+                    "Your response was truncated. Please return the COMPLETE JSON including ALL required pairs. Do not skip any pairs. Return ONLY the complete valid JSON.",
+                    generation_config=config
                 )
 
-            response_text = response.content[0].text
+            response_text = response.text
 
             json_match = re.search(r'```json\s*(.*?)\s*```', response_text, re.DOTALL)
             if json_match:
@@ -652,10 +652,15 @@ RULES:
             if f_id in removed or t_id in removed or f_id not in new_ids or t_id not in new_ids:
                 del existing[key]
 
-        # Compute pairs that need regeneration (any pair touching an affected state)
+        # Compute hub-and-spoke pairs that need regeneration
         sorted_ids = sorted(new_ids)
-        pairs_to_regen = [(f, t) for f in sorted_ids for t in sorted_ids
-                          if f != t and (f in affected or t in affected)]
+        base_state = sorted_ids[0] if sorted_ids else 0
+        all_hub_pairs = (
+            [(base_state, t) for t in sorted_ids if t != base_state] +
+            [(f, base_state) for f in sorted_ids if f != base_state]
+        )
+        pairs_to_regen = [(f, t) for f, t in all_hub_pairs
+                          if f in affected or t in affected]
 
         if not pairs_to_regen:
             new_schema['jump_setup'] = old_schema.get('jump_setup', '')
@@ -725,28 +730,21 @@ RULES:
 
         try:
             print(f"Running incremental jump code analysis ({len(pairs_to_regen)} pairs)...")
-            response = self.client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=12000,
+            config = genai.types.GenerationConfig(
+                max_output_tokens=12000,
                 temperature=0.1,
-                messages=[{"role": "user", "content": update_prompt}]
             )
+            chat = self.model.start_chat()
+            response = chat.send_message(update_prompt, generation_config=config)
 
-            if response.stop_reason == 'max_tokens':
+            if response.candidates[0].finish_reason.name == 'MAX_TOKENS':
                 print("[WARN] Incremental jump response truncated. Retrying...")
-                retry_messages = [
-                    {"role": "user", "content": update_prompt},
-                    {"role": "assistant", "content": response.content[0].text},
-                    {"role": "user", "content": "Your response was truncated. Please return the COMPLETE JSON including ALL required pairs. Do not skip any pairs. Return ONLY the complete valid JSON."}
-                ]
-                response = self.client.messages.create(
-                    model="claude-sonnet-4-20250514",
-                    max_tokens=12000,
-                    temperature=0.1,
-                    messages=retry_messages
+                response = chat.send_message(
+                    "Your response was truncated. Please return the COMPLETE JSON including ALL required pairs. Do not skip any pairs. Return ONLY the complete valid JSON.",
+                    generation_config=config
                 )
 
-            response_text = response.content[0].text
+            response_text = response.text
 
             json_match = re.search(r'```json\s*(.*?)\s*```', response_text, re.DOTALL)
             if json_match:
@@ -963,13 +961,23 @@ Generate a Mermaid `flowchart TD` diagram following these rules exactly:
 
 Output ONLY the raw Mermaid code. No markdown fences. No explanation."""
 
-        response = self.client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=3000,
-            temperature=0.1,
-            messages=[{"role": "user", "content": prompt}]
+        response = self.model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                max_output_tokens=3000,
+                temperature=0.1,
+            ),
+            safety_settings=[
+                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+            ]
         )
-        raw = response.content[0].text.strip()
+        # Handle blocked or empty responses
+        if not response.candidates or not response.candidates[0].content.parts:
+            raise RuntimeError(f"Gemini returned no content (finish_reason: {response.candidates[0].finish_reason if response.candidates else 'unknown'})")
+        raw = response.text.strip()
         # Strip markdown fences if the model wrapped the output anyway
         raw = re.sub(r'^```[a-z]*\n?', '', raw, flags=re.MULTILINE)
         raw = re.sub(r'^```\s*$', '', raw, flags=re.MULTILINE)
@@ -978,22 +986,12 @@ Output ONLY the raw Mermaid code. No markdown fences. No explanation."""
     def save_states_json(self, states_data, output_path="states_schema.json"):
         """
         Save the detected states to a JSON file.
-        Also generates and embeds a Mermaid diagram for use in the panel.
 
         Args:
             states_data (dict): The states JSON data
             output_path (str): Path to save the JSON file
         """
         try:
-            # Generate Mermaid diagram and embed in schema
-            print("\nGenerating Mermaid state flow diagram...")
-            try:
-                mermaid_code = self.generate_mermaid_diagram(states_data)
-                states_data["mermaid_diagram"] = mermaid_code
-                print("[OK] Mermaid diagram generated")
-            except Exception as e:
-                print(f"[WARN] Mermaid generation failed: {e}. Saving schema without diagram.")
-
             with open(output_path, 'w', encoding='utf-8') as f:
                 json.dump(states_data, f, indent=2)
 
@@ -1007,11 +1005,11 @@ def main():
     """
     Test function to detect states in index.html
     """
-    # API key should be set via ANTHROPIC_API_KEY environment variable
+    # API key should be set via GOOGLE_API_KEY environment variable
     # or passed as command line argument
-    
+
     try:
-        # Initialize analyzer (will use ANTHROPIC_API_KEY env var)
+        # Initialize analyzer (will use GOOGLE_API_KEY env var)
         analyzer = StateDetectionAnalyzer()
         
         # Detect states from Instagram example

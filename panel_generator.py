@@ -942,9 +942,8 @@ class StatePanelGenerator:
         }}
 
         .stage-segment.stage-{state_id}.active {{
-            background: linear-gradient(135deg, {colors['active']} 0%, {colors['active']} 100%);
+            background: linear-gradient(135deg, {colors['primary']} 0%, {colors['primary']} 100%);
             border-color: {colors['border']};
-            box-shadow: inset 0 0 30px {colors['active']};
         }}
 
         .stage-{state_id} .dot {{
@@ -962,7 +961,7 @@ class StatePanelGenerator:
 
         return '''
 <div class="branching-map-container">
-    <div class="branching-map-header" onclick="window.open('state_flow_map.html','_blank')">
+    <div class="branching-map-header" onclick="window.open('state-flow-diagram/state_flow_map.html','_blank')">
         STATE FLOW MAP &#8599;
     </div>
 </div>
@@ -2037,15 +2036,24 @@ class StatePanelGenerator:
         else:
             original_html += panel_html
         
+        # Inject AI-generated state tracking code into the SAME script block
+        # as the original code, so it can access closure-scoped variables (e.g., const game)
+        tracking_snippet = self.states.get('state_tracking_code', '')
+        if tracking_snippet and '</script>' in original_html:
+            last_script_pos = original_html.rfind('</script>')
+            original_html = (original_html[:last_script_pos] +
+                           f'\n// AI-generated state tracking\n{tracking_snippet}\n' +
+                           original_html[last_script_pos:])
+
         # Inject helper functions and tracking JavaScript
         helper_js = self.generate_helper_functions()
         combined_js = helper_js + tracking_js
-        
+
         if '</script>' in original_html:
-            # Find the last script tag
+            # Find the last script tag (after tracking injection)
             last_script_pos = original_html.rfind('</script>')
-            original_html = (original_html[:last_script_pos + 9] + 
-                           f'\n<script>\n{combined_js}\n</script>' + 
+            original_html = (original_html[:last_script_pos + 9] +
+                           f'\n<script>\n{combined_js}\n</script>' +
                            original_html[last_script_pos + 9:])
         else:
             # Add before closing body tag
@@ -2053,7 +2061,7 @@ class StatePanelGenerator:
 
         # Always inject state_jumper.js — buttons show "No path" when transitions are missing,
         # which is more informative than invisible buttons
-        jumper_tag = '<script src="state_jumper.js"></script>\n'
+        jumper_tag = '<script src="jump-states/state_jumper.js"></script>\n'
         original_html = original_html.replace('</body>', jumper_tag + '</body>')
 
         return original_html
@@ -2064,10 +2072,10 @@ class StatePanelGenerator:
         plugin that adds Jump buttons to the panel and executes AI-generated jump codes.
 
         state_jumper.js is NOT referenced in index_with_panel.html. Load it on demand:
-          var s=document.createElement('script');s.src='state_jumper.js';document.body.appendChild(s);
+          var s=document.createElement('script');s.src='jump-states/state_jumper.js';document.body.appendChild(s);
 
         Returns:
-            str: Complete JavaScript content for state_jumper.js
+            str: Complete JavaScript content for jump-states/state_jumper.js
         """
         jump_transitions = self.states.get('jump_transitions', {})
         jump_setup = self.states.get('jump_setup', '')
@@ -2081,7 +2089,7 @@ class StatePanelGenerator:
 //   1. Open index_with_panel.html in your browser (via dev server)
 //   2. Open DevTools console (F12)
 //   3. Paste this line and press Enter:
-//        var s=document.createElement('script');s.src='state_jumper.js';document.body.appendChild(s);
+//        var s=document.createElement('script');s.src='jump-states/state_jumper.js';document.body.appendChild(s);
 //   4. "Jump" buttons will appear on each state card in the panel
 
 (function () {{
@@ -2129,6 +2137,19 @@ class StatePanelGenerator:
         var key = fromStateId + '_' + targetStateId;
         var transition = stateJumpTransitions[key];
         var btn = document.getElementById('jumpBtn' + targetStateId);
+
+        // Hub-and-spoke fallback: chain through state 0 if no direct path
+        if ((!transition || !transition.code) && fromStateId !== 0 && targetStateId !== 0) {{
+            var toHub = stateJumpTransitions[fromStateId + '_0'];
+            var fromHub = stateJumpTransitions['0_' + targetStateId];
+            if (toHub && toHub.code && fromHub && fromHub.code) {{
+                transition = {{
+                    code: toHub.code + ';\\n' + fromHub.code,
+                    confidence: Math.min(toHub.confidence || 0, fromHub.confidence || 0),
+                    notes: 'chained via state 0'
+                }};
+            }}
+        }}
 
         if (!transition || !transition.code) {{
             if (btn) {{
@@ -2201,7 +2222,7 @@ class StatePanelGenerator:
     def save_to_file(self, output_path, original_html_path):
         """
         Generate and save the complete HTML file.
-        Also writes state_jumper.js and state_flow_diagram.js alongside it.
+        Also writes jump-states/state_jumper.js and state-flow-diagram/state_flow_diagram.js alongside it.
 
         Args:
             output_path (str): Path to save the output HTML
@@ -2215,20 +2236,25 @@ class StatePanelGenerator:
 
             print(f"[OK] Generated state panel HTML: {output_path}")
 
-            # Write state_jumper.js alongside the panel HTML
-            jumper_path = Path(output_path).parent / 'state_jumper.js'
-            with open(jumper_path, 'w', encoding='utf-8') as f:
-                f.write(self.generate_jump_js())
-            n_pairs = len(self.states.get('jump_transitions', {}))
-            print(f"[OK] Generated jump codes:       {jumper_path}  ({n_pairs} transitions)")
+            # Write state_jumper.js only if jump data was generated
+            if self.states.get('jump_transitions') or self.states.get('jump_setup'):
+                jumper_dir = Path(output_path).parent / 'jump-states'
+                jumper_dir.mkdir(exist_ok=True)
+                jumper_path = jumper_dir / 'state_jumper.js'
+                with open(jumper_path, 'w', encoding='utf-8') as f:
+                    f.write(self.generate_jump_js())
+                n_pairs = len(self.states.get('jump_transitions', {}))
+                print(f"[OK] Generated jump codes:       {jumper_path}  ({n_pairs} transitions)")
 
             # Write Mermaid diagram to external JS file and standalone HTML page
             mermaid_code = self.states.get('mermaid_diagram', '').strip()
             if mermaid_code:
                 output_dir = os.path.dirname(os.path.abspath(output_path))
+                diagram_dir = os.path.join(output_dir, 'state-flow-diagram')
+                os.makedirs(diagram_dir, exist_ok=True)
 
                 # state_flow_diagram.js — diagram data only
-                diagram_path = os.path.join(output_dir, 'state_flow_diagram.js')
+                diagram_path = os.path.join(diagram_dir, 'state_flow_diagram.js')
                 escaped = mermaid_code.replace('\\', '\\\\').replace('`', '\\`').replace('${', '\\${')
                 js_content = f"""// Auto-generated by panel_generator.py — do not edit
 window.STATE_FLOW_DIAGRAM = `{escaped}`;
@@ -2247,10 +2273,10 @@ window.renderMermaidDiagram = function() {{
 """
                 with open(diagram_path, 'w', encoding='utf-8') as f:
                     f.write(js_content)
-                print(f"[OK] Generated Mermaid diagram: state_flow_diagram.js")
+                print(f"[OK] Generated Mermaid diagram: state-flow-diagram/state_flow_diagram.js")
 
                 # state_flow_map.html — standalone page for viewing the diagram
-                map_path = os.path.join(output_dir, 'state_flow_map.html')
+                map_path = os.path.join(diagram_dir, 'state_flow_map.html')
                 map_html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2291,7 +2317,7 @@ window.renderMermaidDiagram = function() {{
 """
                 with open(map_path, 'w', encoding='utf-8') as f:
                     f.write(map_html)
-                print(f"[OK] Generated flow map page:   state_flow_map.html")
+                print(f"[OK] Generated flow map page:   state-flow-diagram/state_flow_map.html")
 
         except Exception as e:
             raise Exception(f"Error saving HTML: {str(e)}")

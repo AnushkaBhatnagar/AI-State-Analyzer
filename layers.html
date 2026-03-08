@@ -1,0 +1,3051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Layers</title>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        background: #0d0d0d;
+        color: rgba(255, 255, 255, 0.9);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        min-height: 100vh;
+        padding: 0 28px 28px 28px;
+    }
+
+    /* Sticky header row */
+    .layers-headers {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        gap: 24px;
+        padding: 20px 0 12px 0;
+        background: #0d0d0d;
+    }
+
+    .layer-header {
+        flex: 1;
+        background: rgba(10, 10, 10, 0.98);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 6px;
+        padding: 10px 16px;
+        font-size: 13px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.9);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        text-align: center;
+    }
+
+    .page-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.75);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    .page-layout {
+        display: flex;
+        gap: 24px;
+        align-items: stretch;
+    }
+
+    .panels-area {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .layers-container {
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+    }
+
+    .sidebar-column {
+        flex: 1;
+        min-width: 0;
+        min-height: 200px;
+        border-left: 1px solid rgba(255, 255, 255, 0.12);
+        padding-left: 24px;
+        display: none;
+    }
+
+    .sidebar-column.visible {
+        display: block;
+    }
+
+    .page-top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 0 0 0;
+    }
+
+    .chat-toggle {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 6px;
+        padding: 6px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: background 0.2s, color 0.2s;
+    }
+
+    .chat-toggle:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .chat-toggle.active {
+        background: rgba(255, 255, 255, 0.18);
+        color: rgba(255, 255, 255, 0.95);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* === Override state panel for layers layout === */
+    .view-toggle-container { display: none !important; }
+    .original-view-container { display: none !important; }
+    .reanalyze-toolbar { display: none !important; }
+    .branching-map-container { display: none !important; }
+    #analysis-content-area { display: none !important; }
+
+    .state-panel {
+        position: static !important;
+        width: auto !important;
+        flex: 1 !important;
+        min-width: 0 !important;
+        height: auto !important;
+        border-left: none !important;
+        box-shadow: none !important;
+        overflow-y: visible !important;
+        background: rgba(20, 20, 20, 0.95) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 8px !important;
+        z-index: auto !important;
+    }
+
+    /* Real state panel CSS */
+    
+
+        body {
+            justify-content: flex-start !important;
+            overflow: hidden !important;
+        }
+        #analysis-content-area {
+            width: calc(100% - 450px);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        #game-container {
+            transform-origin: center center;
+        }
+
+        .view-toggle-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10000;
+            background: rgba(20, 20, 20, 0.95);
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            display: flex;
+            gap: 8px;
+        }
+        
+        .view-toggle-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .view-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .view-toggle-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .original-view-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            background: white;
+            display: none;
+        }
+        
+        .original-view-container.active {
+            display: block;
+        }
+        
+        .original-view-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .state-panel {
+            position: fixed;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 450px;
+            background: rgba(20, 20, 20, 0.95);
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .stage-segment {
+            flex: 1;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            opacity: 0.5;
+        }
+        
+        .segment-content {
+            display: flex;
+            gap: 12px;
+            flex: 1;
+        }
+        
+        .logging-column {
+            display: none;
+        }
+        
+        .params-column {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .param-item {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 8px;
+            font-size: 11px;
+            line-height: 1.4;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .param-item.full-width {
+            width: 100%;
+            margin-bottom: 12px;
+        }
+        
+        .param-item.highlighted {
+            border: 2px solid #2ecc71;
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+            background: rgba(46, 204, 113, 0.15);
+        }
+        
+        .param-name {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: bold;
+            margin-bottom: 3px;
+            font-size: 12px;
+        }
+        
+        .param-id, .param-state, .param-mod {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 10px;
+        }
+        
+        .param-id {
+            color: rgba(100, 200, 255, 0.8);
+            position: relative;
+        }
+        
+        .copy-icon {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: all 0.2s;
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.9);
+            z-index: 10;
+        }
+        
+        .copy-icon:hover {
+            opacity: 1;
+            color: rgba(100, 200, 255, 1);
+            transform: scale(1.15);
+        }
+        
+        .copy-icon.copied {
+            color: #2ecc71;
+        }
+
+        .stage-segment:last-child {
+            border-bottom: none;
+        }
+
+        .stage-segment.active {
+            opacity: 1;
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .stage-header {
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-button {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .header-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
+
+        .header-button:active {
+            transform: scale(0.95);
+        }
+
+        .stage-range {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 10px;
+            margin-bottom: 8px;
+        }
+
+        .dots-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-content: flex-start;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.6);
+            animation: dotAppear 0.3s ease-out;
+        }
+
+        @keyframes dotAppear {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .state-highlight {
+            border: 2px solid #2ecc71 !important;
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.6) !important;
+            animation: highlightPulse 2s infinite;
+        }
+
+        @keyframes highlightPulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(46, 204, 113, 0.6); }
+            50% { box-shadow: 0 0 25px rgba(46, 204, 113, 0.9); }
+        }
+
+        .reanalyze-toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 1001;
+            background: rgba(10, 10, 10, 0.98);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            flex-shrink: 0;
+        }
+
+        .reanalyze-status {
+            flex: 1;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .reanalyze-status.running {
+            color: #f39c12;
+        }
+
+        .reanalyze-status.error {
+            color: #e74c3c;
+        }
+
+        .reanalyze-status.complete {
+            color: #2ecc71;
+        }
+
+        .reanalyze-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .reanalyze-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .reanalyze-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .reanalyze-btn-primary {
+            background: rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+        }
+
+        .reanalyze-btn-full {
+            background: rgba(231, 76, 60, 0.2);
+            border-color: rgba(231, 76, 60, 0.5);
+        }
+
+        /* === Transitions / User Choices Section === */
+        .transitions-section {
+            margin-top: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: 10px 12px;
+        }
+
+        .transitions-label {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .trans-group-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 8px 0 6px 0;
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+
+        .trans-group-label.user-actions {
+            color: rgba(0, 210, 211, 0.95);
+            background: rgba(0, 210, 211, 0.1);
+            border-bottom: 1px solid rgba(0, 210, 211, 0.3);
+        }
+
+        .trans-group-label.auto-transitions {
+            color: rgba(241, 196, 15, 0.95);
+            background: rgba(241, 196, 15, 0.08);
+            border-bottom: 1px solid rgba(241, 196, 15, 0.25);
+        }
+
+        .transition-item {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 5px;
+            padding: 8px 10px;
+            margin-bottom: 5px;
+            font-size: 12px;
+            border-left: 3px solid rgba(0, 210, 211, 0.5);
+        }
+
+        .transition-item.automatic {
+            border-left-color: rgba(241, 196, 15, 0.6);
+        }
+
+        .transition-item.branching {
+            border-left-color: rgba(0, 210, 211, 0.7);
+        }
+
+        .trans-flow {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            font-size: 12px;
+        }
+
+        .trans-action-inline {
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 600;
+        }
+
+        .trans-element-inline {
+            color: rgba(0, 210, 211, 0.6);
+            font-family: monospace;
+            font-size: 11px;
+        }
+
+        .trans-condition-inline {
+            color: rgba(241, 196, 15, 0.8);
+            font-family: monospace;
+            font-size: 11px;
+        }
+
+        .trans-arrow, .branch-arrow {
+            color: rgba(0, 210, 211, 0.9);
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .target-state, .branch-target {
+            color: rgba(0, 210, 211, 0.95);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .target-state:hover, .branch-target:hover {
+            text-decoration: underline;
+            color: #00d2d3;
+        }
+
+        .trans-auto-icon {
+            font-size: 14px;
+        }
+
+        .trans-branch-container {
+            margin-top: 6px;
+            padding-left: 10px;
+            border-left: 2px solid rgba(0, 210, 211, 0.25);
+        }
+
+        .trans-branch {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        .branch-outcome {
+            background: rgba(0, 210, 211, 0.15);
+            color: rgba(0, 210, 211, 0.95);
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .branch-prob {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 10px;
+            font-style: italic;
+        }
+
+        /* === Highlight Toggle Button === */
+        .highlight-toggle-btn.active {
+            background: rgba(46, 204, 113, 0.3);
+            border-color: #2ecc71;
+            color: #2ecc71;
+        }
+
+        .highlight-toggle-btn:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* === Global Branching Map === */
+        .branching-map-container {
+            position: sticky;
+            top: 41px;
+            z-index: 1000;
+            background: rgba(10, 10, 10, 0.6);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+            flex-shrink: 0;
+        }
+
+        .branching-map-header {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 10px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(30, 30, 30, 0.8);
+        }
+
+        .branching-map-header:hover {
+            background: rgba(40, 40, 40, 0.8);
+        }
+
+
+        .flow-diagram {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+        }
+
+        .flow-node {
+            width: 85%;
+            max-width: 350px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 2px solid;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .flow-node:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
+        }
+
+        .flow-node-active {
+            box-shadow: 0 0 12px rgba(46, 204, 113, 0.5) !important;
+            border-color: #2ecc71 !important;
+        }
+
+        .flow-node-id {
+            background: rgba(0, 0, 0, 0.4);
+            color: white;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .flow-node-name {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .flow-node-text {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .flow-node-desc {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 400;
+        }
+
+        .flow-edge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 4px 0;
+            min-height: 30px;
+        }
+
+        .flow-edge-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: 10px;
+            max-width: 300px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .flow-arrow-down {
+            color: rgba(46, 204, 113, 0.6);
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .branching-edge {
+            background: rgba(155, 89, 182, 0.08);
+            border-radius: 4px;
+            padding: 4px 8px;
+            width: 85%;
+            max-width: 350px;
+        }
+
+        .flow-branches {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding-left: 12px;
+        }
+
+        .flow-branch-line {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 9px;
+        }
+
+        .flow-branch-outcome {
+            color: rgba(155, 89, 182, 0.9);
+            font-weight: 600;
+        }
+
+        .flow-arrow {
+            color: rgba(46, 204, 113, 0.6);
+        }
+
+        .flow-branch-target {
+            color: rgba(46, 204, 113, 0.9);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .state-highlight {
+            animation: highlightPulse 2s ease-out;
+        }
+
+        @keyframes highlightPulse {
+            0% { box-shadow: 0 0 20px rgba(46, 204, 113, 0.8); }
+            100% { box-shadow: none; }
+        }
+
+
+        .stage-segment.stage-0 {
+            background: linear-gradient(135deg, rgba(255, 143, 171, 0.45) 0%, rgba(255, 143, 171, 0.45) 100%);
+        }
+
+        .stage-segment.stage-0.active {
+            background: linear-gradient(135deg, rgba(255, 143, 171, 0.45) 0%, rgba(255, 143, 171, 0.45) 100%);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .stage-0 .dot {
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+        }
+
+        .stage-segment.stage-1 {
+            background: linear-gradient(135deg, rgba(255, 182, 193, 0.15) 0%, rgba(255, 182, 193, 0.15) 100%);
+        }
+
+        .stage-segment.stage-1.active {
+            background: linear-gradient(135deg, rgba(255, 182, 193, 0.15) 0%, rgba(255, 182, 193, 0.15) 100%);
+            border-color: rgba(255, 182, 193, 0.35);
+        }
+
+        .stage-1 .dot {
+            background: rgba(255, 182, 193, 0.35);
+            box-shadow: 0 0 5px rgba(255, 182, 193, 0.35);
+        }
+
+        .stage-segment.stage-2 {
+            background: linear-gradient(135deg, rgba(100, 80, 120, 0.18) 0%, rgba(100, 80, 120, 0.18) 100%);
+        }
+
+        .stage-segment.stage-2.active {
+            background: linear-gradient(135deg, rgba(100, 80, 120, 0.18) 0%, rgba(100, 80, 120, 0.18) 100%);
+            border-color: rgba(140, 100, 160, 0.3);
+        }
+
+        .stage-2 .dot {
+            background: rgba(140, 100, 160, 0.3);
+            box-shadow: 0 0 5px rgba(140, 100, 160, 0.3);
+        }
+
+        .stage-segment.stage-3 {
+            background: linear-gradient(135deg, rgba(100, 80, 120, 0.18) 0%, rgba(100, 80, 120, 0.18) 100%);
+        }
+
+        .stage-segment.stage-3.active {
+            background: linear-gradient(135deg, rgba(100, 80, 120, 0.18) 0%, rgba(100, 80, 120, 0.18) 100%);
+            border-color: rgba(140, 100, 160, 0.3);
+        }
+
+        .stage-3 .dot {
+            background: rgba(140, 100, 160, 0.3);
+            box-shadow: 0 0 5px rgba(140, 100, 160, 0.3);
+        }
+
+        .stage-segment.stage-4 {
+            background: linear-gradient(135deg, rgba(130, 0, 0, 0.75) 0%, rgba(130, 0, 0, 0.75) 100%);
+        }
+
+        .stage-segment.stage-4.active {
+            background: linear-gradient(135deg, rgba(130, 0, 0, 0.75) 0%, rgba(130, 0, 0, 0.75) 100%);
+            border-color: rgba(255, 50, 0, 0.75);
+        }
+
+        .stage-4 .dot {
+            background: rgba(255, 50, 0, 0.75);
+            box-shadow: 0 0 5px rgba(255, 50, 0, 0.75);
+        }
+
+        .stage-segment.stage-5 {
+            background: linear-gradient(135deg, rgba(28, 17, 46, 1) 0%, rgba(28, 17, 46, 1) 100%);
+        }
+
+        .stage-segment.stage-5.active {
+            background: linear-gradient(135deg, rgba(28, 17, 46, 1) 0%, rgba(28, 17, 46, 1) 100%);
+            border-color: rgba(255, 215, 0, 0.25);
+        }
+
+        .stage-5 .dot {
+            background: rgba(255, 215, 0, 0.25);
+            box-shadow: 0 0 5px rgba(255, 215, 0, 0.25);
+        }
+
+        .stage-segment.stage-6 {
+            background: linear-gradient(135deg, rgba(28, 17, 46, 1) 0%, rgba(28, 17, 46, 1) 100%);
+        }
+
+        .stage-segment.stage-6.active {
+            background: linear-gradient(135deg, rgba(28, 17, 46, 1) 0%, rgba(28, 17, 46, 1) 100%);
+            border-color: rgba(255, 215, 0, 0.25);
+        }
+
+        .stage-6 .dot {
+            background: rgba(255, 215, 0, 0.25);
+            box-shadow: 0 0 5px rgba(255, 215, 0, 0.25);
+        }
+
+        .stage-segment.stage-7 {
+            background: linear-gradient(135deg, rgba(28, 17, 46, 1) 0%, rgba(28, 17, 46, 1) 100%);
+        }
+
+        .stage-segment.stage-7.active {
+            background: linear-gradient(135deg, rgba(28, 17, 46, 1) 0%, rgba(28, 17, 46, 1) 100%);
+            border-color: rgba(255, 215, 0, 0.25);
+        }
+
+        .stage-7 .dot {
+            background: rgba(255, 215, 0, 0.25);
+            box-shadow: 0 0 5px rgba(255, 215, 0, 0.25);
+        }
+
+        .stage-segment.stage-8 {
+            background: linear-gradient(135deg, rgba(22, 18, 58, 1) 0%, rgba(22, 18, 58, 1) 100%);
+        }
+
+        .stage-segment.stage-8.active {
+            background: linear-gradient(135deg, rgba(22, 18, 58, 1) 0%, rgba(22, 18, 58, 1) 100%);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .stage-8 .dot {
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.12);
+        }
+
+        .stage-segment.stage-9 {
+            background: linear-gradient(135deg, rgba(255, 200, 100, 0.07) 0%, rgba(255, 200, 100, 0.07) 100%);
+        }
+
+        .stage-segment.stage-9.active {
+            background: linear-gradient(135deg, rgba(255, 200, 100, 0.07) 0%, rgba(255, 200, 100, 0.07) 100%);
+            border-color: rgba(255, 200, 100, 0.18);
+        }
+
+        .stage-9 .dot {
+            background: rgba(255, 200, 100, 0.18);
+            box-shadow: 0 0 5px rgba(255, 200, 100, 0.18);
+        }
+
+        .stage-segment.stage-10 {
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.9) 0%, rgba(139, 0, 0, 0.9) 100%);
+        }
+
+        .stage-segment.stage-10.active {
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.9) 0%, rgba(139, 0, 0, 0.9) 100%);
+            border-color: rgba(139, 0, 0, 0.9);
+        }
+
+        .stage-10 .dot {
+            background: rgba(139, 0, 0, 0.9);
+            box-shadow: 0 0 5px rgba(139, 0, 0, 0.9);
+        }
+
+        .stage-segment.stage-11 {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 100%);
+        }
+
+        .stage-segment.stage-11.active {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 100%);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .stage-11 .dot {
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.08);
+        }
+
+
+    /* === Layers-specific overrides === */
+    /* Fix: remove body overflow hidden from state panel CSS */
+    body { overflow: auto !important; }
+    /* Fix: all states equal — no active highlight in layers */
+    .stage-segment { opacity: 1 !important; }
+    .stage-segment.active {
+        box-shadow: none !important;
+        border-color: transparent !important;
+    }
+
+    /* Aesthetics panel CSS */
+
+        .aesthetics-panel {
+            flex: 1;
+            min-width: 0;
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .aes-state-card {
+            padding: 14px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            box-sizing: border-box;
+        }
+
+        .aes-state-card:last-child {
+            border-bottom: none;
+        }
+
+        .aes-state-header {
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        /* AI Reasoning Dropdown */
+        .aes-reasoning {
+            margin: 8px 0 12px 0;
+        }
+
+        .aes-reasoning summary {
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+
+        .aes-reasoning summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .aes-reasoning summary::before {
+            content: '\25B6';
+            font-size: 8px;
+            transition: transform 0.2s;
+            display: inline-block;
+        }
+
+        .aes-reasoning[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        .aes-reasoning summary:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .aes-confidence {
+            margin-left: auto;
+            font-weight: 700;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .aes-confidence.high {
+            color: #2ecc71;
+            background: rgba(46, 204, 113, 0.15);
+        }
+
+        .aes-confidence.medium {
+            color: #f39c12;
+            background: rgba(243, 156, 18, 0.15);
+        }
+
+        .aes-confidence.low {
+            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.15);
+        }
+
+        .aes-reasoning-text {
+            padding: 10px 12px;
+            margin-top: 6px;
+            font-size: 11px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.7);
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            border-left: 3px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Emotion-Description Table */
+        .aes-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .aes-table th {
+            text-align: left;
+            padding: 8px 10px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.5);
+            background: rgba(0, 0, 0, 0.4);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .aes-table th:first-child {
+            width: 30%;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .aes-table td {
+            padding: 0;
+            vertical-align: top;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .aes-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .aes-emotion-cell {
+            padding: 10px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .aes-desc-cell {
+            padding: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .aes-desc-cell .detail-list {
+            margin: 0;
+            padding-left: 14px;
+            list-style: disc;
+        }
+
+        .aes-desc-cell .detail-list li {
+            margin-bottom: 2px;
+        }
+
+        .aes-state-card.aes-state-0 {
+            background: linear-gradient(135deg, rgba(255, 143, 171, 0.45) 0%, rgba(255, 143, 171, 0.45) 100%);
+        }
+
+        .aes-state-card.aes-state-1 {
+            background: linear-gradient(135deg, rgba(255, 182, 193, 0.15) 0%, rgba(255, 182, 193, 0.15) 100%);
+        }
+
+        .aes-state-card.aes-state-2 {
+            background: linear-gradient(135deg, rgba(100, 80, 120, 0.18) 0%, rgba(100, 80, 120, 0.18) 100%);
+        }
+
+        .aes-state-card.aes-state-3 {
+            background: linear-gradient(135deg, rgba(100, 80, 120, 0.18) 0%, rgba(100, 80, 120, 0.18) 100%);
+        }
+
+        .aes-state-card.aes-state-4 {
+            background: linear-gradient(135deg, rgba(130, 0, 0, 0.75) 0%, rgba(130, 0, 0, 0.75) 100%);
+        }
+
+        .aes-state-card.aes-state-5 {
+            background: linear-gradient(135deg, rgba(28, 17, 46, 1) 0%, rgba(28, 17, 46, 1) 100%);
+        }
+
+        .aes-state-card.aes-state-6 {
+            background: linear-gradient(135deg, rgba(28, 17, 46, 1) 0%, rgba(28, 17, 46, 1) 100%);
+        }
+
+        .aes-state-card.aes-state-7 {
+            background: linear-gradient(135deg, rgba(28, 17, 46, 1) 0%, rgba(28, 17, 46, 1) 100%);
+        }
+
+        .aes-state-card.aes-state-8 {
+            background: linear-gradient(135deg, rgba(22, 18, 58, 1) 0%, rgba(22, 18, 58, 1) 100%);
+        }
+
+        .aes-state-card.aes-state-9 {
+            background: linear-gradient(135deg, rgba(255, 200, 100, 0.07) 0%, rgba(255, 200, 100, 0.07) 100%);
+        }
+
+        .aes-state-card.aes-state-10 {
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.9) 0%, rgba(139, 0, 0, 0.9) 100%);
+        }
+
+        .aes-state-card.aes-state-11 {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 100%);
+        }
+
+    /* Strategy panel CSS */
+
+        .strategy-panel {
+            flex: 1;
+            min-width: 0;
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .strat-state-card {
+            padding: 14px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            box-sizing: border-box;
+        }
+
+        .strat-state-card:last-child {
+            border-bottom: none;
+        }
+
+        .strat-state-header {
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        /* AI Reasoning Dropdown */
+        .strat-reasoning {
+            margin: 8px 0 12px 0;
+        }
+
+        .strat-reasoning summary {
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+
+        .strat-reasoning summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .strat-reasoning summary::before {
+            content: '\25B6';
+            font-size: 8px;
+            transition: transform 0.2s;
+            display: inline-block;
+        }
+
+        .strat-reasoning[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        .strat-reasoning summary:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .strat-confidence {
+            margin-left: auto;
+            font-weight: 700;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .strat-confidence.high {
+            color: #2ecc71;
+            background: rgba(46, 204, 113, 0.15);
+        }
+
+        .strat-confidence.medium {
+            color: #f39c12;
+            background: rgba(243, 156, 18, 0.15);
+        }
+
+        .strat-confidence.low {
+            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.15);
+        }
+
+        .strat-reasoning-text {
+            padding: 10px 12px;
+            margin-top: 6px;
+            font-size: 11px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.7);
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            border-left: 3px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Strategy Category-Description Table */
+        .strat-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .strat-table th {
+            text-align: left;
+            padding: 8px 10px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.5);
+            background: rgba(0, 0, 0, 0.4);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .strat-table th:first-child {
+            width: 30%;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .strat-table td {
+            padding: 0;
+            vertical-align: top;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .strat-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .strat-category-cell {
+            padding: 10px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .strat-desc-cell {
+            padding: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .strat-desc-cell .detail-list {
+            margin: 0;
+            padding-left: 14px;
+            list-style: disc;
+        }
+
+        .strat-desc-cell .detail-list li {
+            margin-bottom: 2px;
+        }
+
+        .strat-state-card.strat-state-0 {
+            background: linear-gradient(135deg, rgba(255, 143, 171, 0.45) 0%, rgba(255, 143, 171, 0.45) 100%);
+        }
+
+        .strat-state-card.strat-state-1 {
+            background: linear-gradient(135deg, rgba(255, 182, 193, 0.15) 0%, rgba(255, 182, 193, 0.15) 100%);
+        }
+
+        .strat-state-card.strat-state-2 {
+            background: linear-gradient(135deg, rgba(100, 80, 120, 0.18) 0%, rgba(100, 80, 120, 0.18) 100%);
+        }
+
+        .strat-state-card.strat-state-3 {
+            background: linear-gradient(135deg, rgba(100, 80, 120, 0.18) 0%, rgba(100, 80, 120, 0.18) 100%);
+        }
+
+        .strat-state-card.strat-state-4 {
+            background: linear-gradient(135deg, rgba(130, 0, 0, 0.75) 0%, rgba(130, 0, 0, 0.75) 100%);
+        }
+
+        .strat-state-card.strat-state-5 {
+            background: linear-gradient(135deg, rgba(28, 17, 46, 1) 0%, rgba(28, 17, 46, 1) 100%);
+        }
+
+        .strat-state-card.strat-state-6 {
+            background: linear-gradient(135deg, rgba(28, 17, 46, 1) 0%, rgba(28, 17, 46, 1) 100%);
+        }
+
+        .strat-state-card.strat-state-7 {
+            background: linear-gradient(135deg, rgba(28, 17, 46, 1) 0%, rgba(28, 17, 46, 1) 100%);
+        }
+
+        .strat-state-card.strat-state-8 {
+            background: linear-gradient(135deg, rgba(22, 18, 58, 1) 0%, rgba(22, 18, 58, 1) 100%);
+        }
+
+        .strat-state-card.strat-state-9 {
+            background: linear-gradient(135deg, rgba(255, 200, 100, 0.07) 0%, rgba(255, 200, 100, 0.07) 100%);
+        }
+
+        .strat-state-card.strat-state-10 {
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.9) 0%, rgba(139, 0, 0, 0.9) 100%);
+        }
+
+        .strat-state-card.strat-state-11 {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 100%);
+        }
+
+</style>
+</head>
+<body>
+
+<div class="page-top-bar">
+    <div class="page-title">Layers</div>
+    <button class="chat-toggle" id="chatToggle" onclick="toggleChat()">Chat</button>
+</div>
+
+<div class="page-layout">
+
+<div class="panels-area">
+<div class="layers-headers">
+    <div class="layer-header">State Layer</div>
+    <div class="layer-header">Aesthetic Layer</div>
+    <div class="layer-header">Strategy Layer</div>
+</div>
+<div class="layers-container">
+    
+<!-- View Toggle Controls -->
+<div class="view-toggle-container">
+    <button class="view-toggle-btn active" id="analysisViewBtn" onclick="switchToAnalysisView()">
+        Analysis View
+    </button>
+    <button class="view-toggle-btn" id="originalViewBtn" onclick="switchToOriginalView()">
+        Original View
+    </button>
+</div>
+
+<!-- Original View (iframe) -->
+<div class="original-view-container" id="originalViewContainer">
+    <iframe class="original-view-iframe" id="originalViewIframe" src="index.html"></iframe>
+</div>
+
+<div class="state-panel" id="statePanel">
+<!-- Re-Analysis Toolbar -->
+<div class="reanalyze-toolbar" id="reanalyzeToolbar">
+    <div class="reanalyze-status" id="reanalyzeStatus">Ready</div>
+    <button class="reanalyze-btn reanalyze-btn-primary" onclick="triggerReanalysis('incremental')" title="Incremental AI re-analysis (~15-25s)">Incremental Analysis</button>
+    <button class="reanalyze-btn reanalyze-btn-full" onclick="triggerReanalysis('full')" title="Full from-scratch AI analysis (~20-30s)">Full Analysis</button>
+    <button class="reanalyze-btn highlight-toggle-btn active" id="highlightToggleBtn" onclick="toggleExperienceHighlights()" title="Toggle element highlights on the experience">Highlights</button>
+</div>
+
+    <div class="stage-segment stage-0 active" id="state0">
+        <div class="stage-header">
+            State 0: Welcome Screen
+            <div style="display: flex; gap: 4px;">
+                <button class="header-button" onclick="copyStateCode(0)">Copy Code</button>
+                <button class="header-button" onclick="copyStateReference(0)">Copy Ref</button>
+            </div>
+        </div>
+        <div class="stage-range">stage = 0</div>
+
+        <!-- State Logic & Description (Full Width) -->
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyDescription(0)" title="Copy Description">⎘</span>
+                <div class="param-name">Description</div>
+                <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">The app is closed and shows a welcome message with a button to begin.</div>
+            </div>
+
+            <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyTriggerLogic(0)" title="Copy Logic">⎘</span>
+                <div class="param-name">Trigger Logic</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">findVariable('stage') === 0</div>
+            </div>
+        </div>
+
+        <div class="segment-content">
+            <div class="params-column">
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('.start-button')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Start Button</div>
+                    <div class="param-id">Selector: .start-button</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: startHell()</div>
+                </div>
+
+                <div class="transitions-section">
+                    <div class="transitions-label">User Choices &amp; Transitions (1)</div>
+                    <div class="trans-group-label user-actions">User Actions</div>
+
+                    <div class="transition-item simple">
+                        <div class="trans-flow">
+                            <span class="trans-action-inline">User clicks 'Open Instagram'</span> <span class="trans-element-inline">.start-button</span>
+                            <span class="trans-arrow">&#8594;</span>
+                            <span class="target-state" data-state="1">State 1: Warm Notifications</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="stage-segment stage-1" id="state1">
+        <div class="stage-header">
+            State 1: Warm Notifications
+            <div style="display: flex; gap: 4px;">
+                <button class="header-button" onclick="copyStateCode(1)">Copy Code</button>
+                <button class="header-button" onclick="copyStateReference(1)">Copy Ref</button>
+            </div>
+        </div>
+        <div class="stage-range">stage = 1, notifications < 15</div>
+
+        <!-- State Logic & Description (Full Width) -->
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyDescription(1)" title="Copy Description">⎘</span>
+                <div class="param-name">Description</div>
+                <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">You are receiving friendly notifications about likes and new followers.</div>
+            </div>
+
+            <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyTriggerLogic(1)" title="Copy Logic">⎘</span>
+                <div class="param-name">Trigger Logic</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">findVariable('stage') === 1</div>
+            </div>
+        </div>
+
+        <div class="segment-content">
+            <div class="params-column">
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('.notification.warm')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Warm Notification</div>
+                    <div class="param-id">Selector: .notification.warm</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: handleNotificationClick()</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('.notification.reflection')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Reflection Notification</div>
+                    <div class="param-id">Selector: .notification.reflection</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: showReflectionOverlay()</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('#escapeButton')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Escape Button (disabled)</div>
+                    <div class="param-id">Selector: #escapeButton</div>
+                    <div class="param-state">State: disabled</div>
+                    <div class="param-mod">Action: tryEscape()</div>
+                </div>
+
+                <div class="transitions-section">
+                    <div class="transitions-label">User Choices &amp; Transitions (2)</div>
+                    <div class="trans-group-label user-actions">User Actions</div>
+
+                    <div class="transition-item simple">
+                        <div class="trans-flow">
+                            <span class="trans-action-inline">User clicks reflection easter egg</span> <span class="trans-element-inline">.notification.reflection</span>
+                            <span class="trans-arrow">&#8594;</span>
+                            <span class="target-state" data-state="9">State 9: Reflection Easter Egg</span>
+                        </div>
+                    </div>
+                    <div class="trans-group-label auto-transitions">Automatic Transitions</div>
+
+                    <div class="transition-item automatic">
+                        <div class="trans-flow">
+                            <span class="trans-auto-icon">&#9889;</span>
+                            <span class="trans-action-inline">Notification count reaches 15</span>
+                            <span class="trans-arrow">&#8594;</span>
+                            <span class="target-state" data-state="5">State 5: Transition 1-2</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="stage-segment stage-2" id="state2">
+        <div class="stage-header">
+            State 2: Stress Phase
+            <div style="display: flex; gap: 4px;">
+                <button class="header-button" onclick="copyStateCode(2)">Copy Code</button>
+                <button class="header-button" onclick="copyStateReference(2)">Copy Ref</button>
+            </div>
+        </div>
+        <div class="stage-range">stage = 2, notifications 15-49</div>
+
+        <!-- State Logic & Description (Full Width) -->
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyDescription(2)" title="Copy Description">⎘</span>
+                <div class="param-name">Description</div>
+                <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">Notifications become more frequent and unsettling, with visual effects.</div>
+            </div>
+
+            <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyTriggerLogic(2)" title="Copy Logic">⎘</span>
+                <div class="param-name">Trigger Logic</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">findVariable('stage') === 2</div>
+            </div>
+        </div>
+
+        <div class="segment-content">
+            <div class="params-column">
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('.notification')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Notification</div>
+                    <div class="param-id">Selector: .notification</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: handleNotificationClick()</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('#escapeButton.enabled')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Escape Button (enabled)</div>
+                    <div class="param-id">Selector: #escapeButton.enabled</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: tryEscape()</div>
+                </div>
+
+                <div class="transitions-section">
+                    <div class="transitions-label">User Choices &amp; Transitions (1)</div>
+                    <div class="trans-group-label auto-transitions">Automatic Transitions</div>
+
+                    <div class="transition-item automatic">
+                        <div class="trans-flow">
+                            <span class="trans-auto-icon">&#9889;</span>
+                            <span class="trans-action-inline">Notification count reaches 50</span>
+                            <span class="trans-arrow">&#8594;</span>
+                            <span class="target-state" data-state="6">State 6: Transition 2-3</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="stage-segment stage-3" id="state3">
+        <div class="stage-header">
+            State 3: Intense Phase
+            <div style="display: flex; gap: 4px;">
+                <button class="header-button" onclick="copyStateCode(3)">Copy Code</button>
+                <button class="header-button" onclick="copyStateReference(3)">Copy Ref</button>
+            </div>
+        </div>
+        <div class="stage-range">stage = 3, notifications 50-99</div>
+
+        <!-- State Logic & Description (Full Width) -->
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyDescription(3)" title="Copy Description">⎘</span>
+                <div class="param-name">Description</div>
+                <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">The pace and intensity of notifications increase dramatically.</div>
+            </div>
+
+            <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyTriggerLogic(3)" title="Copy Logic">⎘</span>
+                <div class="param-name">Trigger Logic</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">findVariable('stage') === 3</div>
+            </div>
+        </div>
+
+        <div class="segment-content">
+            <div class="params-column">
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('.notification')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Notification</div>
+                    <div class="param-id">Selector: .notification</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: handleNotificationClick()</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('#escapeButton.enabled')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Escape Button</div>
+                    <div class="param-id">Selector: #escapeButton.enabled</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: tryEscape()</div>
+                </div>
+
+                <div class="transitions-section">
+                    <div class="transitions-label">User Choices &amp; Transitions (1)</div>
+                    <div class="trans-group-label auto-transitions">Automatic Transitions</div>
+
+                    <div class="transition-item automatic">
+                        <div class="trans-flow">
+                            <span class="trans-auto-icon">&#9889;</span>
+                            <span class="trans-action-inline">Notification count reaches 100</span>
+                            <span class="trans-arrow">&#8594;</span>
+                            <span class="target-state" data-state="7">State 7: Transition 3-4</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="stage-segment stage-4" id="state4">
+        <div class="stage-header">
+            State 4: Hell Mode
+            <div style="display: flex; gap: 4px;">
+                <button class="header-button" onclick="copyStateCode(4)">Copy Code</button>
+                <button class="header-button" onclick="copyStateReference(4)">Copy Ref</button>
+            </div>
+        </div>
+        <div class="stage-range">stage = 4, notifications 100-149</div>
+
+        <!-- State Logic & Description (Full Width) -->
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyDescription(4)" title="Copy Description">⎘</span>
+                <div class="param-name">Description</div>
+                <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">Notifications are overwhelming, breaking out of the phone screen.</div>
+            </div>
+
+            <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyTriggerLogic(4)" title="Copy Logic">⎘</span>
+                <div class="param-name">Trigger Logic</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">findVariable('isHellMode') === true</div>
+            </div>
+        </div>
+
+        <div class="segment-content">
+            <div class="params-column">
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('.notification.hell')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Hell Notification</div>
+                    <div class="param-id">Selector: .notification.hell</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: handleNotificationClick()</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('#escapeButton.enabled')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Escape Button</div>
+                    <div class="param-id">Selector: #escapeButton.enabled</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: tryEscape()</div>
+                </div>
+
+                <div class="transitions-section">
+                    <div class="transitions-label">User Choices &amp; Transitions (1)</div>
+                    <div class="trans-group-label auto-transitions">Automatic Transitions</div>
+
+                    <div class="transition-item automatic">
+                        <div class="trans-flow">
+                            <span class="trans-auto-icon">&#9889;</span>
+                            <span class="trans-action-inline">Notification count reaches 150</span>
+                            <span class="trans-arrow">&#8594;</span>
+                            <span class="target-state" data-state="10">State 10: Flood Screen</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="stage-segment stage-5" id="state5">
+        <div class="stage-header">
+            State 5: Transition 1-2
+            <div style="display: flex; gap: 4px;">
+                <button class="header-button" onclick="copyStateCode(5)">Copy Code</button>
+                <button class="header-button" onclick="copyStateReference(5)">Copy Ref</button>
+            </div>
+        </div>
+        <div class="stage-range">Between Warm and Stress</div>
+
+        <!-- State Logic & Description (Full Width) -->
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyDescription(5)" title="Copy Description">⎘</span>
+                <div class="param-name">Description</div>
+                <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">You are shown your progress and asked if you want to continue.</div>
+            </div>
+
+            <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyTriggerLogic(5)" title="Copy Logic">⎘</span>
+                <div class="param-name">Trigger Logic</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">findVariable('stage') === 2 && checkVisible('#transitionOverlay')</div>
+            </div>
+        </div>
+
+        <div class="segment-content">
+            <div class="params-column">
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('#transitionYesBtn')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Continue Button</div>
+                    <div class="param-id">Selector: #transitionYesBtn</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: continueToNextStage()</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('#transitionNoBtn')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Stop Button</div>
+                    <div class="param-id">Selector: #transitionNoBtn</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: showTrapScreen()</div>
+                </div>
+
+                <div class="transitions-section">
+                    <div class="transitions-label">User Choices &amp; Transitions (2)</div>
+                    <div class="trans-group-label user-actions">User Actions</div>
+
+                    <div class="transition-item simple">
+                        <div class="trans-flow">
+                            <span class="trans-action-inline">User agrees to continue</span> <span class="trans-element-inline">#transitionYesBtn</span>
+                            <span class="trans-arrow">&#8594;</span>
+                            <span class="target-state" data-state="2">State 2: Stress Phase</span>
+                        </div>
+                    </div>
+
+                    <div class="transition-item simple">
+                        <div class="trans-flow">
+                            <span class="trans-action-inline">User tries to stop</span> <span class="trans-element-inline">#transitionNoBtn</span>
+                            <span class="trans-arrow">&#8594;</span>
+                            <span class="target-state" data-state="8">State 8: Trap Screen</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="stage-segment stage-6" id="state6">
+        <div class="stage-header">
+            State 6: Transition 2-3
+            <div style="display: flex; gap: 4px;">
+                <button class="header-button" onclick="copyStateCode(6)">Copy Code</button>
+                <button class="header-button" onclick="copyStateReference(6)">Copy Ref</button>
+            </div>
+        </div>
+        <div class="stage-range">Between Stress and Intense</div>
+
+        <!-- State Logic & Description (Full Width) -->
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyDescription(6)" title="Copy Description">⎘</span>
+                <div class="param-name">Description</div>
+                <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">You are praised for being 'famous' and asked if you want to continue.</div>
+            </div>
+
+            <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyTriggerLogic(6)" title="Copy Logic">⎘</span>
+                <div class="param-name">Trigger Logic</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">findVariable('stage') === 3 && checkVisible('#transitionOverlay')</div>
+            </div>
+        </div>
+
+        <div class="segment-content">
+            <div class="params-column">
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('#transitionYesBtn')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Continue Button</div>
+                    <div class="param-id">Selector: #transitionYesBtn</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: continueToNextStage()</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('#transitionNoBtn')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Stop Button</div>
+                    <div class="param-id">Selector: #transitionNoBtn</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: showTrapScreen()</div>
+                </div>
+
+                <div class="transitions-section">
+                    <div class="transitions-label">User Choices &amp; Transitions (2)</div>
+                    <div class="trans-group-label user-actions">User Actions</div>
+
+                    <div class="transition-item simple">
+                        <div class="trans-flow">
+                            <span class="trans-action-inline">User agrees to continue</span> <span class="trans-element-inline">#transitionYesBtn</span>
+                            <span class="trans-arrow">&#8594;</span>
+                            <span class="target-state" data-state="3">State 3: Intense Phase</span>
+                        </div>
+                    </div>
+
+                    <div class="transition-item simple">
+                        <div class="trans-flow">
+                            <span class="trans-action-inline">User tries to stop</span> <span class="trans-element-inline">#transitionNoBtn</span>
+                            <span class="trans-arrow">&#8594;</span>
+                            <span class="target-state" data-state="8">State 8: Trap Screen</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="stage-segment stage-7" id="state7">
+        <div class="stage-header">
+            State 7: Transition 3-4
+            <div style="display: flex; gap: 4px;">
+                <button class="header-button" onclick="copyStateCode(7)">Copy Code</button>
+                <button class="header-button" onclick="copyStateReference(7)">Copy Ref</button>
+            </div>
+        </div>
+        <div class="stage-range">Between Intense and Hell Mode</div>
+
+        <!-- State Logic & Description (Full Width) -->
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyDescription(7)" title="Copy Description">⎘</span>
+                <div class="param-name">Description</div>
+                <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">You are called a 'legend' and given a final choice to proceed.</div>
+            </div>
+
+            <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyTriggerLogic(7)" title="Copy Logic">⎘</span>
+                <div class="param-name">Trigger Logic</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">findVariable('stage') === 4 && checkVisible('#transitionOverlay')</div>
+            </div>
+        </div>
+
+        <div class="segment-content">
+            <div class="params-column">
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('#transitionYesBtn')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Continue Button</div>
+                    <div class="param-id">Selector: #transitionYesBtn</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: continueToNextStage()</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('#transitionNoBtn')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Stop Button</div>
+                    <div class="param-id">Selector: #transitionNoBtn</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: showTrapScreen()</div>
+                </div>
+
+                <div class="transitions-section">
+                    <div class="transitions-label">User Choices &amp; Transitions (2)</div>
+                    <div class="trans-group-label user-actions">User Actions</div>
+
+                    <div class="transition-item simple">
+                        <div class="trans-flow">
+                            <span class="trans-action-inline">User agrees to continue</span> <span class="trans-element-inline">#transitionYesBtn</span>
+                            <span class="trans-arrow">&#8594;</span>
+                            <span class="target-state" data-state="4">State 4: Hell Mode</span>
+                        </div>
+                    </div>
+
+                    <div class="transition-item simple">
+                        <div class="trans-flow">
+                            <span class="trans-action-inline">User tries to stop</span> <span class="trans-element-inline">#transitionNoBtn</span>
+                            <span class="trans-arrow">&#8594;</span>
+                            <span class="target-state" data-state="8">State 8: Trap Screen</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="stage-segment stage-8" id="state8">
+        <div class="stage-header">
+            State 8: Trap Screen
+            <div style="display: flex; gap: 4px;">
+                <button class="header-button" onclick="copyStateCode(8)">Copy Code</button>
+                <button class="header-button" onclick="copyStateReference(8)">Copy Ref</button>
+            </div>
+        </div>
+        <div class="stage-range">Modal overlay</div>
+
+        <!-- State Logic & Description (Full Width) -->
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyDescription(8)" title="Copy Description">⎘</span>
+                <div class="param-name">Description</div>
+                <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">A screen tries to convince you to stay, with a 'No' button that moves.</div>
+            </div>
+
+            <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyTriggerLogic(8)" title="Copy Logic">⎘</span>
+                <div class="param-name">Trigger Logic</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">checkVisible('#trapOverlay')</div>
+            </div>
+        </div>
+
+        <div class="segment-content">
+            <div class="params-column">
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('#trapYesBtn')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Yes Button</div>
+                    <div class="param-id">Selector: #trapYesBtn</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: trapYes()</div>
+                </div>
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('#trapNoBtn')" title="Copy HTML">⎘</span>
+                    <div class="param-name">No Button (dodges)</div>
+                    <div class="param-id">Selector: #trapNoBtn</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: trapNo()</div>
+                </div>
+
+                <div class="transitions-section">
+                    <div class="transitions-label">User Choices &amp; Transitions (2)</div>
+                    <div class="trans-group-label user-actions">User Actions</div>
+
+                    <div class="transition-item branching">
+                        <div class="trans-flow" style="margin-bottom: 4px;">
+                            <span class="trans-action-inline">User gives in to the trap</span> <span class="trans-element-inline">#trapYesBtn</span>
+                        </div>
+                        <div class="trans-branch-container">
+
+                            <div class="trans-branch">
+                                <span class="branch-outcome">Continue to Stress Phase</span>
+                                <span class="branch-arrow">&#8594;</span>
+                                <span class="branch-target" data-state="2">State 2: Stress Phase</span>
+                            </div>
+
+                            <div class="trans-branch">
+                                <span class="branch-outcome">Continue to Intense Phase</span>
+                                <span class="branch-arrow">&#8594;</span>
+                                <span class="branch-target" data-state="3">State 3: Intense Phase</span>
+                            </div>
+
+                            <div class="trans-branch">
+                                <span class="branch-outcome">Continue to Hell Mode</span>
+                                <span class="branch-arrow">&#8594;</span>
+                                <span class="branch-target" data-state="4">State 4: Hell Mode</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="transition-item simple">
+                        <div class="trans-flow">
+                            <span class="trans-action-inline">User dodges 'No' button 8 times</span> <span class="trans-element-inline">#trapNoBtn</span>
+                            <span class="trans-arrow">&#8594;</span>
+                            <span class="target-state" data-state="11">State 11: Game Over</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="stage-segment stage-9" id="state9">
+        <div class="stage-header">
+            State 9: Reflection Easter Egg
+            <div style="display: flex; gap: 4px;">
+                <button class="header-button" onclick="copyStateCode(9)">Copy Code</button>
+                <button class="header-button" onclick="copyStateReference(9)">Copy Ref</button>
+            </div>
+        </div>
+        <div class="stage-range">Modal overlay</div>
+
+        <!-- State Logic & Description (Full Width) -->
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyDescription(9)" title="Copy Description">⎘</span>
+                <div class="param-name">Description</div>
+                <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">A secret screen shows you stats about your session.</div>
+            </div>
+
+            <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyTriggerLogic(9)" title="Copy Logic">⎘</span>
+                <div class="param-name">Trigger Logic</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">checkVisible('#reflectionOverlay')</div>
+            </div>
+        </div>
+
+        <div class="segment-content">
+            <div class="params-column">
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('.reflection-close-btn')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Close Button</div>
+                    <div class="param-id">Selector: .reflection-close-btn</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: closeReflectionOverlay()</div>
+                </div>
+
+                <div class="transitions-section">
+                    <div class="transitions-label">User Choices &amp; Transitions (1)</div>
+                    <div class="trans-group-label user-actions">User Actions</div>
+
+                    <div class="transition-item simple">
+                        <div class="trans-flow">
+                            <span class="trans-action-inline">User closes the reflection overlay</span> <span class="trans-element-inline">.reflection-close-btn</span>
+                            <span class="trans-arrow">&#8594;</span>
+                            <span class="target-state" data-state="1">State 1: Warm Notifications</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="stage-segment stage-10" id="state10">
+        <div class="stage-header">
+            State 10: Flood Screen
+            <div style="display: flex; gap: 4px;">
+                <button class="header-button" onclick="copyStateCode(10)">Copy Code</button>
+                <button class="header-button" onclick="copyStateReference(10)">Copy Ref</button>
+            </div>
+        </div>
+        <div class="stage-range">Terminal overlay</div>
+
+        <!-- State Logic & Description (Full Width) -->
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyDescription(10)" title="Copy Description">⎘</span>
+                <div class="param-name">Description</div>
+                <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">The screen is covered by a dark red overlay with a cryptic message.</div>
+            </div>
+
+            <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyTriggerLogic(10)" title="Copy Logic">⎘</span>
+                <div class="param-name">Trigger Logic</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">checkVisible('#floodOverlay')</div>
+            </div>
+        </div>
+
+        <div class="segment-content">
+            <div class="params-column">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="stage-segment stage-11" id="state11">
+        <div class="stage-header">
+            State 11: Game Over
+            <div style="display: flex; gap: 4px;">
+                <button class="header-button" onclick="copyStateCode(11)">Copy Code</button>
+                <button class="header-button" onclick="copyStateReference(11)">Copy Ref</button>
+            </div>
+        </div>
+        <div class="stage-range">Terminal overlay</div>
+
+        <!-- State Logic & Description (Full Width) -->
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="param-item full-width" style="border-left: 3px solid #3498db; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyDescription(11)" title="Copy Description">⎘</span>
+                <div class="param-name">Description</div>
+                <div class="param-id" style="white-space: pre-wrap; color: rgba(255,255,255,0.8); font-size: 12px;">You see a 'Game Over' screen with your score counting down to zero.</div>
+            </div>
+
+            <div class="param-item full-width" style="border-left: 3px solid #f39c12; margin-bottom: 8px;">
+                <span class="copy-icon" onclick="copyTriggerLogic(11)" title="Copy Logic">⎘</span>
+                <div class="param-name">Trigger Logic</div>
+                <div class="param-id" style="font-family: monospace; color: #f39c12; font-size: 11px;">checkVisible('#gameoverOverlay')</div>
+            </div>
+        </div>
+
+        <div class="segment-content">
+            <div class="params-column">
+
+                <div class="param-item">
+                    <span class="copy-icon" onclick="copyElementHTML('.gameover-restart-btn')" title="Copy HTML">⎘</span>
+                    <div class="param-name">Restart Button</div>
+                    <div class="param-id">Selector: .gameover-restart-btn</div>
+                    <div class="param-state">State: enabled</div>
+                    <div class="param-mod">Action: restartExperience()</div>
+                </div>
+
+                <div class="transitions-section">
+                    <div class="transitions-label">User Choices &amp; Transitions (1)</div>
+                    <div class="trans-group-label user-actions">User Actions</div>
+
+                    <div class="transition-item simple">
+                        <div class="trans-flow">
+                            <span class="trans-action-inline">User clicks 'try again'</span> <span class="trans-element-inline">.gameover-restart-btn</span>
+                            <span class="trans-arrow">&#8594;</span>
+                            <span class="target-state" data-state="0">State 0: Welcome Screen</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="aesthetics-panel" id="aestheticsPanel">
+  <div class="aes-state-card aes-state-0" data-state-id="0">
+    <div class="aes-state-header">State 0: Welcome Screen</div>
+    <details class="aes-reasoning">
+      <summary>AI Reasoning <span class="aes-confidence high">CONF: 100%</span></summary>
+      <div class="aes-reasoning-text">This is a classic onboarding screen designed to be inviting and non-threatening, using positive language and soft visuals to encourage the user to begin the experience.</div>
+    </details>
+    <table class="aes-table">
+      <thead><tr><th>Emotion</th><th>Implementation Details</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="aes-emotion-cell">Comfort</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Warm</li><li>pink-toned gradient</li><li>gentle 'breathing' animation on button</li><li>welcoming text</li><li>flower emoji</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Anticipation</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Promise of 'something wonderful'</li><li>glowing start button</li><li>familiar 'Instagram' branding</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="aes-state-card aes-state-1" data-state-id="1">
+    <div class="aes-state-header">State 1: Warm Notifications</div>
+    <details class="aes-reasoning">
+      <summary>AI Reasoning <span class="aes-confidence high">CONF: 100%</span></summary>
+      <div class="aes-reasoning-text">This state establishes a positive reinforcement loop using classic gamification to build user investment. The disabled escape button subtly introduces the theme of losing control.</div>
+    </details>
+    <table class="aes-table">
+      <thead><tr><th>Emotion</th><th>Implementation Details</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="aes-emotion-cell">Delight</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Positive feedback notifications</li><li>heart emoji bursts on click</li><li>warm color palette</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Engagement</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Constant stream of notifications</li><li>satisfying click interactions</li><li>rising counter</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Comfort</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Gentle slide-in animations</li><li>soft visual style</li><li>non-threatening content</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="aes-state-card aes-state-2" data-state-id="2">
+    <div class="aes-state-header">State 2: Stress Phase</div>
+    <details class="aes-reasoning">
+      <summary>AI Reasoning <span class="aes-confidence high">CONF: 100%</span></summary>
+      <div class="aes-reasoning-text">The experience pivots from pure positive reinforcement to a mix of positive and negative feedback, creating performance anxiety. The degrading visual cues reinforce this emotional shift.</div>
+    </details>
+    <table class="aes-table">
+      <thead><tr><th>Emotion</th><th>Implementation Details</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="aes-emotion-cell">Anxiety</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Negative notifications</li><li>muted/cool color palette</li><li>slow background color shift</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Unease</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Glitching app title</li><li>eyeball burst animations on click</li><li>darkening screen vignette</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Tension</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Enabled but ineffective escape button</li><li>introduction of punishment notifications</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="aes-state-card aes-state-3" data-state-id="3">
+    <div class="aes-state-header">State 3: Intense Phase</div>
+    <details class="aes-reasoning">
+      <summary>AI Reasoning <span class="aes-confidence high">CONF: 100%</span></summary>
+      <div class="aes-reasoning-text">This phase simulates addictive social media mechanics, using variable rewards (mystery boxes) and loss aversion (timers, guilt) to compel frantic interaction.</div>
+    </details>
+    <table class="aes-table">
+      <thead><tr><th>Emotion</th><th>Implementation Details</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="aes-emotion-cell">Urgency</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Notifications with countdown timers</li><li>FOMO-inducing content</li><li>faster notification speed</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Pressure</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Guilt-tripping messages</li><li>punishment for slow responses</li><li>constant demands</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Addiction</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Mystery boxes and jackpots creating a variable reward loop</li><li>chasing streaks</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="aes-state-card aes-state-4" data-state-id="4">
+    <div class="aes-state-header">State 4: Hell Mode</div>
+    <details class="aes-reasoning">
+      <summary>AI Reasoning <span class="aes-confidence high">CONF: 100%</span></summary>
+      <div class="aes-reasoning-text">This is the climax of the negative arc, representing total loss of agency. The experience breaks its own rules (notifications leaving the phone) to show the user they are completely trapped.</div>
+    </details>
+    <table class="aes-table">
+      <thead><tr><th>Emotion</th><th>Implementation Details</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="aes-emotion-cell">Overwhelm</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Extremely fast notification storm</li><li>chaotic shaking animations</li><li>sensory overload</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Dread</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Ominous messages</li><li>demonic/skull icons</li><li>dark red and black color scheme</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Powerlessness</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Escape button becomes a taunt</li><li>notifications escaping the phone frame</li><li>loss of control</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="aes-state-card aes-state-5" data-state-id="5">
+    <div class="aes-state-header">State 5: Transition 1-2</div>
+    <details class="aes-reasoning">
+      <summary>AI Reasoning <span class="aes-confidence high">CONF: 100%</span></summary>
+      <div class="aes-reasoning-text">This is a 'velvet rope' strategy. It makes the user feel successful and frames the choice to continue not as a risk, but as the obvious next step for a high-achiever.</div>
+    </details>
+    <table class="aes-table">
+      <thead><tr><th>Emotion</th><th>Implementation Details</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="aes-emotion-cell">Empowerment</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Positive framing</li><li>flattering stats</li><li>feeling of success and popularity</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Temptation</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Encouraging language</li><li>promise of 'something bigger'</li><li>large</li><li>glowing 'Yes' button</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="aes-state-card aes-state-6" data-state-id="6">
+    <div class="aes-state-header">State 6: Transition 2-3</div>
+    <details class="aes-reasoning">
+      <summary>AI Reasoning <span class="aes-confidence high">CONF: 100%</span></summary>
+      <div class="aes-reasoning-text">The strategy shifts from simple flattery to creating a sense of social responsibility, a more powerful and manipulative motivator for the user to continue.</div>
+    </details>
+    <table class="aes-table">
+      <thead><tr><th>Emotion</th><th>Implementation Details</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="aes-emotion-cell">Validation</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Escalated praise</li><li>impressive-sounding stats like 'Trending in 3 cities'</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Obligation</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Manipulative language ('they need you!')</li><li>creating social pressure to continue</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="aes-state-card aes-state-7" data-state-id="7">
+    <div class="aes-state-header">State 7: Transition 3-4</div>
+    <details class="aes-reasoning">
+      <summary>AI Reasoning <span class="aes-confidence high">CONF: 100%</span></summary>
+      <div class="aes-reasoning-text">This is the final point of no return. The language is designed to be irresistible, playing on the user's ego and sunk cost fallacy to push them into the final, chaotic stage.</div>
+    </details>
+    <table class="aes-table">
+      <thead><tr><th>Emotion</th><th>Implementation Details</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="aes-emotion-cell">Exaltation</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Extreme praise ('You're a LEGEND.')</li><li>claims of exclusivity ('Top 0.1%')</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Intense Curiosity</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Promise of something 'incredible'</li><li>framing the choice as the final step to a reward</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Dread</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>The 'Yes' button text ('I NEED to see') has a desperate</li><li>obsessive quality</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="aes-state-card aes-state-8" data-state-id="8">
+    <div class="aes-state-header">State 8: Trap Screen</div>
+    <details class="aes-reasoning">
+      <summary>AI Reasoning <span class="aes-confidence high">CONF: 100%</span></summary>
+      <div class="aes-reasoning-text">This state simulates hostile design patterns that make it hard to leave a service. It punishes the user for trying to exit by making it frustrating and psychologically costly.</div>
+    </details>
+    <table class="aes-table">
+      <thead><tr><th>Emotion</th><th>Implementation Details</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="aes-emotion-cell">Frustration</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>The 'No' button actively dodges the cursor</li><li>making escape a difficult mini-game</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Manipulation</td>
+          <td class="aes-desc-cell">Each screen uses a different psychological hook like FOMO or loss aversion</td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Desperation</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Overwhelmingly attractive 'Yes' button vs a tiny</li><li>difficult 'No' button</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="aes-state-card aes-state-9" data-state-id="9">
+    <div class="aes-state-header">State 9: Reflection Easter Egg</div>
+    <details class="aes-reasoning">
+      <summary>AI Reasoning <span class="aes-confidence high">CONF: 100%</span></summary>
+      <div class="aes-reasoning-text">This is a meta-commentary that rewards deep engagement by showing users *how* the system sees them, briefly turning the participant into an observer of their own behavior.</div>
+    </details>
+    <table class="aes-table">
+      <thead><tr><th>Emotion</th><th>Implementation Details</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="aes-emotion-cell">Surprise</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>An unexpected</li><li>shimmering notification appears</li><li>breaking the established pattern</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Intrigue</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Mysterious text ('Something just happened...')</li><li>promise of a secret 'profile'</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Self-Awareness</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Overlay reveals the user's own interaction data</li><li>creating a meta-reflection</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="aes-state-card aes-state-10" data-state-id="10">
+    <div class="aes-state-header">State 10: Flood Screen</div>
+    <details class="aes-reasoning">
+      <summary>AI Reasoning <span class="aes-confidence high">CONF: 100%</span></summary>
+      <div class="aes-reasoning-text">This is the narrative punchline. After stripping the user of all agency, it delivers a powerful, cynical message about online identity, leaving a lasting impression.</div>
+    </details>
+    <table class="aes-table">
+      <thead><tr><th>Emotion</th><th>Implementation Details</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="aes-emotion-cell">Dread</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Bleak</li><li>existential final message</li><li>flickering text effect</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Emptiness</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Stark</li><li>dark red screen</li><li>all interactive elements are gone</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Resignation</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>The experience ends with a chilling</li><li>unchangeable statement</li><li>no further action</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="aes-state-card aes-state-11" data-state-id="11">
+    <div class="aes-state-header">State 11: Game Over</div>
+    <details class="aes-reasoning">
+      <summary>AI Reasoning <span class="aes-confidence high">CONF: 100%</span></summary>
+      <div class="aes-reasoning-text">This is a manipulative twist where 'winning' the escape mini-game is framed as a catastrophic loss, reinforcing the core message that leaving the system is the worst outcome.</div>
+    </details>
+    <table class="aes-table">
+      <thead><tr><th>Emotion</th><th>Implementation Details</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="aes-emotion-cell">Failure</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Large 'GAME OVER' text</li><li>tagline about losing all social capital</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Frustration</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Score rapidly and visibly drains to zero</li><li>representing a total loss</li></ul></td>
+        </tr>
+        <tr>
+          <td class="aes-emotion-cell">Defeat</td>
+          <td class="aes-desc-cell"><ul class="detail-list"><li>Dark</li><li>muted</li><li>depressing aesthetic</li><li>a tiny and weak 'try again' button</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+    <div class="strategy-panel" id="strategyPanel">
+  <div class="strat-state-card strat-state-0" data-state-id="0">
+    <div class="strat-state-header">State 0: Welcome Screen</div>
+    <details class="strat-reasoning">
+      <summary>AI Reasoning <span class="strat-confidence high">CONF: 100%</span></summary>
+      <div class="strat-reasoning-text">This is a classic onboarding screen designed to be inviting and non-threatening, using positive language and soft visuals to encourage the user to begin the experience.</div>
+    </details>
+    <table class="strat-table">
+      <thead><tr><th>Category</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="strat-category-cell">Strategy</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Onboard the user</li><li>establish a positive and familiar tone</li><li>provide a clear CTA</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">User Role</td>
+          <td class="strat-desc-cell">Potential Participant</td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Directives</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Read the welcome message</li><li>click the start button</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Choices</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Start the experience → Warm Notifications</li><li>Close window → Exit</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">World State</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Calm</li><li>inviting</li><li>zero stakes</li><li>warm aesthetic</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="strat-state-card strat-state-1" data-state-id="1">
+    <div class="strat-state-header">State 1: Warm Notifications</div>
+    <details class="strat-reasoning">
+      <summary>AI Reasoning <span class="strat-confidence high">CONF: 100%</span></summary>
+      <div class="strat-reasoning-text">This state establishes a positive reinforcement loop using classic gamification to build user investment. The disabled escape button subtly introduces the theme of losing control.</div>
+    </details>
+    <table class="strat-table">
+      <thead><tr><th>Category</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="strat-category-cell">Strategy</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Create a positive feedback loop</li><li>build user investment</li><li>establish a baseline</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">User Role</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Valued User</li><li>Recipient of Praise</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Directives</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Tap notifications</li><li>watch the counter increase</li><li>feel popular</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Choices</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Tap notifications → reward</li><li>Click disabled escape button → no effect</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">World State</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Positive</li><li>rewarding</li><li>low stakes</li><li>warm purple/pink aesthetic</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="strat-state-card strat-state-2" data-state-id="2">
+    <div class="strat-state-header">State 2: Stress Phase</div>
+    <details class="strat-reasoning">
+      <summary>AI Reasoning <span class="strat-confidence high">CONF: 100%</span></summary>
+      <div class="strat-reasoning-text">The experience pivots from pure positive reinforcement to a mix of positive and negative feedback, creating performance anxiety. The degrading visual cues reinforce this emotional shift.</div>
+    </details>
+    <table class="strat-table">
+      <thead><tr><th>Category</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="strat-category-cell">Strategy</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Introduce negative feedback</li><li>shift emotional tone</li><li>create performance anxiety</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">User Role</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Performer</li><li>Scrutinized User</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Directives</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Keep tapping</li><li>try to escape</li><li>notice the negative shift</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Choices</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Continue tapping → mixed results</li><li>Attempt escape → ineffective</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">World State</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Tense</li><li>cool-toned</li><li>rising stakes</li><li>subtle visual degradation</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="strat-state-card strat-state-3" data-state-id="3">
+    <div class="strat-state-header">State 3: Intense Phase</div>
+    <details class="strat-reasoning">
+      <summary>AI Reasoning <span class="strat-confidence high">CONF: 100%</span></summary>
+      <div class="strat-reasoning-text">This phase simulates addictive social media mechanics, using variable rewards (mystery boxes) and loss aversion (timers, guilt) to compel frantic interaction.</div>
+    </details>
+    <table class="strat-table">
+      <thead><tr><th>Category</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="strat-category-cell">Strategy</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Employ dark patterns</li><li>variable reinforcement</li><li>and time pressure to maximize stress</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">User Role</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Addict</li><li>Gambler</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Directives</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Tap faster</li><li>respond to urgent prompts</li><li>chase rewards</li><li>avoid punishments</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Choices</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Engage with high-risk notifications</li><li>try to escape</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">World State</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>High pressure</li><li>chaotic</li><li>urgent</li><li>mix of red/gold/purple visuals</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="strat-state-card strat-state-4" data-state-id="4">
+    <div class="strat-state-header">State 4: Hell Mode</div>
+    <details class="strat-reasoning">
+      <summary>AI Reasoning <span class="strat-confidence high">CONF: 100%</span></summary>
+      <div class="strat-reasoning-text">This is the climax of the negative arc, representing total loss of agency. The experience breaks its own rules (notifications leaving the phone) to show the user they are completely trapped.</div>
+    </details>
+    <table class="strat-table">
+      <thead><tr><th>Category</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="strat-category-cell">Strategy</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Induce sensory overload</li><li>break the fourth wall</li><li>demonstrate inescapability</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">User Role</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Trapped Soul</li><li>Helpless Observer</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Directives</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Witness the chaos</li><li>attempt futile escape</li><li>endure the onslaught</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Choices</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Click notifications → more chaos</li><li>Click escape → punishment</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">World State</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Apocalyptic</li><li>chaotic</li><li>inescapable</li><li>hellish red/black visuals</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="strat-state-card strat-state-5" data-state-id="5">
+    <div class="strat-state-header">State 5: Transition 1-2</div>
+    <details class="strat-reasoning">
+      <summary>AI Reasoning <span class="strat-confidence high">CONF: 100%</span></summary>
+      <div class="strat-reasoning-text">This is a 'velvet rope' strategy. It makes the user feel successful and frames the choice to continue not as a risk, but as the obvious next step for a high-achiever.</div>
+    </details>
+    <table class="strat-table">
+      <thead><tr><th>Category</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="strat-category-cell">Strategy</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Gate progression with a choice</li><li>use flattery and FOMO to encourage continuation</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">User Role</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Decision-Maker</li><li>Star Performer</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Directives</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Read the praise</li><li>feel special</li><li>click the big 'Yes' button</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Choices</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Continue → Stress Phase</li><li>Stop → Trap Screen</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">World State</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Pause in action</li><li>celebratory</li><li>low-pressure decision point</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="strat-state-card strat-state-6" data-state-id="6">
+    <div class="strat-state-header">State 6: Transition 2-3</div>
+    <details class="strat-reasoning">
+      <summary>AI Reasoning <span class="strat-confidence high">CONF: 100%</span></summary>
+      <div class="strat-reasoning-text">The strategy shifts from simple flattery to creating a sense of social responsibility, a more powerful and manipulative motivator for the user to continue.</div>
+    </details>
+    <table class="strat-table">
+      <thead><tr><th>Category</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="strat-category-cell">Strategy</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Increase manipulative praise</li><li>introduce social obligation</li><li>reinforce sunk cost</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">User Role</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Influencer</li><li>Valued Commodity</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Directives</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Internalize the praise</li><li>feel the social pressure</li><li>continue the journey</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Choices</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Continue → Intense Phase</li><li>Stop → Trap Screen</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">World State</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Pause in action</li><li>high praise</li><li>increased social stakes</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="strat-state-card strat-state-7" data-state-id="7">
+    <div class="strat-state-header">State 7: Transition 3-4</div>
+    <details class="strat-reasoning">
+      <summary>AI Reasoning <span class="strat-confidence high">CONF: 100%</span></summary>
+      <div class="strat-reasoning-text">This is the final point of no return. The language is designed to be irresistible, playing on the user's ego and sunk cost fallacy to push them into the final, chaotic stage.</div>
+    </details>
+    <table class="strat-table">
+      <thead><tr><th>Category</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="strat-category-cell">Strategy</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Use ultimate praise and exclusivity</li><li>leverage intense FOMO</li><li>frame escalation as reward</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">User Role</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Legend</li><li>The Chosen One</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Directives</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Accept legendary status</li><li>give in to curiosity</li><li>click to see the end</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Choices</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Continue → Hell Mode</li><li>Stop → Trap Screen</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">World State</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Final pause</li><li>ultimate stakes</li><li>a sense of destiny or doom</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="strat-state-card strat-state-8" data-state-id="8">
+    <div class="strat-state-header">State 8: Trap Screen</div>
+    <details class="strat-reasoning">
+      <summary>AI Reasoning <span class="strat-confidence high">CONF: 100%</span></summary>
+      <div class="strat-reasoning-text">This state simulates hostile design patterns that make it hard to leave a service. It punishes the user for trying to exit by making it frustrating and psychologically costly.</div>
+    </details>
+    <table class="strat-table">
+      <thead><tr><th>Category</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="strat-category-cell">Strategy</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Hostile design</li><li>prevent exit via manipulative choices and interaction difficulty</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">User Role</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Escape Artist</li><li>Target of Manipulation</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Directives</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Try to click the dodging 'No' button</li><li>give in and click 'Yes'</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Choices</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Give in (Yes) → return to flow</li><li>Persist (No) → new trap or Game Over</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">World State</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Hostile</li><li>manipulative</li><li>a mini-game of attrition</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="strat-state-card strat-state-9" data-state-id="9">
+    <div class="strat-state-header">State 9: Reflection Easter Egg</div>
+    <details class="strat-reasoning">
+      <summary>AI Reasoning <span class="strat-confidence high">CONF: 100%</span></summary>
+      <div class="strat-reasoning-text">This is a meta-commentary that rewards deep engagement by showing users *how* the system sees them, briefly turning the participant into an observer of their own behavior.</div>
+    </details>
+    <table class="strat-table">
+      <thead><tr><th>Category</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="strat-category-cell">Strategy</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Reward deep engagement with a secret</li><li>break the fourth wall with user metrics</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">User Role</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Explorer</li><li>The Analyst</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Directives</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Find the secret</li><li>click it</li><li>read your own data</li><li>reflect on your behavior</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Choices</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Click notification → see overlay</li><li>Ignore → continue</li><li>Close overlay → return</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">World State</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Secretive</li><li>calm</li><li>meta-analytical</li><li>a break from the main loop</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="strat-state-card strat-state-10" data-state-id="10">
+    <div class="strat-state-header">State 10: Flood Screen</div>
+    <details class="strat-reasoning">
+      <summary>AI Reasoning <span class="strat-confidence high">CONF: 100%</span></summary>
+      <div class="strat-reasoning-text">This is the narrative punchline. After stripping the user of all agency, it delivers a powerful, cynical message about online identity, leaving a lasting impression.</div>
+    </details>
+    <table class="strat-table">
+      <thead><tr><th>Category</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="strat-category-cell">Strategy</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Deliver the final thematic message</li><li>remove all user agency</li><li>end on a bleak note</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">User Role</td>
+          <td class="strat-desc-cell">Recipient of the Moral</td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Directives</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Read the final message</li><li>contemplate its meaning</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Choices</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>None</li><li>the experience is over</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">World State</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Final</li><li>static</li><li>nihilistic</li><li>deep red and black</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="strat-state-card strat-state-11" data-state-id="11">
+    <div class="strat-state-header">State 11: Game Over</div>
+    <details class="strat-reasoning">
+      <summary>AI Reasoning <span class="strat-confidence high">CONF: 100%</span></summary>
+      <div class="strat-reasoning-text">This is a manipulative twist where 'winning' the escape mini-game is framed as a catastrophic loss, reinforcing the core message that leaving the system is the worst outcome.</div>
+    </details>
+    <table class="strat-table">
+      <thead><tr><th>Category</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="strat-category-cell">Strategy</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Punish the user for escaping the trap</li><li>frame leaving as a total loss</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">User Role</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Loser</li><li>Failure</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Directives</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Watch your score deplete</li><li>feel the loss</li><li>consider restarting</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">Choices</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Restart → Welcome Screen</li><li>Close window → Exit</li></ul></td>
+        </tr>
+        <tr>
+          <td class="strat-category-cell">World State</td>
+          <td class="strat-desc-cell"><ul class="detail-list"><li>Bleak</li><li>punishing</li><li>a definitive end state of failure</li></ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+</div>
+
+<div class="sidebar-column" id="sidebarColumn"></div>
+
+</div>
+
+<script>
+
+    var stateCodeBlocks = {"0": [{"label": "Initial HTML content", "code": "<div style=\"font-size: 22px; font-weight: 700; color: #fff5f5; margin-bottom: 8px; letter-spacing: -0.3px;\">Welcome back</div>\n<div style=\"font-size: 14px; color: rgba(255,200,200,0.75); line-height: 1.6; margin-bottom: 32px; font-weight: 400;\">\n    Your friends are here.<br>Something wonderful is waiting.\n</div>\n<button class=\"start-button\" onclick=\"startHell()\">Open Instagram \u2728</button>"}], "1": [{"label": "startHell() function", "code": "function startHell() {\n    document.getElementById('contentArea').innerHTML = '';\n    notificationCount = 0;\n    tapCount = 0;\n    warmTapCount = 0;\n// ..."}], "2": [{"label": "startStage2() function", "code": "function startStage2() {\n    var escapeButton = document.getElementById('escapeButton');\n    escapeButton.classList.add('enabled');\n    escapeButton.textContent = 'Turn Off Notifications';\n    animateStressBackground();\n// ..."}], "3": [{"label": "startStage3() function", "code": "function startStage3() {\n    var interval = setInterval(function() {\n        if (stage === 3) {\n            addRandomAddictiveNotification();\n            if (Math.random() < 0.5) {\n// ..."}], "4": [{"label": "startHell4() function", "code": "function startHell4() {\n    isHellMode = true;\n\n    // Notifications escaping the phone \u2014 every ~350ms\n    setInterval(function() {\n// ..."}], "5": [{"label": "showTransitionScreen() function", "code": "function showTransitionScreen(key, nextCallback) {\n    var data = transitionScreens[key];\n    if (!data) { nextCallback(); return; }\n    pendingNextStageCallback = nextCallback;\n    // ...\n}"}], "6": [{"label": "showTransitionScreen() function", "code": "function showTransitionScreen(key, nextCallback) {\n    var data = transitionScreens[key];\n    if (!data) { nextCallback(); return; }\n    pendingNextStageCallback = nextCallback;\n    // ...\n}"}], "7": [{"label": "showTransitionScreen() function", "code": "function showTransitionScreen(key, nextCallback) {\n    var data = transitionScreens[key];\n    if (!data) { nextCallback(); return; }\n    pendingNextStageCallback = nextCallback;\n    // ...\n}"}], "8": [{"label": "showTrapScreen() function", "code": "function showTrapScreen() {\n    document.getElementById('transitionOverlay').classList.remove('visible');\n    currentTrapOfferIndex = (currentTrapOfferIndex + 1) % trapOffers.length;\n    var offer = trapOffers[currentTrapOfferIndex];\n    var overlay = document.getElementById('trapOverlay');\n// ..."}], "9": [{"label": "showReflectionOverlay() function", "code": "function showReflectionOverlay() {\n    var elapsed = sessionStartTime ? Math.round((Date.now() - sessionStartTime) / 1000) : 0;\n    var elapsedStr = elapsed < 60 ? elapsed + 's' : Math.floor(elapsed / 60) + 'm ' + (elapsed % 60) + 's';\n    var engagementLevel = tapCount >= 10 ? 'EXCEPTIONAL' : tapCount >= 5 ? 'HIGH' : 'ELEVATED';\n    var predictedSession = 17 + Math.floor(Math.random() * 12);\n// ..."}], "10": [{"label": "Hell Mode climax", "code": "if (notificationCount >= 150) {\n    clearInterval(interval);\n    setTimeout(function() {\n        document.getElementById('floodOverlay').style.display = 'flex';\n    }, 3000);\n// ..."}], "11": [{"label": "showGameOver() function", "code": "function showGameOver() {\n    document.getElementById('transitionOverlay').classList.remove('visible');\n    var overlay = document.getElementById('gameoverOverlay');\n    var scoreEl = document.getElementById('gameoverScore');\n    var startScore = notificationCount * 47 + tapCount * 12; // fake \"followers\"\n// ..."}]};
+    var stateReferenceData = {"0": {"name": "Welcome Screen", "trigger_logic": "findVariable('stage') === 0", "related_functions": ["startHell", "restartExperience"]}, "1": {"name": "Warm Notifications", "trigger_logic": "findVariable('stage') === 1", "related_functions": ["startHell", "handleNotificationClick", "spawnHeartBurst", "spawnReflectionNotification"]}, "2": {"name": "Stress Phase", "trigger_logic": "findVariable('stage') === 2", "related_functions": ["startStage2", "addStage2Notification", "spawnEyeBurst", "triggerRedFlash", "triggerScreenShake"]}, "3": {"name": "Intense Phase", "trigger_logic": "findVariable('stage') === 3", "related_functions": ["startStage3", "addRandomAddictiveNotification", "tryEscape"]}, "4": {"name": "Hell Mode", "trigger_logic": "findVariable('isHellMode') === true", "related_functions": ["startHell4", "spawnEscapeNotification", "tryEscape"]}, "5": {"name": "Transition 1-2", "trigger_logic": "findVariable('stage') === 2 && checkVisible('#transitionOverlay')", "related_functions": ["showTransitionScreen", "continueToNextStage", "showTrapScreen"]}, "6": {"name": "Transition 2-3", "trigger_logic": "findVariable('stage') === 3 && checkVisible('#transitionOverlay')", "related_functions": ["showTransitionScreen", "continueToNextStage", "showTrapScreen"]}, "7": {"name": "Transition 3-4", "trigger_logic": "findVariable('stage') === 4 && checkVisible('#transitionOverlay')", "related_functions": ["showTransitionScreen", "continueToNextStage", "showTrapScreen"]}, "8": {"name": "Trap Screen", "trigger_logic": "checkVisible('#trapOverlay')", "related_functions": ["showTrapScreen", "trapYes", "trapNo", "positionNoButton"]}, "9": {"name": "Reflection Easter Egg", "trigger_logic": "checkVisible('#reflectionOverlay')", "related_functions": ["spawnReflectionNotification", "showReflectionOverlay", "closeReflectionOverlay"]}, "10": {"name": "Flood Screen", "trigger_logic": "checkVisible('#floodOverlay')", "related_functions": ["startHell4"]}, "11": {"name": "Game Over", "trigger_logic": "checkVisible('#gameoverOverlay')", "related_functions": ["showGameOver", "restartExperience"]}};
+    var stateDescriptions = {"0": "The app is closed and shows a welcome message with a button to begin.", "1": "You are receiving friendly notifications about likes and new followers.", "2": "Notifications become more frequent and unsettling, with visual effects.", "3": "The pace and intensity of notifications increase dramatically.", "4": "Notifications are overwhelming, breaking out of the phone screen.", "5": "You are shown your progress and asked if you want to continue.", "6": "You are praised for being 'famous' and asked if you want to continue.", "7": "You are called a 'legend' and given a final choice to proceed.", "8": "A screen tries to convince you to stay, with a 'No' button that moves.", "9": "A secret screen shows you stats about your session.", "10": "The screen is covered by a dark red overlay with a cryptic message.", "11": "You see a 'Game Over' screen with your score counting down to zero."};
+    var stateTriggerLogic = {"0": "findVariable('stage') === 0", "1": "findVariable('stage') === 1", "2": "findVariable('stage') === 2", "3": "findVariable('stage') === 3", "4": "findVariable('isHellMode') === true", "5": "findVariable('stage') === 2 && checkVisible('#transitionOverlay')", "6": "findVariable('stage') === 3 && checkVisible('#transitionOverlay')", "7": "findVariable('stage') === 4 && checkVisible('#transitionOverlay')", "8": "checkVisible('#trapOverlay')", "9": "checkVisible('#reflectionOverlay')", "10": "checkVisible('#floodOverlay')", "11": "checkVisible('#gameoverOverlay')"};
+
+    function writeToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(text);
+        }
+        return new Promise(function(resolve, reject) {
+            var textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                resolve();
+            } catch(e) {
+                reject(e);
+            }
+            document.body.removeChild(textarea);
+        });
+    }
+
+    function findVariable(varName) {
+        try {
+            if (typeof window[varName] !== 'undefined') return window[varName];
+        } catch(e) {}
+        return null;
+    }
+
+    function copyElementHTML(selector) {
+        var value = findVariable(selector);
+        var text = (typeof value !== 'undefined' && value !== null) ? selector + ' = ' + JSON.stringify(value) : selector + ' = undefined';
+        writeToClipboard(text).then(function() {
+            if (event && event.target) {
+                var icon = event.target;
+                icon.classList.add('copied');
+                setTimeout(function() { icon.classList.remove('copied'); }, 500);
+            }
+        }).catch(function() {});
+    }
+
+    function copyDescription(stateId) {
+        writeToClipboard(stateDescriptions[stateId] || '').then(function() {
+            if (event && event.target) {
+                var icon = event.target;
+                icon.classList.add('copied');
+                setTimeout(function() { icon.classList.remove('copied'); }, 500);
+            }
+        }).catch(function() {});
+    }
+
+    function copyTriggerLogic(stateId) {
+        writeToClipboard(stateTriggerLogic[stateId] || '').then(function() {
+            if (event && event.target) {
+                var icon = event.target;
+                icon.classList.add('copied');
+                setTimeout(function() { icon.classList.remove('copied'); }, 500);
+            }
+        }).catch(function() {});
+    }
+
+    function copyStateCode(stateId) {
+        var blocks = stateCodeBlocks[stateId];
+        if (!blocks || blocks.length === 0) {
+            writeToClipboard('No source code blocks available for State ' + stateId);
+            return;
+        }
+        var fullCode = blocks.map(function(block) {
+            return '// === ' + block.label + ' ===\n' + block.code;
+        }).join('\n\n');
+        writeToClipboard(fullCode).then(function() {
+            if (event && event.target) {
+                var btn = event.target.closest('button') || event.target;
+                var orig = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.style.background = 'rgba(46, 204, 113, 0.3)';
+                setTimeout(function() { btn.textContent = orig; btn.style.background = ''; }, 1000);
+            }
+        }).catch(function() {});
+    }
+
+    function copyStateReference(stateId) {
+        var ref = stateReferenceData[stateId];
+        if (!ref) { writeToClipboard('No reference data for State ' + stateId); return; }
+        var funcStr = (ref.related_functions || []).join(', ') || 'N/A';
+        var text = '## State ' + stateId + ': ' + ref.name + '\n' +
+            '**File:** index.html\n' +
+            '**Trigger Condition:** ' + ref.trigger_logic + '\n' +
+            '**Related Functions:** ' + funcStr;
+        writeToClipboard(text).then(function() {
+            if (event && event.target) {
+                var btn = event.target.closest('button') || event.target;
+                var orig = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.style.background = 'rgba(46, 204, 113, 0.3)';
+                setTimeout(function() { btn.textContent = orig; btn.style.background = ''; }, 1000);
+            }
+        }).catch(function() {});
+    }
+
+
+// Height synchronization: equalize state card heights across all panels
+function syncStateHeights() {
+    var stateCards = document.querySelectorAll('.state-panel .stage-segment');
+    var aesCards = document.querySelectorAll('.aesthetics-panel .aes-state-card');
+    var stratCards = document.querySelectorAll('.strategy-panel .strat-state-card');
+
+    // Reset heights first
+    stateCards.forEach(function(card) { card.style.minHeight = ''; });
+    aesCards.forEach(function(card) { card.style.minHeight = ''; });
+    stratCards.forEach(function(card) { card.style.minHeight = ''; });
+
+    // Build map by state ID
+    var stateMap = {};
+    stateCards.forEach(function(card) {
+        var match = card.id && card.id.match(/^state(\d+)$/);
+        if (match) stateMap[match[1]] = { stateCard: card };
+    });
+    aesCards.forEach(function(card) {
+        var id = card.getAttribute('data-state-id');
+        if (id !== null) {
+            if (!stateMap[id]) stateMap[id] = {};
+            stateMap[id].aesCard = card;
+        }
+    });
+    stratCards.forEach(function(card) {
+        var id = card.getAttribute('data-state-id');
+        if (id !== null) {
+            if (!stateMap[id]) stateMap[id] = {};
+            stateMap[id].stratCard = card;
+        }
+    });
+
+    // Equalize heights
+    Object.keys(stateMap).forEach(function(key) {
+        var entry = stateMap[key];
+        var heights = [];
+        if (entry.stateCard) heights.push(entry.stateCard.offsetHeight);
+        if (entry.aesCard) heights.push(entry.aesCard.offsetHeight);
+        if (entry.stratCard) heights.push(entry.stratCard.offsetHeight);
+        if (heights.length > 1) {
+            var maxH = Math.max.apply(null, heights);
+            if (entry.stateCard) entry.stateCard.style.minHeight = maxH + 'px';
+            if (entry.aesCard) entry.aesCard.style.minHeight = maxH + 'px';
+            if (entry.stratCard) entry.stratCard.style.minHeight = maxH + 'px';
+        }
+    });
+}
+
+// Run on load and resize
+window.addEventListener('DOMContentLoaded', function() {
+    setTimeout(syncStateHeights, 100);
+});
+window.addEventListener('resize', syncStateHeights);
+
+function toggleChat() {
+    var sidebar = document.getElementById('sidebarColumn');
+    var btn = document.getElementById('chatToggle');
+    var panelsArea = document.querySelector('.panels-area');
+    sidebar.classList.toggle('visible');
+    btn.classList.toggle('active');
+    if (sidebar.classList.contains('visible')) {
+        panelsArea.style.flex = '3';
+    } else {
+        panelsArea.style.flex = '1';
+    }
+    setTimeout(syncStateHeights, 50);
+}
+</script>
+
+</body>
+</html>
